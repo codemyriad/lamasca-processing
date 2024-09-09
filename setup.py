@@ -8,6 +8,11 @@ setup(
     include_package_data=True,
     install_requires=[
         'Click',
+        'layoutparser',
+        'torch',
+        'torchvision',
+        'Pillow',
+        'detectron2 @ git+https://github.com/facebookresearch/detectron2.git@v0.5',
     ],
     entry_points={
         'console_scripts': [

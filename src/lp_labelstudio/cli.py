@@ -24,10 +24,15 @@ def process_dir(directory):
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
 def process_image(image_path):
     """Process a single PNG image using layoutparser."""
+    if not image_path.lower().endswith('.png'):
+        click.echo(f"Error: The file '{image_path}' is not a PNG image.", err=True)
+        return
+
     click.echo(f"Processing image: {image_path}")
     
-    # Load the image
-    image = Image.open(image_path)
+    try:
+        # Load the image
+        image = Image.open(image_path)
     
     # Initialize layoutparser model
     model = lp.models.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config')
