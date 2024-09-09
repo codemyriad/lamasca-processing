@@ -8,14 +8,11 @@ setup(
     include_package_data=True,
     install_requires=[
         'Click',
-        'layoutparser',
+        'layoutparser[ocr,paddledetection]',
         'torch',
         'torchvision',
         'Pillow',
         'detectron2 @ git+https://github.com/facebookresearch/detectron2.git',
-        'paddleocr==2.6.0.3',
-        'paddlepaddle==2.6.1',
-        'PyMuPDF==1.19.0',  # Updated to match paddleocr 2.6.0.3 requirement
         'opencv-python',
         'numpy',
     ],
