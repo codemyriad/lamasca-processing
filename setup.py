@@ -14,7 +14,7 @@ setup(
         'Pillow',
         'detectron2 @ git+https://github.com/facebookresearch/detectron2.git',
         'paddleocr==2.6.0.3',
-        'paddlepaddle==2.4.2',
+        'paddlepaddle==2.6.1',
         'opencv-python',
         'numpy',
     ],
