@@ -51,7 +51,27 @@ These commands will process all PNG images in the specified directory, treating 
 
 ## Installation
 
-[Add installation instructions here]
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/lp-labelstudio.git
+   cd lp-labelstudio
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+   ```
+
+3. Install the dependencies:
+   ```bash
+   pip install layoutparser paddleocr click Pillow opencv-python numpy
+   ```
+
+   Note: If you encounter issues installing PaddleOCR, you may need to install it separately:
+   ```bash
+   pip install "paddleocr>=2.0.1"
+   ```
 
 ### Dependencies
 
@@ -64,11 +84,7 @@ This project requires the following main dependencies:
 - opencv-python
 - numpy
 
-You can install these dependencies using pip:
-
-```bash
-pip install layoutparser paddleocr click Pillow opencv-python numpy
-```
+These will be installed automatically when you follow the installation steps above.
 
 ## Contributing
 
