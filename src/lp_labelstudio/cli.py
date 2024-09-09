@@ -56,7 +56,7 @@ def process_image(image_path):
     except Exception as e:
         click.echo(f"Error processing image: {str(e)}", err=True)
 
-@cli.command()
+@cli.command('process_newspaper')
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
 @click.option('--output', '-o', type=click.Path(file_okay=True, dir_okay=False), default='label_studio_annotations.json', help='Output JSON file for Label Studio')
 def process_newspaper(image_path, output):
