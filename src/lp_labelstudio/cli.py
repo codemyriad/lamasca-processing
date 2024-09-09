@@ -35,17 +35,16 @@ def process_image(image_path):
         return
 
     click.echo(f"Processing image: {image_path}")
-    
+
     try:
         # Load the image
         image = Image.open(image_path)
-    
+
         # Initialize layoutparser model
-        model = lp.models.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config')
-    
+        model = lp.models.Detectron2LayoutModel('lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config')
         # Detect layout
         layout = model.detect(image)
-    
+
         # Convert layout to JSON-serializable format
         result = []
         for block in layout:
@@ -54,7 +53,7 @@ def process_image(image_path):
                 'score': float(block.score),
                 'bbox': block.block.coordinates.tolist()
             })
-    
+
         # Output result as JSON
         click.echo(json.dumps(result, indent=2))
     except Exception as e:
@@ -66,16 +65,16 @@ def process_image(image_path):
 def process_newspaper(image_path, output):
     """Process a newspaper image using layoutparser and convert to Label Studio format."""
     click.echo(f"Processing newspaper image: {image_path}")
-    
+
     # Load the image using PIL
     image = Image.open(image_path)
-    
+
     # Initialize layoutparser model
     model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config')
-    
+
     # Detect layout
     layout = model.detect(image)
-    
+
     # Convert layout to Label Studio format
     annotations = []
     for block in layout:
