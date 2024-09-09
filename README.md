@@ -14,13 +14,13 @@ This line should be added in the appropriate location within the file, typically
 
 ## Usage
 
-To process images and generate Label Studio annotations:
+To process newspaper pages and generate Label Studio annotations:
 
 ```bash
-python -m lp_labelstudio process_image /path/to/image/directory
+python -m lp_labelstudio process_newspaper /path/to/newspaper/pages/directory
 ```
 
-This command will process all images (PNG, JPG, JPEG) in the specified directory and generate annotation JSON files next to each image.
+This command will process all PNG images in the specified directory, treating them as newspaper pages. It will generate annotation JSON files next to each image.
 
 ## Installation
 

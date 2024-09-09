@@ -59,19 +59,19 @@ def process_image(image_path):
     except Exception as e:
         click.echo(f"Error processing image: {str(e)}", err=True)
 
-@cli.command('process_image')
+@cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def process_image(directory):
-    """Process images in a directory using layoutparser and convert to Label Studio format."""
-    click.echo(f"Processing images in directory: {directory}")
+def process_newspaper(directory):
+    """Process newspaper pages (PNG images) in a directory using layoutparser and convert to Label Studio format."""
+    click.echo(f"Processing newspaper pages in directory: {directory}")
 
     # Initialize layoutparser model
     model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config')
 
     for filename in os.listdir(directory):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+        if filename.lower().endswith('.png'):
             image_path = os.path.join(directory, filename)
-            click.echo(f"Processing image: {image_path}")
+            click.echo(f"Processing page: {image_path}")
 
             # Load the image using PIL
             image = Image.open(image_path)
