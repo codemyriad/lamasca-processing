@@ -33,9 +33,9 @@ Available commands:
 - `hello`: Simple command that says hello.
 - `process-dir`: Process a directory of images.
 - `process-image`: Process a single PNG image using layoutparser.
-- `process-newspaper`: Process newspaper pages (PNG images) in a directory.
+- `process-newspaper`: Process newspaper pages (PNG images) in a directory, including OCR.
 
-For example, to process newspaper pages and generate Label Studio annotations:
+For example, to process newspaper pages, generate Label Studio annotations, and perform OCR:
 
 ```bash
 python -m lp_labelstudio process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
@@ -47,11 +47,28 @@ or
 python src/lp_labelstudio/cli.py process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
 ```
 
-These commands will process all PNG images in the specified directory, treating them as newspaper pages. They will generate annotation JSON files next to each image.
+These commands will process all PNG images in the specified directory, treating them as newspaper pages. They will generate annotation JSON files next to each image, including OCR results for each detected block.
 
 ## Installation
 
 [Add installation instructions here]
+
+### Dependencies
+
+This project requires the following main dependencies:
+
+- layoutparser
+- PaddleOCR
+- click
+- Pillow
+- opencv-python
+- numpy
+
+You can install these dependencies using pip:
+
+```bash
+pip install layoutparser paddleocr click Pillow opencv-python numpy
+```
 
 ## Contributing
 

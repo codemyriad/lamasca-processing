@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageOps
 import warnings
+from paddleocr import PaddleOCR
 
 @click.group()
 def cli():
@@ -68,6 +69,9 @@ def process_newspaper(directory):
     # Initialize layoutparser model
     model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config')
 
+    # Initialize PaddleOCR
+    ocr = PaddleOCR(use_angle_cls=True, lang='en')
+
     for filename in os.listdir(directory):
         if filename.lower().endswith('.png'):
             image_path = os.path.join(directory, filename)
@@ -90,6 +94,14 @@ def process_newspaper(directory):
             annotations = []
             for block in layout:
                 bbox = block.block.coordinates
+                
+                # Perform OCR on the block
+                crop_img = image.crop(bbox)
+                ocr_result = ocr.ocr(np.array(crop_img), cls=False)
+                
+                # Extract text from OCR result
+                text = ' '.join([line[1][0] for line in ocr_result[0]]) if ocr_result[0] else ''
+
                 annotation = {
                     "value": {
                         "x": bbox[0] / image.width * 100,  # Convert to percentage
@@ -97,7 +109,8 @@ def process_newspaper(directory):
                         "width": (bbox[2] - bbox[0]) / image.width * 100,
                         "height": (bbox[3] - bbox[1]) / image.height * 100,
                         "rotation": 0,
-                        "rectanglelabels": [block.type]
+                        "rectanglelabels": [block.type],
+                        "text": [text]  # Include OCR text
                     },
                     "type": "rectanglelabels",
                     "id": str(uuid.uuid4()),
