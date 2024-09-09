@@ -120,5 +120,8 @@ def process_newspaper(directory):
 
     click.echo("Processing complete.")
 
-if __name__ == '__main__':
+def main():
     cli()
+
+if __name__ == '__main__':
+    main()

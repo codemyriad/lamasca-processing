@@ -14,19 +14,40 @@ This line should be added in the appropriate location within the file, typically
 
 ## Usage
 
-To process newspaper pages and generate Label Studio annotations:
+You can use LP-LabelStudio in two ways:
+
+1. As a module:
 
 ```bash
-python -m lp_labelstudio process_newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
+python -m lp_labelstudio [COMMAND] [ARGS]
 ```
 
-This command will process all PNG images in the specified directory, treating them as newspaper pages. It will generate annotation JSON files next to each image.
-
-For example, if you have newspaper pages in the directory `/tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/`, you can run:
+2. Directly using the CLI script:
 
 ```bash
-python -m lp_labelstudio process_newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
+python src/lp_labelstudio/cli.py [COMMAND] [ARGS]
 ```
+
+Available commands:
+
+- `hello`: Simple command that says hello.
+- `process-dir`: Process a directory of images.
+- `process-image`: Process a single PNG image using layoutparser.
+- `process-newspaper`: Process newspaper pages (PNG images) in a directory.
+
+For example, to process newspaper pages and generate Label Studio annotations:
+
+```bash
+python -m lp_labelstudio process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
+```
+
+or
+
+```bash
+python src/lp_labelstudio/cli.py process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
+```
+
+These commands will process all PNG images in the specified directory, treating them as newspaper pages. They will generate annotation JSON files next to each image.
 
 ## Installation
 
