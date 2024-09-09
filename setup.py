@@ -11,7 +11,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'lp-labelstudio=lp_labelstudio.cli:hello',
+            'lp-labelstudio=lp_labelstudio.cli:cli',
         ],
     },
 )
