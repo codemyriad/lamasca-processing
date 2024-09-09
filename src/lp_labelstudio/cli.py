@@ -78,6 +78,11 @@ def process_newspaper(image_path, output):
         if pil_image.mode != 'RGB':
             pil_image = pil_image.convert('RGB')
         
+        # Resize the image if it's too large (optional, adjust the max_size as needed)
+        max_size = 3000  # Example max size
+        if max(pil_image.size) > max_size:
+            pil_image.thumbnail((max_size, max_size), Image.LANCZOS)
+        
         # Convert PIL image to numpy array for layoutparser
         image = np.array(pil_image)
     
@@ -130,6 +135,7 @@ def process_newspaper(image_path, output):
         click.echo(f"Label Studio annotations saved to {output}")
     except Exception as e:
         click.echo(f"Error processing newspaper image: {str(e)}", err=True)
+        raise  # Re-raise the exception to get the full stack trace
 
 if __name__ == '__main__':
     cli()
