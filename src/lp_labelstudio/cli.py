@@ -6,6 +6,7 @@ import uuid
 import os
 import cv2
 import numpy as np
+from PIL import Image, ImageOps
 
 @click.group()
 def cli():
@@ -66,12 +67,15 @@ def process_newspaper(image_path, output):
     click.echo(f"Processing newspaper image: {image_path}")
     
     try:
-        # Load the image using cv2
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Load the image using PIL
+        pil_image = Image.open(image_path)
         
-        # Convert the image to a PIL Image object
-        pil_image = Image.fromarray(image)
+        # Convert the image to RGB mode if it's not already
+        if pil_image.mode != 'RGB':
+            pil_image = pil_image.convert('RGB')
+        
+        # Convert PIL image to numpy array for layoutparser
+        image = np.array(pil_image)
     
         # Initialize layoutparser model for newspapers
         model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
@@ -81,7 +85,7 @@ def process_newspaper(image_path, output):
                                                             6: "Headline", 7: "Advertisement", 8: "Text"})
     
         # Detect layout
-        layout = model.detect(pil_image)
+        layout = model.detect(image)
     
         # Convert layout to Label Studio format
         annotations = []
