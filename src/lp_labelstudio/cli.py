@@ -5,6 +5,7 @@ import json
 import uuid
 import os
 import cv2
+import numpy as np
 
 @click.group()
 def cli():
@@ -68,6 +69,9 @@ def process_newspaper(image_path, output):
         # Load the image using cv2
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # Convert the image to a PIL Image object
+        pil_image = Image.fromarray(image)
     
         # Initialize layoutparser model for newspapers
         model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
@@ -77,7 +81,7 @@ def process_newspaper(image_path, output):
                                                             6: "Headline", 7: "Advertisement", 8: "Text"})
     
         # Detect layout
-        layout = model.detect(image)
+        layout = model.detect(pil_image)
     
         # Convert layout to Label Studio format
         annotations = []
@@ -85,10 +89,10 @@ def process_newspaper(image_path, output):
             bbox = block.block.coordinates
             annotation = {
                 "value": {
-                    "x": bbox[0] / image.width * 100,  # Convert to percentage
-                    "y": bbox[1] / image.height * 100,
-                    "width": (bbox[2] - bbox[0]) / image.width * 100,
-                    "height": (bbox[3] - bbox[1]) / image.height * 100,
+                    "x": bbox[0] / pil_image.width * 100,  # Convert to percentage
+                    "y": bbox[1] / pil_image.height * 100,
+                    "width": (bbox[2] - bbox[0]) / pil_image.width * 100,
+                    "height": (bbox[3] - bbox[1]) / pil_image.height * 100,
                     "rotation": 0,
                     "rectanglelabels": [block.type]
                 },
