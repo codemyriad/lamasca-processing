@@ -14,7 +14,13 @@ This line should be added in the appropriate location within the file, typically
 
 ## Usage
 
-[Add usage instructions here]
+To process images and generate Label Studio annotations:
+
+```bash
+python -m lp_labelstudio process_image /path/to/image/directory
+```
+
+This command will process all images (PNG, JPG, JPEG) in the specified directory and generate annotation JSON files next to each image.
 
 ## Installation
 

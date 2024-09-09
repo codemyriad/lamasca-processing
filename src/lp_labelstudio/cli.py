@@ -59,59 +59,66 @@ def process_image(image_path):
     except Exception as e:
         click.echo(f"Error processing image: {str(e)}", err=True)
 
-@cli.command('process_newspaper')
-@click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.option('--output', '-o', type=click.Path(file_okay=True, dir_okay=False), default='label_studio_annotations.json', help='Output JSON file for Label Studio')
-def process_newspaper(image_path, output):
-    """Process a newspaper image using layoutparser and convert to Label Studio format."""
-    click.echo(f"Processing newspaper image: {image_path}")
-
-    # Load the image using PIL
-    image = Image.open(image_path)
+@cli.command('process_image')
+@click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+def process_image(directory):
+    """Process images in a directory using layoutparser and convert to Label Studio format."""
+    click.echo(f"Processing images in directory: {directory}")
 
     # Initialize layoutparser model
     model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config')
 
-    # Detect layout
-    layout = model.detect(image)
+    for filename in os.listdir(directory):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            image_path = os.path.join(directory, filename)
+            click.echo(f"Processing image: {image_path}")
 
-    # Convert layout to Label Studio format
-    annotations = []
-    for block in layout:
-        bbox = block.block.coordinates
-        annotation = {
-            "value": {
-                "x": bbox[0] / image.width * 100,  # Convert to percentage
-                "y": bbox[1] / image.height * 100,
-                "width": (bbox[2] - bbox[0]) / image.width * 100,
-                "height": (bbox[3] - bbox[1]) / image.height * 100,
-                "rotation": 0,
-                "rectanglelabels": [block.type]
-            },
-            "type": "rectanglelabels",
-            "id": str(uuid.uuid4()),
-            "from_name": "label",
-            "to_name": "image",
-            "image_rotation": 0
-        }
-        annotations.append(annotation)
+            # Load the image using PIL
+            image = Image.open(image_path)
 
-    label_studio_data = {
-        "data": {
-            "image": os.path.basename(image_path)
-        },
-        "annotations": [
-            {
-                "result": annotations
+            # Detect layout
+            layout = model.detect(image)
+
+            # Convert layout to Label Studio format
+            annotations = []
+            for block in layout:
+                bbox = block.block.coordinates
+                annotation = {
+                    "value": {
+                        "x": bbox[0] / image.width * 100,  # Convert to percentage
+                        "y": bbox[1] / image.height * 100,
+                        "width": (bbox[2] - bbox[0]) / image.width * 100,
+                        "height": (bbox[3] - bbox[1]) / image.height * 100,
+                        "rotation": 0,
+                        "rectanglelabels": [block.type]
+                    },
+                    "type": "rectanglelabels",
+                    "id": str(uuid.uuid4()),
+                    "from_name": "label",
+                    "to_name": "image",
+                    "image_rotation": 0
+                }
+                annotations.append(annotation)
+
+            label_studio_data = {
+                "data": {
+                    "image": filename
+                },
+                "annotations": [
+                    {
+                        "result": annotations
+                    }
+                ]
             }
-        ]
-    }
 
-    # Write to JSON file for Label Studio
-    with open(output, 'w') as f:
-        json.dump(label_studio_data, f, indent=2)
+            # Write to JSON file next to the original image
+            output_path = os.path.splitext(image_path)[0] + '_annotations.json'
+            with open(output_path, 'w') as f:
+                json.dump(label_studio_data, f, indent=2)
 
-    click.echo(f"Label Studio annotations saved to {output}")
+            click.echo(f"Label Studio annotations saved to {output_path}")
+
+    click.echo("Processing complete.")
 
 if __name__ == '__main__':
     cli()
