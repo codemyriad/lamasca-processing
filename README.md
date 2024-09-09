@@ -17,10 +17,16 @@ This line should be added in the appropriate location within the file, typically
 To process newspaper pages and generate Label Studio annotations:
 
 ```bash
-python -m lp_labelstudio process_newspaper /path/to/newspaper/pages/directory
+python -m lp_labelstudio process_newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
 ```
 
 This command will process all PNG images in the specified directory, treating them as newspaper pages. It will generate annotation JSON files next to each image.
+
+For example, if you have newspaper pages in the directory `/tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/`, you can run:
+
+```bash
+python -m lp_labelstudio process_newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
+```
 
 ## Installation
 
