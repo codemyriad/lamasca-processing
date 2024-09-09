@@ -12,43 +12,6 @@ queries.pop("dl", None) # Added by Silvio to solve problem with dropbox urls
 
 This line should be added in the appropriate location within the file, typically where URL queries are being processed.
 
-## Usage
-
-You can use LP-LabelStudio in two ways:
-
-1. As a module:
-
-```bash
-python -m lp_labelstudio [COMMAND] [ARGS]
-```
-
-2. Directly using the CLI script:
-
-```bash
-python src/lp_labelstudio/cli.py [COMMAND] [ARGS]
-```
-
-Available commands:
-
-- `hello`: Simple command that says hello.
-- `process-dir`: Process a directory of images.
-- `process-image`: Process a single PNG image using layoutparser.
-- `process-newspaper`: Process newspaper pages (PNG images) in a directory, including OCR.
-
-For example, to process newspaper pages, generate Label Studio annotations, and perform OCR:
-
-```bash
-python -m lp_labelstudio process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
-```
-
-or
-
-```bash
-python src/lp_labelstudio/cli.py process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
-```
-
-These commands will process all PNG images in the specified directory, treating them as newspaper pages. They will generate annotation JSON files next to each image, including OCR results for each detected block.
-
 ## Installation
 
 1. Clone the repository:
@@ -63,28 +26,35 @@ These commands will process all PNG images in the specified directory, treating 
    source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
    ```
 
-3. Install the dependencies:
+3. Install the package in editable mode:
    ```bash
-   pip install layoutparser paddleocr click Pillow opencv-python numpy
+   pip install -e .
    ```
 
-   Note: If you encounter issues installing PaddleOCR, you may need to install it separately:
-   ```bash
-   pip install "paddleocr>=2.0.1"
-   ```
+This will install all the required dependencies automatically.
 
-### Dependencies
+## Usage
 
-This project requires the following main dependencies:
+After installation, you can use LP-LabelStudio as a command-line tool:
 
-- layoutparser
-- PaddleOCR
-- click
-- Pillow
-- opencv-python
-- numpy
+```bash
+lp-labelstudio [COMMAND] [ARGS]
+```
 
-These will be installed automatically when you follow the installation steps above.
+Available commands:
+
+- `hello`: Simple command that says hello.
+- `process-dir`: Process a directory of images.
+- `process-image`: Process a single PNG image using layoutparser.
+- `process-newspaper`: Process newspaper pages (PNG images) in a directory, including OCR.
+
+For example, to process newspaper pages, generate Label Studio annotations, and perform OCR:
+
+```bash
+lp-labelstudio process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-19/
+```
+
+This command will process all PNG images in the specified directory, treating them as newspaper pages. It will generate annotation JSON files next to each image, including OCR results for each detected block.
 
 ## Contributing
 
