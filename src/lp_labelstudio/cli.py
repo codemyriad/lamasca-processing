@@ -87,11 +87,13 @@ def process_newspaper(image_path, output):
         image = np.array(pil_image)
     
         # Initialize layoutparser model for newspapers
-        model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
-                                                 extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
-                                                 label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
-                                                            4: "Comics/Cartoon", 5: "Editorial Cartoon", 
-                                                            6: "Headline", 7: "Advertisement", 8: "Text"})
+        model = lp.models.Detectron2LayoutModel.from_pretrained(
+            'lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
+            extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
+            label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
+                       4: "Comics/Cartoon", 5: "Editorial Cartoon", 
+                       6: "Headline", 7: "Advertisement", 8: "Text"}
+        )
     
         # Detect layout
         layout = model.detect(image)
