@@ -12,7 +12,7 @@ setup(
         'torch',
         'torchvision',
         'Pillow',
-        'detectron2 @ git+https://github.com/facebookresearch/detectron2.git@v0.5',
+        'detectron2 @ git+https://github.com/facebookresearch/detectron2.git',
     ],
     entry_points={
         'console_scripts': [
