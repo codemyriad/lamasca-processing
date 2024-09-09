@@ -54,5 +54,39 @@ def process_image(image_path):
     except Exception as e:
         click.echo(f"Error processing image: {str(e)}", err=True)
 
+@cli.command()
+@click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
+def process_newspaper(image_path):
+    """Process a newspaper image using layoutparser with a newspaper model."""
+    click.echo(f"Processing newspaper image: {image_path}")
+    
+    try:
+        # Load the image
+        image = lp.io.load_image(image_path)
+    
+        # Initialize layoutparser model for newspapers
+        model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
+                                                 extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
+                                                 label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
+                                                            4: "Comics/Cartoon", 5: "Editorial Cartoon", 
+                                                            6: "Headline", 7: "Advertisement", 8: "Text"})
+    
+        # Detect layout
+        layout = model.detect(image)
+    
+        # Convert layout to JSON-serializable format
+        result = []
+        for block in layout:
+            result.append({
+                'type': block.type,
+                'score': float(block.score),
+                'bbox': block.block.coordinates.tolist()
+            })
+    
+        # Output result as JSON
+        click.echo(json.dumps(result, indent=2))
+    except Exception as e:
+        click.echo(f"Error processing newspaper image: {str(e)}", err=True)
+
 if __name__ == '__main__':
     cli()
