@@ -34,23 +34,25 @@ def process_image(image_path):
         # Load the image
         image = Image.open(image_path)
     
-    # Initialize layoutparser model
-    model = lp.models.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config')
+        # Initialize layoutparser model
+        model = lp.models.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config')
     
-    # Detect layout
-    layout = model.detect(image)
+        # Detect layout
+        layout = model.detect(image)
     
-    # Convert layout to JSON-serializable format
-    result = []
-    for block in layout:
-        result.append({
-            'type': block.type,
-            'score': float(block.score),
-            'bbox': block.block.coordinates.tolist()
-        })
+        # Convert layout to JSON-serializable format
+        result = []
+        for block in layout:
+            result.append({
+                'type': block.type,
+                'score': float(block.score),
+                'bbox': block.block.coordinates.tolist()
+            })
     
-    # Output result as JSON
-    click.echo(json.dumps(result, indent=2))
+        # Output result as JSON
+        click.echo(json.dumps(result, indent=2))
+    except Exception as e:
+        click.echo(f"Error processing image: {str(e)}", err=True)
 
 if __name__ == '__main__':
     cli()
