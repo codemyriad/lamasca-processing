@@ -4,6 +4,7 @@ from PIL import Image
 import json
 import uuid
 import os
+import cv2
 
 @click.group()
 def cli():
@@ -64,8 +65,9 @@ def process_newspaper(image_path, output):
     click.echo(f"Processing newspaper image: {image_path}")
     
     try:
-        # Load the image
-        image = lp.io.load_image(image_path)
+        # Load the image using cv2
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
         # Initialize layoutparser model for newspapers
         model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
