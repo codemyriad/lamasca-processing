@@ -87,13 +87,34 @@ def process_newspaper(image_path, output):
         image = np.array(pil_image)
     
         # Initialize layoutparser model for newspapers
-        model = lp.models.Detectron2LayoutModel(
-            'lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
-            extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
-            label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
-                       4: "Comics/Cartoon", 5: "Editorial Cartoon", 
-                       6: "Headline", 7: "Advertisement", 8: "Text"}
-        )
+        try:
+            model = lp.models.Detectron2LayoutModel(
+                'lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
+                extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
+                label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
+                           4: "Comics/Cartoon", 5: "Editorial Cartoon", 
+                           6: "Headline", 7: "Advertisement", 8: "Text"}
+            )
+        except ValueError as e:
+            if "Unsupported query remaining" in str(e):
+                # If the error is due to an unsupported query, try to load from local cache
+                import os
+                cache_dir = os.path.expanduser("~/.torch/iopath_cache")
+                model_path = os.path.join(cache_dir, "s", "6ewh6g8rqt2ev3a", "model_final.pth")
+                if os.path.exists(model_path):
+                    click.echo("Loading model from local cache...")
+                    model = lp.models.Detectron2LayoutModel(
+                        'lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
+                        extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
+                        label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
+                                   4: "Comics/Cartoon", 5: "Editorial Cartoon", 
+                                   6: "Headline", 7: "Advertisement", 8: "Text"},
+                        weights_path=model_path
+                    )
+                else:
+                    raise ValueError("Model weights not found in local cache. Please download them manually.")
+            else:
+                raise
     
         # Detect layout
         layout = model.detect(image)
