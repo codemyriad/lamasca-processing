@@ -67,94 +67,52 @@ def process_newspaper(image_path, output):
     """Process a newspaper image using layoutparser and convert to Label Studio format."""
     click.echo(f"Processing newspaper image: {image_path}")
     
-    try:
-        # Suppress warnings
-        warnings.filterwarnings("ignore", category=UserWarning)
-        
-        # Load the image using PIL
-        pil_image = Image.open(image_path)
-        
-        # Convert the image to RGB mode if it's not already
-        if pil_image.mode != 'RGB':
-            pil_image = pil_image.convert('RGB')
-        
-        # Resize the image if it's too large (optional, adjust the max_size as needed)
-        max_size = 3000  # Example max size
-        if max(pil_image.size) > max_size:
-            pil_image.thumbnail((max_size, max_size), Image.LANCZOS)
-        
-        # Convert PIL image to numpy array for layoutparser
-        image = np.array(pil_image)
+    # Load the image using PIL
+    image = Image.open(image_path)
     
-        # Initialize layoutparser model for newspapers
-        import os
-        cache_dir = os.path.expanduser("~/.torch/iopath_cache")
-        model_path = os.path.join(cache_dir, "s", "6ewh6g8rqt2ev3a", "model_final.pth")
-        
-        if os.path.exists(model_path):
-            click.echo("Loading model from local cache...")
-            config_path = 'lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config'
-            model = lp.models.Detectron2LayoutModel(
-                config_path,
-                extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8,
-                              "MODEL.WEIGHTS", model_path],
-                label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
-                           4: "Comics/Cartoon", 5: "Editorial Cartoon", 
-                           6: "Headline", 7: "Advertisement", 8: "Text"}
-            )
-        else:
-            click.echo("Model weights not found in local cache. Attempting to download...")
-            model = lp.models.Detectron2LayoutModel(
-                'lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config',
-                extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
-                label_map={1: "Photograph", 2: "Illustration", 3: "Map", 
-                           4: "Comics/Cartoon", 5: "Editorial Cartoon", 
-                           6: "Headline", 7: "Advertisement", 8: "Text"}
-            )
+    # Initialize layoutparser model
+    model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config')
     
-        # Detect layout
-        layout = model.detect(image)
+    # Detect layout
+    layout = model.detect(image)
     
-        # Convert layout to Label Studio format
-        annotations = []
-        for block in layout:
-            bbox = block.block.coordinates
-            annotation = {
-                "value": {
-                    "x": bbox[0] / pil_image.width * 100,  # Convert to percentage
-                    "y": bbox[1] / pil_image.height * 100,
-                    "width": (bbox[2] - bbox[0]) / pil_image.width * 100,
-                    "height": (bbox[3] - bbox[1]) / pil_image.height * 100,
-                    "rotation": 0,
-                    "rectanglelabels": [block.type]
-                },
-                "type": "rectanglelabels",
-                "id": str(uuid.uuid4()),
-                "from_name": "label",
-                "to_name": "image",
-                "image_rotation": 0
-            }
-            annotations.append(annotation)
-
-        label_studio_data = {
-            "data": {
-                "image": os.path.basename(image_path)
+    # Convert layout to Label Studio format
+    annotations = []
+    for block in layout:
+        bbox = block.block.coordinates
+        annotation = {
+            "value": {
+                "x": bbox[0] / image.width * 100,  # Convert to percentage
+                "y": bbox[1] / image.height * 100,
+                "width": (bbox[2] - bbox[0]) / image.width * 100,
+                "height": (bbox[3] - bbox[1]) / image.height * 100,
+                "rotation": 0,
+                "rectanglelabels": [block.type]
             },
-            "annotations": [
-                {
-                    "result": annotations
-                }
-            ]
+            "type": "rectanglelabels",
+            "id": str(uuid.uuid4()),
+            "from_name": "label",
+            "to_name": "image",
+            "image_rotation": 0
         }
+        annotations.append(annotation)
 
-        # Write to JSON file for Label Studio
-        with open(output, 'w') as f:
-            json.dump(label_studio_data, f, indent=2)
+    label_studio_data = {
+        "data": {
+            "image": os.path.basename(image_path)
+        },
+        "annotations": [
+            {
+                "result": annotations
+            }
+        ]
+    }
 
-        click.echo(f"Label Studio annotations saved to {output}")
-    except Exception as e:
-        click.echo(f"Error processing newspaper image: {str(e)}", err=True)
-        raise  # Re-raise the exception to get the full stack trace
+    # Write to JSON file for Label Studio
+    with open(output, 'w') as f:
+        json.dump(label_studio_data, f, indent=2)
+
+    click.echo(f"Label Studio annotations saved to {output}")
 
 if __name__ == '__main__':
     cli()
