@@ -15,6 +15,7 @@ setup(
         'detectron2 @ git+https://github.com/facebookresearch/detectron2.git',
         'paddleocr==2.6.0.3',
         'paddlepaddle==2.6.1',
+        'PyMuPDF<1.19.0',  # Add this line to specify an older version of PyMuPDF
         'opencv-python',
         'numpy',
     ],
