@@ -68,9 +68,6 @@ def process_newspaper(directory):
     # Initialize layoutparser model
     model = lp.models.Detectron2LayoutModel('lp://NewspaperNavigator/faster_rcnn_R_50_FPN_3x/config')
 
-    # Initialize PaddleOCR
-    ocr = PaddleOCR(use_angle_cls=True, lang='en')
-
     for filename in os.listdir(directory):
         if filename.lower().endswith('.png'):
             image_path = os.path.join(directory, filename)
@@ -93,13 +90,6 @@ def process_newspaper(directory):
             annotations = []
             for block in layout:
                 bbox = block.block.coordinates
-                
-                # Perform OCR on the block
-                crop_img = image.crop(bbox)
-                ocr_result = ocr.ocr(np.array(crop_img), cls=False)
-                
-                # Extract text from OCR result
-                text = ' '.join([line[1][0] for line in ocr_result[0]]) if ocr_result[0] else ''
 
                 annotation = {
                     "value": {
@@ -108,8 +98,7 @@ def process_newspaper(directory):
                         "width": (bbox[2] - bbox[0]) / image.width * 100,
                         "height": (bbox[3] - bbox[1]) / image.height * 100,
                         "rotation": 0,
-                        "rectanglelabels": [block.type],
-                        "text": [text]  # Include OCR text
+                        "rectanglelabels": [block.type]
                     },
                     "type": "rectanglelabels",
                     "id": str(uuid.uuid4()),
