@@ -71,6 +71,13 @@ def process_newspaper(directory):
     for filename in os.listdir(directory):
         if filename.lower().endswith('.png'):
             image_path = os.path.join(directory, filename)
+            output_path = os.path.splitext(image_path)[0] + '_annotations.json'
+            
+            # Skip if annotation file already exists
+            if os.path.exists(output_path):
+                click.echo(f"Skipping {filename} - annotation file already exists")
+                continue
+            
             click.echo(f"Processing page: {image_path}")
 
             # Load the image using PIL
@@ -112,7 +119,6 @@ def process_newspaper(directory):
             }
 
             # Write to JSON file next to the original image
-            output_path = os.path.splitext(image_path)[0] + '_annotations.json'
             with open(output_path, 'w') as f:
                 json.dump(label_studio_data, f, indent=2)
 
