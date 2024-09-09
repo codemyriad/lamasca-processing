@@ -7,6 +7,7 @@ import os
 import cv2
 import numpy as np
 from PIL import Image, ImageOps
+import warnings
 
 @click.group()
 def cli():
@@ -67,6 +68,9 @@ def process_newspaper(image_path, output):
     click.echo(f"Processing newspaper image: {image_path}")
     
     try:
+        # Suppress warnings
+        warnings.filterwarnings("ignore", category=UserWarning)
+        
         # Load the image using PIL
         pil_image = Image.open(image_path)
         
