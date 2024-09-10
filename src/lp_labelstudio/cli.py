@@ -2,6 +2,7 @@ import click
 import layoutparser as lp
 from PIL import Image
 import json
+import os
 
 def process_single_image(image_path, model):
     """Process a single image and return the layout."""
