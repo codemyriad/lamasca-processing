@@ -4,8 +4,11 @@ import uuid
 from paddleocr import PaddleOCR
 import numpy as np
 from typing import List, Dict, Any, Tuple
+import logging
 
 from lp_labelstudio.constants import PNG_EXTENSION
+
+logger = logging.getLogger(__name__)
 
 # Initialize PaddleOCR
 ocr = PaddleOCR(use_angle_cls=True, lang='en')
@@ -14,18 +17,24 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
     if not image_path.lower().endswith(PNG_EXTENSION):
         raise ValueError(f"The file '{image_path}' is not a PNG image.")
 
+    logger.info(f"Processing image: {image_path}")
     image = Image.open(image_path)
     layout = model.detect(image)
 
     result = []
-    for block in layout:
+    for i, block in enumerate(layout):
         coordinates = block.block.coordinates
         bbox = list(coordinates) if isinstance(coordinates, tuple) else coordinates.tolist()
         
         # Perform OCR on the block
         crop = image.crop(bbox)
         ocr_result = ocr.ocr(np.array(crop), cls=False)
-        text = ' '.join([line[1][0] for line in ocr_result[0]] if ocr_result else [])
+        
+        if ocr_result is None or not ocr_result[0]:
+            logger.warning(f"OCR result is empty for block {i} in {image_path}")
+            text = ""
+        else:
+            text = ' '.join([line[1][0] for line in ocr_result[0]])
         
         result.append({
             'type': block.type,
@@ -34,6 +43,7 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
             'text': text.strip()  # Add the OCR text to the result
         })
 
+    logger.info(f"Processed {len(result)} blocks in {image_path}")
     return result
 
 def get_image_size(image_path: str) -> Tuple[int, int]:
