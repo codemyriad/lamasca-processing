@@ -37,7 +37,17 @@ def process_image(image_path: str, redo: bool) -> None:
     model = lp.models.Detectron2LayoutModel(PUBLAYNET_MODEL_PATH)
     result = process_single_image(image_path, model)
     save_annotations(output_path, result)
-    click.echo(f"Processed {image_path}: {len(result)} layout elements detected")
+    
+    # Count the types of layout elements
+    element_counts = {}
+    for element in result:
+        element_type = element['type']
+        element_counts[element_type] = element_counts.get(element_type, 0) + 1
+    
+    click.echo(f"Processed {image_path}:")
+    click.echo(f"Total layout elements detected: {len(result)}")
+    for element_type, count in element_counts.items():
+        click.echo(f"  - {element_type}: {count}")
 
 @cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
