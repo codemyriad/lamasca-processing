@@ -31,12 +31,15 @@ def process_image(image_path: str, redo: bool) -> None:
     """Process a single PNG image using layoutparser."""
     output_path = os.path.splitext(image_path)[0] + '_annotations.json'
     if os.path.exists(output_path) and not redo:
-        click.echo(f"Skipped {image_path} (annotation file exists)")
+        click.echo(click.style(f"Skipped {image_path} (annotation file exists)", fg="yellow"))
         return
 
     model = lp.models.Detectron2LayoutModel(PUBLAYNET_MODEL_PATH)
     result = process_single_image(image_path, model)
     save_annotations(output_path, result)
+    
+    # Get image dimensions
+    img_width, img_height = get_image_dimensions(image_path)
     
     # Count the types of layout elements
     element_counts = {}
@@ -44,10 +47,11 @@ def process_image(image_path: str, redo: bool) -> None:
         element_type = element['type']
         element_counts[element_type] = element_counts.get(element_type, 0) + 1
     
-    click.echo(f"Processed {image_path}:")
-    click.echo(f"Total layout elements detected: {len(result)}")
+    click.echo(click.style(f"Processed {image_path}:", fg="green", bold=True))
+    click.echo(f"Image dimensions: {img_width}x{img_height}")
+    click.echo(click.style(f"Total layout elements detected: {len(result)}", fg="cyan"))
     for element_type, count in element_counts.items():
-        click.echo(f"  - {element_type}: {count}")
+        click.echo(f"  - {element_type}: {click.style(str(count), fg='bright_cyan')}")
 
 @cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
