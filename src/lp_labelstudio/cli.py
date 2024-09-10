@@ -81,25 +81,13 @@ def process_newspaper(directory: str, redo: bool) -> None:
             
             click.echo(click.style(f"Processing {image_path}...", fg="blue"))
 
-            try:
-                layout = process_single_image(image_path, model)
-                img_width, img_height = get_image_size(image_path)
-                label_studio_data = convert_to_label_studio_format(layout, img_width, img_height, filename)
-                save_annotations(output_path, label_studio_data)
-                
-                summary = generate_summary(image_path, layout, output_path)
-                click.echo(summary)
-            except ValueError as e:
-                click.echo(click.style(f"ValueError processing image {filename}: {str(e)}", fg="red"))
-            except IOError as e:
-                click.echo(click.style(f"IOError processing image {filename}: {str(e)}", fg="red"))
-            except lp.exceptions.LayoutParserException as e:
-                click.echo(click.style(f"LayoutParser error processing image {filename}: {str(e)}", fg="red"))
-            except Image.UnidentifiedImageError as e:
-                click.echo(click.style(f"Unable to identify image {filename}: {str(e)}", fg="red"))
-            except Exception as e:
-                logger.exception(f"Unexpected error processing image {filename}")
-                click.echo(click.style(f"Unexpected error processing image {filename}. Check logs for details.", fg="red"))
+            layout = process_single_image(image_path, model)
+            img_width, img_height = get_image_size(image_path)
+            label_studio_data = convert_to_label_studio_format(layout, img_width, img_height, filename)
+            save_annotations(output_path, label_studio_data)
+            
+            summary = generate_summary(image_path, layout, output_path)
+            click.echo(summary)
 
     click.echo(click.style("Processing complete.", fg="green"))
 
