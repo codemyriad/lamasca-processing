@@ -43,10 +43,15 @@ def process_image(image_path: str, redo: bool) -> None:
         element_type = element['type']
         element_counts[element_type] = element_counts.get(element_type, 0) + 1
     
-    summary = f"Processed {image_path} ({img_width}x{img_height}): {len(result)} elements detected ("
-    summary += ", ".join([f"{element_type}: {count}" for element_type, count in element_counts.items()])
-    summary += f"). Annotations saved to: {output_path}"
-    click.echo(click.style(summary, fg="green"))
+    summary = click.style(f"Processed ", fg="green")
+    summary += click.style(f"{image_path}", fg="bright_blue")
+    summary += click.style(f" ({img_width}x{img_height}): ", fg="green")
+    summary += click.style(f"{len(result)}", fg="yellow")
+    summary += click.style(" elements detected (", fg="green")
+    summary += ", ".join([f"{click.style(element_type, fg='cyan')}: {click.style(str(count), fg='yellow')}" for element_type, count in element_counts.items()])
+    summary += click.style("). Annotations saved to: ", fg="green")
+    summary += click.style(f"{output_path}", fg="bright_blue")
+    click.echo(summary)
 
 @cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
