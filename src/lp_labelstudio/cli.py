@@ -32,9 +32,15 @@ def cli():
 
 @cli.command()
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
-def process_image(image_path):
+@click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
+def process_image(image_path, redo):
     """Process a single PNG image using layoutparser."""
     click.echo(f"Processing image: {image_path}")
+
+    output_path = os.path.splitext(image_path)[0] + '_annotations.json'
+    if os.path.exists(output_path) and not redo:
+        click.echo(f"Skipping {image_path} - annotation file already exists. Use --redo to reprocess.")
+        return
 
     try:
         # Initialize layoutparser model
@@ -45,12 +51,18 @@ def process_image(image_path):
 
         # Output result as JSON
         click.echo(json.dumps(result, indent=2))
+
+        # Save annotations
+        with open(output_path, 'w') as f:
+            json.dump(result, f, indent=2)
+        click.echo(f"Annotations saved to {output_path}")
     except Exception as e:
         click.echo(f"Error processing image: {str(e)}", err=True)
 
 @cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def process_newspaper(directory):
+@click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
+def process_newspaper(directory, redo):
     """Process newspaper pages (PNG images) in a directory using layoutparser and convert to Label Studio format."""
     import uuid
     import os
@@ -65,8 +77,8 @@ def process_newspaper(directory):
             image_path = os.path.join(directory, filename)
             output_path = os.path.splitext(image_path)[0] + '_annotations.json'
             
-            # Skip if annotation file already exists
-            if os.path.exists(output_path):
+            # Skip if annotation file already exists and --redo is not set
+            if os.path.exists(output_path) and not redo:
                 click.echo(f"Skipping {filename} - annotation file already exists")
                 continue
             
