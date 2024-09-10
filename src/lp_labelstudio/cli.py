@@ -18,10 +18,16 @@ def process_single_image(image_path, model):
     # Convert layout to JSON-serializable format
     result = []
     for block in layout:
+        coordinates = block.block.coordinates
+        if isinstance(coordinates, tuple):
+            bbox = list(coordinates)
+        else:
+            bbox = coordinates.tolist()
+        
         result.append({
             'type': block.type,
             'score': float(block.score),
-            'bbox': block.block.coordinates.tolist()
+            'bbox': bbox
         })
 
     return result
