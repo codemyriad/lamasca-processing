@@ -12,9 +12,11 @@ setup(
         'torch',
         'torchvision',
         'Pillow',
-        'detectron2 @ git+https://github.com/facebookresearch/detectron2.git',
+        'detectron2',
         'opencv-python',
         'numpy',
+        'paddlepaddle',
+        'paddleocr>=2.0.1',
     ],
     entry_points={
         'console_scripts': [
