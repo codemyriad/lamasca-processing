@@ -1,13 +1,4 @@
 import click
-import layoutparser as lp
-from PIL import Image
-import json
-import uuid
-import os
-import cv2
-import numpy as np
-from PIL import Image, ImageOps
-import warnings
 
 @click.group()
 def cli():
@@ -23,6 +14,7 @@ def hello():
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def process_dir(directory):
     """Process a directory of images."""
+    import os
     click.echo(f"Processing directory: {directory}")
     # TODO: Implement directory processing logic
 
@@ -30,6 +22,10 @@ def process_dir(directory):
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
 def process_image(image_path):
     """Process a single PNG image using layoutparser."""
+    import layoutparser as lp
+    from PIL import Image
+    import json
+
     if not image_path.lower().endswith('.png'):
         click.echo(f"Error: The file '{image_path}' is not a PNG image.", err=True)
         return
@@ -63,6 +59,12 @@ def process_image(image_path):
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def process_newspaper(directory):
     """Process newspaper pages (PNG images) in a directory using layoutparser and convert to Label Studio format."""
+    import layoutparser as lp
+    from PIL import Image
+    import json
+    import uuid
+    import os
+
     click.echo(f"Processing newspaper pages in directory: {directory}")
 
     # Initialize layoutparser model
