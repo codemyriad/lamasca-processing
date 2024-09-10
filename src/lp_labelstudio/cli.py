@@ -4,6 +4,7 @@ from PIL import Image
 import json
 import os
 import logging
+import uuid
 from typing import List, Dict, Any
 
 # Constants
