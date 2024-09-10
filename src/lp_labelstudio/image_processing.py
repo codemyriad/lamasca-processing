@@ -11,7 +11,7 @@ from lp_labelstudio.constants import PNG_EXTENSION
 logger = logging.getLogger(__name__)
 
 # Initialize PaddleOCR
-ocr = PaddleOCR(use_angle_cls=True, lang='en')
+ocr = PaddleOCR(lang='it')
 
 def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel) -> List[Dict[str, Any]]:
     if not image_path.lower().endswith(PNG_EXTENSION):
@@ -25,17 +25,17 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
     for i, block in enumerate(layout):
         coordinates = block.block.coordinates
         bbox = list(coordinates) if isinstance(coordinates, tuple) else coordinates.tolist()
-        
+
         # Perform OCR on the block
         crop = image.crop(bbox)
         ocr_result = ocr.ocr(np.array(crop), cls=False)
-        
+
         if ocr_result is None or not ocr_result[0]:
             logger.warning(f"OCR result is empty for block {i} in {image_path}")
             text = ""
         else:
             text = ' '.join([line[1][0] for line in ocr_result[0]])
-        
+
         result.append({
             'type': block.type,
             'score': float(block.score),
