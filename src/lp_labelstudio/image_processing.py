@@ -25,7 +25,7 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
         # Perform OCR on the block
         crop = image.crop(bbox)
         ocr_result = ocr.ocr(np.array(crop), cls=False)
-        text = ' '.join([line[1][0] for line in ocr_result])
+        text = ' '.join([line[0][1] for line in ocr_result[0]] if ocr_result else [])
         
         result.append({
             'type': block.type,
