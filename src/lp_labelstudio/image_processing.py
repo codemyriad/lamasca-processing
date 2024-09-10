@@ -1,10 +1,10 @@
-import layoutparser as lp
-from PIL import Image
-import uuid
-from paddleocr import PaddleOCR
-import numpy as np
 from typing import List, Dict, Any, Tuple
 import logging
+import uuid
+import numpy as np
+from PIL import Image
+import layoutparser as lp  # type: ignore
+from paddleocr import PaddleOCR  # type: ignore
 
 from lp_labelstudio.constants import PNG_EXTENSION
 
@@ -23,11 +23,11 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
 
     result: List[Dict[str, Any]] = []
     for i, block in enumerate(layout):
-        coordinates: Tuple[float, float, float, float] = block.block.coordinates
-        bbox: List[float] = list(coordinates) if isinstance(coordinates, tuple) else coordinates.tolist()
+        coordinates = block.block.coordinates
+        bbox: List[float] = list(coordinates)
 
         # Perform OCR on the block
-        crop: Image.Image = image.crop(bbox)
+        crop: Image.Image = image.crop([int(coord) for coord in bbox])
         ocr_result: List[List[Tuple[List[List[int]], Tuple[str, float]]]] = ocr.ocr(np.array(crop), cls=False)
 
         if ocr_result is None or not ocr_result[0]:

@@ -1,5 +1,5 @@
 import click
-import layoutparser as lp
+import layoutparser as lp  # type: ignore
 import json
 import os
 import logging
@@ -12,7 +12,7 @@ from lp_labelstudio.image_processing import process_single_image, convert_to_lab
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def save_annotations(output_path: str, data: Dict[str, Any]) -> None:
+def save_annotations(output_path: str, data: Dict[str, Any] | List[Dict[str, Any]]) -> None:
     with open(output_path, 'w') as f:
         json.dump(data, f, indent=2)
     logger.info(f"Annotations saved to {output_path}")
@@ -57,7 +57,7 @@ def process_image(image_path: str, redo: bool) -> None:
 
     model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
     result: List[Dict[str, Any]] = process_single_image(image_path, model)
-    save_annotations(output_path, result)
+    save_annotations(output_path, {"result": result})
 
     summary: str = generate_summary(image_path, result, output_path)
     click.echo(summary)
