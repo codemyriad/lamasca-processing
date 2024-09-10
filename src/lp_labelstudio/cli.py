@@ -6,7 +6,7 @@ import logging
 from typing import Any, Dict, List
 from PIL import Image
 
-from lp_labelstudio.constants import PNG_EXTENSION, PUBLAYNET_MODEL_PATH, NEWSPAPER_MODEL_PATH
+from lp_labelstudio.constants import PNG_EXTENSION, NEWSPAPER_MODEL_PATH
 from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 
 logging.basicConfig(level=logging.INFO)
@@ -19,14 +19,14 @@ def save_annotations(output_path: str, data: Dict[str, Any]) -> None:
 
 def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path: str) -> str:
     img_width, img_height = get_image_size(image_path)
-    
+
     element_counts: Dict[str, int] = {}
     total_chars = 0
     for element in result:
         element_type = element['type']
         element_counts[element_type] = element_counts.get(element_type, 0) + 1
         total_chars += len(element['text'])
-    
+
     summary = click.style(f"Processed ", fg="green")
     summary += click.style(f"{image_path}", fg="bright_blue")
     summary += click.style(f" ({img_width}x{img_height}): ", fg="green")
@@ -54,11 +54,11 @@ def process_image(image_path: str, redo: bool) -> None:
         return
 
     click.echo(click.style(f"Processing {image_path}...", fg="blue"))
-    
-    model = lp.models.Detectron2LayoutModel(PUBLAYNET_MODEL_PATH)
+
+    model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
     result = process_single_image(image_path, model)
     save_annotations(output_path, result)
-    
+
     summary = generate_summary(image_path, result, output_path)
     click.echo(summary)
 
@@ -74,18 +74,18 @@ def process_newspaper(directory: str, redo: bool) -> None:
         if filename.lower().endswith(PNG_EXTENSION):
             image_path = os.path.join(directory, filename)
             output_path = os.path.splitext(image_path)[0] + '_annotations.json'
-            
+
             if os.path.exists(output_path) and not redo:
                 click.echo(click.style(f"Skipped {image_path} (annotation file exists)", fg="yellow"))
                 continue
-            
+
             click.echo(click.style(f"Processing {image_path}...", fg="blue"))
 
             layout = process_single_image(image_path, model)
             img_width, img_height = get_image_size(image_path)
             label_studio_data = convert_to_label_studio_format(layout, img_width, img_height, filename)
             save_annotations(output_path, label_studio_data)
-            
+
             summary = generate_summary(image_path, layout, output_path)
             click.echo(summary)
 
