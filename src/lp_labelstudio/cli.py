@@ -6,19 +6,6 @@ def cli():
     pass
 
 @cli.command()
-def hello():
-    """Simple command that says hello."""
-    click.echo("Hello from lp-labelstudio!")
-
-@cli.command()
-@click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def process_dir(directory):
-    """Process a directory of images."""
-    import os
-    click.echo(f"Processing directory: {directory}")
-    # TODO: Implement directory processing logic
-
-@cli.command()
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
 def process_image(image_path):
     """Process a single PNG image using layoutparser."""
