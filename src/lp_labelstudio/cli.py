@@ -92,8 +92,13 @@ def process_newspaper(directory: str, redo: bool) -> None:
                 click.echo(click.style(f"ValueError processing image {filename}: {str(e)}", fg="red"))
             except IOError as e:
                 click.echo(click.style(f"IOError processing image {filename}: {str(e)}", fg="red"))
+            except lp.exceptions.LayoutParserException as e:
+                click.echo(click.style(f"LayoutParser error processing image {filename}: {str(e)}", fg="red"))
+            except Image.UnidentifiedImageError as e:
+                click.echo(click.style(f"Unable to identify image {filename}: {str(e)}", fg="red"))
             except Exception as e:
-                click.echo(click.style(f"Unexpected error processing image {filename}: {str(e)}", fg="red"))
+                logger.exception(f"Unexpected error processing image {filename}")
+                click.echo(click.style(f"Unexpected error processing image {filename}. Check logs for details.", fg="red"))
 
     click.echo(click.style("Processing complete.", fg="green"))
 
