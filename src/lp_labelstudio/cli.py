@@ -80,16 +80,15 @@ def cli():
 @click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
 def process_image(image_path: str, redo: bool):
     """Process a single PNG image using layoutparser."""
-    logger.info(f"Processing image: {image_path}")
-
     output_path = os.path.splitext(image_path)[0] + '_annotations.json'
     if os.path.exists(output_path) and not redo:
-        logger.info(f"Skipping {image_path} - annotation file already exists. Use --redo to reprocess.")
+        click.echo(f"Skipped {image_path} (annotation file exists)")
         return
 
     model = lp.models.Detectron2LayoutModel(PUBLAYNET_MODEL_PATH)
     result = process_single_image(image_path, model)
     save_annotations(output_path, result)
+    click.echo(f"Processed {image_path}: {len(result)} layout elements detected")
 
 @cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
