@@ -27,7 +27,7 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
         bbox: List[float] = list(coordinates)
 
         # Perform OCR on the block
-        crop: Image.Image = image.crop([int(coord) for coord in bbox])
+        crop: Image.Image = image.crop(tuple(int(coord) for coord in bbox))
         ocr_result: List[List[Tuple[List[List[int]], Tuple[str, float]]]] = ocr.ocr(np.array(crop), cls=False)
 
         if ocr_result is None or not ocr_result[0]:

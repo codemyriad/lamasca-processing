@@ -3,7 +3,7 @@ import layoutparser as lp  # type: ignore
 import json
 import os
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 from PIL import Image
 
 from lp_labelstudio.constants import PNG_EXTENSION, NEWSPAPER_MODEL_PATH
@@ -12,7 +12,7 @@ from lp_labelstudio.image_processing import process_single_image, convert_to_lab
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def save_annotations(output_path: str, data: Dict[str, Any] | List[Dict[str, Any]]) -> None:
+def save_annotations(output_path: str, data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> None:
     with open(output_path, 'w') as f:
         json.dump(data, f, indent=2)
     logger.info(f"Annotations saved to {output_path}")
