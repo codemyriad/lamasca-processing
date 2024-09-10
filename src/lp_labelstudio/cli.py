@@ -4,6 +4,7 @@ import json
 import os
 import logging
 from typing import Any, Dict, List
+from PIL import Image
 
 from lp_labelstudio.constants import PNG_EXTENSION, PUBLAYNET_MODEL_PATH, NEWSPAPER_MODEL_PATH
 from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
