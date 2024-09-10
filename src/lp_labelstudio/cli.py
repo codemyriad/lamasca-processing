@@ -3,7 +3,7 @@ import layoutparser as lp
 import json
 import os
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from PIL import Image
 
 from lp_labelstudio.constants import PNG_EXTENSION, NEWSPAPER_MODEL_PATH
@@ -21,9 +21,9 @@ def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path:
     img_width, img_height = get_image_size(image_path)
 
     element_counts: Dict[str, int] = {}
-    total_chars = 0
+    total_chars: int = 0
     for element in result:
-        element_type = element['type']
+        element_type: str = element['type']
         element_counts[element_type] = element_counts.get(element_type, 0) + 1
         total_chars += len(element['text'])
 
@@ -55,11 +55,11 @@ def process_image(image_path: str, redo: bool) -> None:
 
     click.echo(click.style(f"Processing {image_path}...", fg="blue"))
 
-    model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
-    result = process_single_image(image_path, model)
+    model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
+    result: List[Dict[str, Any]] = process_single_image(image_path, model)
     save_annotations(output_path, result)
 
-    summary = generate_summary(image_path, result, output_path)
+    summary: str = generate_summary(image_path, result, output_path)
     click.echo(summary)
 
 @cli.command()
