@@ -7,8 +7,8 @@ import logging
 import uuid
 from typing import List, Dict, Any, Tuple
 
-from .constants import PNG_EXTENSION, PUBLAYNET_MODEL_PATH, NEWSPAPER_MODEL_PATH
-from .image_processing import process_single_image, convert_to_label_studio_format, get_image_dimensions
+from lp_labelstudio.constants import PNG_EXTENSION, PUBLAYNET_MODEL_PATH, NEWSPAPER_MODEL_PATH
+from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_dimensions
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
