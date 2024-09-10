@@ -1,4 +1,29 @@
 import click
+import layoutparser as lp
+from PIL import Image
+import json
+
+def process_single_image(image_path, model):
+    """Process a single image and return the layout."""
+    if not image_path.lower().endswith('.png'):
+        raise ValueError(f"The file '{image_path}' is not a PNG image.")
+
+    # Load the image
+    image = Image.open(image_path)
+
+    # Detect layout
+    layout = model.detect(image)
+
+    # Convert layout to JSON-serializable format
+    result = []
+    for block in layout:
+        result.append({
+            'type': block.type,
+            'score': float(block.score),
+            'bbox': block.block.coordinates.tolist()
+        })
+
+    return result
 
 @click.group()
 def cli():
@@ -9,33 +34,14 @@ def cli():
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
 def process_image(image_path):
     """Process a single PNG image using layoutparser."""
-    import layoutparser as lp
-    from PIL import Image
-    import json
-
-    if not image_path.lower().endswith('.png'):
-        click.echo(f"Error: The file '{image_path}' is not a PNG image.", err=True)
-        return
-
     click.echo(f"Processing image: {image_path}")
 
     try:
-        # Load the image
-        image = Image.open(image_path)
-
         # Initialize layoutparser model
         model = lp.models.Detectron2LayoutModel('lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config')
-        # Detect layout
-        layout = model.detect(image)
-
-        # Convert layout to JSON-serializable format
-        result = []
-        for block in layout:
-            result.append({
-                'type': block.type,
-                'score': float(block.score),
-                'bbox': block.block.coordinates.tolist()
-            })
+        
+        # Process the image
+        result = process_single_image(image_path, model)
 
         # Output result as JSON
         click.echo(json.dumps(result, indent=2))
@@ -46,9 +52,6 @@ def process_image(image_path):
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def process_newspaper(directory):
     """Process newspaper pages (PNG images) in a directory using layoutparser and convert to Label Studio format."""
-    import layoutparser as lp
-    from PIL import Image
-    import json
     import uuid
     import os
 
@@ -69,50 +72,54 @@ def process_newspaper(directory):
             
             click.echo(f"Processing page: {image_path}")
 
-            # Load the image using PIL
-            image = Image.open(image_path)
+            try:
+                # Process the image
+                layout = process_single_image(image_path, model)
 
-            # Detect layout
-            layout = model.detect(image)
+                # Load the image to get dimensions
+                with Image.open(image_path) as img:
+                    img_width, img_height = img.size
 
-            # Convert layout to Label Studio format
-            annotations = []
-            for block in layout:
-                bbox = block.block.coordinates
+                # Convert layout to Label Studio format
+                annotations = []
+                for block in layout:
+                    bbox = block['bbox']
 
-                annotation = {
-                    "value": {
-                        "x": bbox[0] / image.width * 100,  # Convert to percentage
-                        "y": bbox[1] / image.height * 100,
-                        "width": (bbox[2] - bbox[0]) / image.width * 100,
-                        "height": (bbox[3] - bbox[1]) / image.height * 100,
-                        "rotation": 0,
-                        "rectanglelabels": [block.type]
-                    },
-                    "type": "rectanglelabels",
-                    "id": str(uuid.uuid4()),
-                    "from_name": "label",
-                    "to_name": "image",
-                    "image_rotation": 0
-                }
-                annotations.append(annotation)
-
-            label_studio_data = {
-                "data": {
-                    "image": filename
-                },
-                "annotations": [
-                    {
-                        "result": annotations
+                    annotation = {
+                        "value": {
+                            "x": bbox[0] / img_width * 100,  # Convert to percentage
+                            "y": bbox[1] / img_height * 100,
+                            "width": (bbox[2] - bbox[0]) / img_width * 100,
+                            "height": (bbox[3] - bbox[1]) / img_height * 100,
+                            "rotation": 0,
+                            "rectanglelabels": [block['type']]
+                        },
+                        "type": "rectanglelabels",
+                        "id": str(uuid.uuid4()),
+                        "from_name": "label",
+                        "to_name": "image",
+                        "image_rotation": 0
                     }
-                ]
-            }
+                    annotations.append(annotation)
 
-            # Write to JSON file next to the original image
-            with open(output_path, 'w') as f:
-                json.dump(label_studio_data, f, indent=2)
+                label_studio_data = {
+                    "data": {
+                        "image": filename
+                    },
+                    "annotations": [
+                        {
+                            "result": annotations
+                        }
+                    ]
+                }
 
-            click.echo(f"Label Studio annotations saved to {output_path}")
+                # Write to JSON file next to the original image
+                with open(output_path, 'w') as f:
+                    json.dump(label_studio_data, f, indent=2)
+
+                click.echo(f"Label Studio annotations saved to {output_path}")
+            except Exception as e:
+                click.echo(f"Error processing image {filename}: {str(e)}", err=True)
 
     click.echo("Processing complete.")
 
