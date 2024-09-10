@@ -20,9 +20,11 @@ def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path:
     img_width, img_height = get_image_size(image_path)
     
     element_counts: Dict[str, int] = {}
+    total_chars = 0
     for element in result:
         element_type = element['type']
         element_counts[element_type] = element_counts.get(element_type, 0) + 1
+        total_chars += len(element['text'])
     
     summary = click.style(f"Processed ", fg="green")
     summary += click.style(f"{image_path}", fg="bright_blue")
@@ -30,6 +32,8 @@ def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path:
     summary += click.style(f"{len(result)}", fg="yellow")
     summary += click.style(" elements detected (", fg="green")
     summary += ", ".join([f"{click.style(element_type, fg='cyan')}: {click.style(str(count), fg='yellow')}" for element_type, count in element_counts.items()])
+    summary += click.style(f"). Total characters: ", fg="green")
+    summary += click.style(f"{total_chars}", fg="yellow")
     summary += click.style("). Annotations saved to: ", fg="green")
     summary += click.style(f"{output_path}", fg="bright_blue")
     return summary
