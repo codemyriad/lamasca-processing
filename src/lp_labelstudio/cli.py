@@ -49,22 +49,19 @@ def process_image(image_path, redo):
         click.echo(f"Skipping {image_path} - annotation file already exists. Use --redo to reprocess.")
         return
 
-    try:
-        # Initialize layoutparser model
-        model = lp.models.Detectron2LayoutModel('lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config')
-        
-        # Process the image
-        result = process_single_image(image_path, model)
+    # Initialize layoutparser model
+    model = lp.models.Detectron2LayoutModel('lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config')
+    
+    # Process the image
+    result = process_single_image(image_path, model)
 
-        # Output result as JSON
-        click.echo(json.dumps(result, indent=2))
+    # Output result as JSON
+    click.echo(json.dumps(result, indent=2))
 
-        # Save annotations
-        with open(output_path, 'w') as f:
-            json.dump(result, f, indent=2)
-        click.echo(f"Annotations saved to {output_path}")
-    except Exception as e:
-        click.echo(f"Error processing image: {str(e)}", err=True)
+    # Save annotations
+    with open(output_path, 'w') as f:
+        json.dump(result, f, indent=2)
+    click.echo(f"Annotations saved to {output_path}")
 
 @cli.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
