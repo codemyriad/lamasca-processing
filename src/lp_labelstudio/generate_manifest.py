@@ -14,12 +14,14 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
     total_issues: int = 0
 
     for directory in directories:
+        if directory.endswith('/'):
+            directory = directory[:-1]
         if max_issues is not None and total_issues >= max_issues:
             break
 
         publication_name: str = os.path.basename(directory)
         jpeg_files: List[str] = [f for f in os.listdir(directory) if f.lower().endswith('.jpeg')]
-        
+
         publication_pages: List[Dict[str, Any]] = []
         for jpeg_file in jpeg_files:
             image_path: str = os.path.join(directory, jpeg_file)
