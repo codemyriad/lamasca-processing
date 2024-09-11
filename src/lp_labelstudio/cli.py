@@ -2,6 +2,7 @@ import click
 import os
 import logging
 from typing import Any, Dict, List, Union
+from lp_labelstudio.generate_manifest import generate_manifest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -9,6 +10,8 @@ logger = logging.getLogger(__name__)
 @click.group()
 def cli():
     pass
+
+cli.add_command(generate_manifest)
 
 @cli.command()
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
