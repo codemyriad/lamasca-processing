@@ -2,25 +2,26 @@ import click
 import os
 import json
 from typing import List, Dict, Any
-import random
+from collections import defaultdict
 
 @click.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('-o', '--output', type=click.Path(file_okay=True, dir_okay=False), required=True, help='Output JSON manifest file')
-@click.option('-n', '--max-images', type=int, default=None, help='Maximum number of images to include')
-def generate_manifest(directories: List[str], output: str, max_images: int) -> None:
+@click.option('-n', '--max-issues', type=int, default=None, help='Maximum number of issues to include')
+def generate_manifest(directories: List[str], output: str, max_issues: int) -> None:
     """Generate a Label Studio JSON manifest file for a project, including newspaper issues with OCR/segmentation."""
-    manifest: List[Dict[str, Any]] = []
-    total_images: int = 0
+    manifest: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"name": "", "pages": []})
+    total_issues: int = 0
 
     for directory in directories:
+        if max_issues is not None and total_issues >= max_issues:
+            break
+
         issue_name: str = os.path.basename(directory)
         jpeg_files: List[str] = [f for f in os.listdir(directory) if f.lower().endswith('.jpeg')]
         
+        issue_pages: List[Dict[str, Any]] = []
         for jpeg_file in jpeg_files:
-            if max_images is not None and total_images >= max_images:
-                break
-
             image_path: str = os.path.join(directory, jpeg_file)
             json_path: str = os.path.splitext(image_path)[0] + '_annotations.json'
 
@@ -31,24 +32,25 @@ def generate_manifest(directories: List[str], output: str, max_images: int) -> N
             with open(json_path, 'r') as f:
                 annotations: Dict[str, Any] = json.load(f)
 
-            manifest_item: Dict[str, Any] = {
+            page_item: Dict[str, Any] = {
                 "image": os.path.abspath(image_path),
-                "issue": issue_name,
                 "annotations": annotations
             }
-            manifest.append(manifest_item)
-            total_images += 1
+            issue_pages.append(page_item)
 
-        if max_images is not None and total_images >= max_images:
-            break
+        if issue_pages:
+            manifest[issue_name] = {
+                "name": issue_name,
+                "pages": issue_pages
+            }
+            total_issues += 1
 
-    # Shuffle the manifest to ensure a random selection if max_images is less than total available
-    random.shuffle(manifest)
-    if max_images is not None:
-        manifest = manifest[:max_images]
+    # Convert defaultdict to regular dict for JSON serialization
+    manifest_list = list(manifest.values())
 
     with open(output, 'w') as f:
-        json.dump(manifest, f, indent=2)
+        json.dump(manifest_list, f, indent=2)
 
     click.echo(click.style(f"Manifest file generated: {output}", fg="green"))
-    click.echo(click.style(f"Total images included: {len(manifest)}", fg="green"))
+    click.echo(click.style(f"Total issues included: {len(manifest_list)}", fg="green"))
+    click.echo(click.style(f"Total pages included: {sum(len(issue['pages']) for issue in manifest_list)}", fg="green"))
