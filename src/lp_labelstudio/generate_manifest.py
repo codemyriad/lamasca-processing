@@ -56,3 +56,6 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
     click.echo(click.style(f"Manifest file generated: {output}", fg="green"))
     click.echo(click.style(f"Total issues included: {len(manifest_list)}", fg="green"))
     click.echo(click.style(f"Total pages included: {sum(len(issue['pages']) for issue in manifest_list)}", fg="green"))
+def read_xml_file(file_path: str) -> str:
+    with open(file_path, 'r') as file:
+        return file.read()
