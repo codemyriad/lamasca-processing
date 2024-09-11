@@ -10,7 +10,10 @@ from collections import defaultdict
 @click.option('-n', '--max-issues', type=int, default=None, help='Maximum number of issues to include')
 def generate_manifest(directories: List[str], output: str, max_issues: int) -> None:
     """Generate a Label Studio JSON manifest file for a project, including newspaper issues with OCR/segmentation."""
-    manifest: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"name": "", "pages": []})
+    manifest: Dict[str, Any] = {
+        "publications": defaultdict(lambda: {"name": "", "pages": []}),
+        "ui_xml": read_xml_file(os.path.join(os.path.dirname(__file__), 'ui.xml'))
+    }
     total_issues: int = 0
 
     for directory in directories:
@@ -41,21 +44,21 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
             publication_pages.append(page_item)
 
         if publication_pages:
-            manifest[publication_name] = {
+            manifest["publications"][publication_name] = {
                 "name": publication_name,
                 "pages": publication_pages
             }
             total_issues += 1
 
     # Convert defaultdict to regular dict for JSON serialization
-    manifest_list = list(manifest.values())
+    manifest["publications"] = dict(manifest["publications"])
 
     with open(output, 'w') as f:
-        json.dump(manifest_list, f, indent=2)
+        json.dump(manifest, f, indent=2)
 
     click.echo(click.style(f"Manifest file generated: {output}", fg="green"))
-    click.echo(click.style(f"Total issues included: {len(manifest_list)}", fg="green"))
-    click.echo(click.style(f"Total pages included: {sum(len(issue['pages']) for issue in manifest_list)}", fg="green"))
+    click.echo(click.style(f"Total issues included: {len(manifest['publications'])}", fg="green"))
+    click.echo(click.style(f"Total pages included: {sum(len(issue['pages']) for issue in manifest['publications'].values())}", fg="green"))
 def read_xml_file(file_path: str) -> str:
     with open(file_path, 'r') as file:
         return file.read()
