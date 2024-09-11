@@ -57,12 +57,13 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
                 "comment_authors": []
             }
 
-            # Add the first annotation from the JSON file
-            if annotations:
+            # Add the first annotation from the JSON file if it exists
+            if annotations and len(annotations) > 0:
+                first_annotation = annotations[0]
                 task_item["annotations"].append({
                     "id": 1,
                     "completed_by": 1,
-                    "result": annotations[0]["result"] if "result" in annotations[0] else [],
+                    "result": first_annotation.get("result", []),
                     "was_cancelled": False,
                     "ground_truth": False,
                     "created_at": "",
@@ -77,6 +78,8 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
                     "parent_annotation": None
                 })
                 task_item["total_annotations"] = 1
+            else:
+                click.echo(click.style(f"Warning: No annotations found for {image_path}", fg="yellow"))
 
             manifest.append(task_item)
 
