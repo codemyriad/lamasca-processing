@@ -17,10 +17,10 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
         if max_issues is not None and total_issues >= max_issues:
             break
 
-        issue_name: str = os.path.basename(directory)
+        publication_name: str = os.path.basename(directory)
         jpeg_files: List[str] = [f for f in os.listdir(directory) if f.lower().endswith('.jpeg')]
         
-        issue_pages: List[Dict[str, Any]] = []
+        publication_pages: List[Dict[str, Any]] = []
         for jpeg_file in jpeg_files:
             image_path: str = os.path.join(directory, jpeg_file)
             json_path: str = os.path.splitext(image_path)[0] + '_annotations.json'
@@ -36,12 +36,12 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
                 "image": os.path.abspath(image_path),
                 "annotations": annotations
             }
-            issue_pages.append(page_item)
+            publication_pages.append(page_item)
 
-        if issue_pages:
-            manifest[issue_name] = {
-                "name": issue_name,
-                "pages": issue_pages
+        if publication_pages:
+            manifest[publication_name] = {
+                "name": publication_name,
+                "pages": publication_pages
             }
             total_issues += 1
 
