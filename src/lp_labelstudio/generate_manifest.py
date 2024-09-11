@@ -33,6 +33,7 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
             with open(json_path, 'r') as f:
                 predictions: Dict[str, Any] = json.load(f)["annotations"]
 
+            image_url: str = image_path.replace("/tmp/newspapers", "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers")
             task_item: Dict[str, Any] = {
                 "id": len(manifest) + 1,
                 "annotations": [],
@@ -40,7 +41,7 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
                 "drafts": [],
                 "predictions": [],
                 "data": {
-                    "ocr": os.path.abspath(image_path)
+                    "ocr": image_url
                 },
                 "meta": {},
                 "created_at": "",
