@@ -41,36 +41,37 @@ def process_image(image_path: str, redo: bool) -> None:
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
 def process_newspaper(directory: str, redo: bool) -> None:
-    """Process newspaper pages (JPEG images) in a directory using layoutparser and convert to Label Studio format."""
+    """Process newspaper pages (JPEG images) recursively in a directory using layoutparser and convert to Label Studio format."""
     import json
     import layoutparser as lp  # type: ignore
     from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH
     from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 
-    logger.info(f"Processing newspaper pages in directory: {directory}")
+    logger.info(f"Processing newspaper pages recursively in directory: {directory}")
     model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
 
-    for filename in os.listdir(directory):
-        if filename.lower().endswith(JPEG_EXTENSION):
-            image_path = os.path.join(directory, filename)
-            output_path = os.path.splitext(image_path)[0] + '_annotations.json'
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            if filename.lower().endswith(JPEG_EXTENSION):
+                image_path = os.path.join(root, filename)
+                output_path = os.path.splitext(image_path)[0] + '_annotations.json'
 
-            if os.path.exists(output_path) and not redo:
-                click.echo(click.style(f"Skipped {image_path} (annotation file exists)", fg="yellow"))
-                continue
+                if os.path.exists(output_path) and not redo:
+                    click.echo(click.style(f"Skipped {image_path} (annotation file exists)", fg="yellow"))
+                    continue
 
-            click.echo(click.style(f"Processing {image_path}...", fg="blue"))
+                click.echo(click.style(f"Processing {image_path}...", fg="blue"))
 
-            layout = process_single_image(image_path, model)
-            img_width, img_height = get_image_size(image_path)
-            label_studio_data = convert_to_label_studio_format(layout, img_width, img_height, filename)
-            
-            with open(output_path, 'w') as f:
-                json.dump(label_studio_data, f, indent=2)
-            logger.info(f"Annotations saved to {output_path}")
+                layout = process_single_image(image_path, model)
+                img_width, img_height = get_image_size(image_path)
+                label_studio_data = convert_to_label_studio_format(layout, img_width, img_height, filename)
+                
+                with open(output_path, 'w') as f:
+                    json.dump(label_studio_data, f, indent=2)
+                logger.info(f"Annotations saved to {output_path}")
 
-            summary = generate_summary(image_path, layout, output_path)
-            click.echo(summary)
+                summary = generate_summary(image_path, layout, output_path)
+                click.echo(summary)
 
     click.echo(click.style("Processing complete.", fg="green"))
 
