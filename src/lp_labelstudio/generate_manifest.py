@@ -31,7 +31,7 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
                 continue
 
             with open(json_path, 'r') as f:
-                annotations: Dict[str, Any] = json.load(f)
+                predictions: Dict[str, Any] = json.load(f)["annotations"]
 
             task_item: Dict[str, Any] = {
                 "id": len(manifest) + 1,
@@ -58,12 +58,12 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
             }
 
             # Add the first annotation from the JSON file if it exists
-            if annotations and len(annotations) > 0:
-                first_annotation = annotations[0]
-                task_item["annotations"].append({
+            if predictions and len(predictions) > 0:
+                first_prediction = predictions[0]
+                task_item["predictions"].append({
                     "id": 1,
                     "completed_by": 1,
-                    "result": first_annotation.get("result", []),
+                    "result": first_prediction.get("result", []),
                     "was_cancelled": False,
                     "ground_truth": False,
                     "created_at": "",
@@ -77,7 +77,7 @@ def generate_manifest(directories: List[str], output: str, max_issues: int) -> N
                     "parent_prediction": None,
                     "parent_annotation": None
                 })
-                task_item["total_annotations"] = 1
+                task_item["total_predictions"] = 1
             else:
                 click.echo(click.style(f"Warning: No annotations found for {image_path}", fg="yellow"))
 

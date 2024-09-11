@@ -107,3 +107,6 @@ urllib3==2.2.2
 Werkzeug==3.0.4
 yacs==0.1.8
 zipp==3.20.1
+
+types-Pillow
+types-click

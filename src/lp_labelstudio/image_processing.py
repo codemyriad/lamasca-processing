@@ -73,6 +73,6 @@ def convert_to_label_studio_format(layout: List[Dict[str, Any]], img_width: int,
         annotations.append(annotation)
 
     return {
-        "data": {"image": filename},
-        "annotations": [{"result": annotations}]
+        "data": {"ocr": filename},
+        "predictions": [annotations],
     }
