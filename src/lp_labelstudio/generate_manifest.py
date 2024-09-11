@@ -32,7 +32,7 @@ def generate_manifest(directories: List[str], output: str, max_images: int) -> N
                 annotations: Dict[str, Any] = json.load(f)
 
             manifest_item: Dict[str, Any] = {
-                "image": os.path.relpath(image_path, start=os.path.commonprefix(directories)),
+                "image": os.path.abspath(image_path),
                 "issue": issue_name,
                 "annotations": annotations
             }
