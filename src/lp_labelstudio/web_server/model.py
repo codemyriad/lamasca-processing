@@ -1,53 +1,77 @@
 from typing import List, Dict, Optional
 from label_studio_ml.model import LabelStudioMLBase
 from label_studio_ml.response import ModelResponse
+from flask import Flask, request, jsonify
+import layoutparser as lp
+from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH
+from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
+import logging
+import requests
+from io import BytesIO
+from PIL import Image
+import tempfile
+import os
+from functools import lru_cache
 
+app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class NewModel(LabelStudioMLBase):
-    """Custom ML Backend model
-    """
+    """Custom ML Backend model"""
     
     def setup(self):
-        """Configure any parameters of your model here
-        """
+        """Configure any parameters of your model here"""
         self.set("model_version", "0.0.1")
+        try:
+            self.model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
+            logger.info("ML model initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize ML model: {str(e)}")
+            self.model = None
+
+    def download_image(self, url):
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            return Image.open(BytesIO(response.content))
+        except Exception as e:
+            logger.error(f"Failed to download image from {url}: {str(e)}")
+            raise
+
+    @lru_cache(maxsize=100)
+    def get_cached_predictions(self, image_url):
+        # This function caches predictions for the last 100 unique image URLs
+        image = self.download_image(image_url)
+        img_width, img_height = image.size
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+            image.save(tmp_file, format='JPEG')
+            tmp_file_path = tmp_file.name
+            layout = process_single_image(tmp_file_path, self.model)
+
+        return convert_to_label_studio_format(layout, img_width, img_height, image_url)
 
     def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> ModelResponse:
-        """ Write your inference logic here
-            :param tasks: [Label Studio tasks in JSON format](https://labelstud.io/guide/task_format.html)
-            :param context: [Label Studio context in JSON format](https://labelstud.io/guide/ml_create#Implement-prediction-logic)
-            :return model_response
-                ModelResponse(predictions=predictions) with
-                predictions: [Predictions array in JSON format](https://labelstud.io/guide/export.html#Label-Studio-JSON-format-of-annotated-tasks)
-        """
-        print(f'''\
-        Run prediction on {tasks}
-        Received context: {context}
-        Project ID: {self.project_id}
-        Label config: {self.label_config}
-        Parsed JSON Label config: {self.parsed_label_config}
-        Extra params: {self.extra_params}''')
+        """Write your inference logic here"""
+        predictions = []
+        for task in tasks:
+            image_url = task['data']['image']
+            logger.info(f"Processing image: {image_url}")
 
-        # example for resource downloading from Label Studio instance,
-        # you need to set env vars LABEL_STUDIO_URL and LABEL_STUDIO_API_KEY
-        # path = self.get_local_path(tasks[0]['data']['image_url'], task_id=tasks[0]['id'])
+            try:
+                if self.model is None:
+                    raise Exception("ML model not initialized")
 
-        # example for simple classification
-        # return [{
-        #     "model_version": self.get("model_version"),
-        #     "score": 0.12,
-        #     "result": [{
-        #         "id": "vgzE336-a8",
-        #         "from_name": "sentiment",
-        #         "to_name": "text",
-        #         "type": "choices",
-        #         "value": {
-        #             "choices": [ "Negative" ]
-        #         }
-        #     }]
-        # }]
-        
-        return ModelResponse(predictions=[])
+                annotations = self.get_cached_predictions(image_url)
+                predictions.extend(annotations)
+
+                logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+            except Exception as e:
+                logger.error(f"Error processing image {image_url}: {str(e)}")
+                return ModelResponse(predictions=[], errors=[str(e)])
+
+        return ModelResponse(predictions=predictions)
     
     def fit(self, event, data, **kwargs):
         """
