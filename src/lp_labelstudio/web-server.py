@@ -26,21 +26,17 @@ def predict():
 
     logger.info(f"Processing image: {image_url}")
 
-    try:
-        # Download and process the image
-        image = download_image(image_url)
-        layout = process_single_image(image, model)
-        img_width, img_height = image.size
-        
-        # Convert to Label Studio format
-        annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
+    # Download and process the image
+    image = download_image(image_url)
+    layout = process_single_image(image, model)
+    img_width, img_height = image.size
 
-        logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+    # Convert to Label Studio format
+    annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
 
-        return jsonify(annotations)
-    except Exception as e:
-        logger.error(f"Error processing image {image_url}: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+
+    return jsonify(annotations)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
