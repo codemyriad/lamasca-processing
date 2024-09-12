@@ -1,28 +1,12 @@
 .aider*
 
-# Ignore everything
-*
-
-# But don't ignore these files and directories
-!.gitignore
-!README.md
-!requirements.txt
-!setup.py
-!scripts/
-!src/
-!src/**
-!INSPIRATION.rst
 
 # Ignore specific files and directories within src/
 src/**/__pycache__/
 src/**/*.egg-info/
 
-# Don't ignore ui.xml
-!src/lp_labelstudio/ui.xml
 
 # Ignore build and dist directories
 build/
 dist/
 
-# Ignore get-pip.py
-get-pip.py

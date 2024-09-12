@@ -1,0 +1,27 @@
+<View>
+  <View style="display:flex;align-items:start;gap:8px;flex-direction:row-reverse">
+
+    <Image name="image" value="$ocr" zoom="true" zoomControl="true" rotateControl="false"/><Labels name="label" toName="image" showInline="false">
+    <Label value="Text" background="green"/>
+    <Label value="Title" background="#FFA39E"/>
+    <Label value="SubTitle" background="#FFA39E"/><Label value="Ad" background="#dc8add"/>
+    </Labels>
+  </View>
+  <Rectangle name="bbox" toName="image" strokeWidth="3"/>
+  <Polygon name="poly" toName="image" strokeWidth="3"/>
+
+  <Relations name="relations" toName="label">
+    <Relation value="Flow"/>
+    <Relation value="Title of"/>
+  </Relations>
+
+    <TextArea name="transcription" toName="image"
+            editable="true"
+            perRegion="true"
+            required="false"
+            maxSubmissions="1"
+            rows="5"
+            placeholder="Recognized Text"
+            displayMode="region-list"
+            />
+</View>
