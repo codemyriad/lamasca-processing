@@ -17,6 +17,7 @@ setup(
         'numpy',
         'paddlepaddle',
         'paddleocr>=2.0.1',
+        'jdeskew',
     ],
     entry_points={
         'console_scripts': [
