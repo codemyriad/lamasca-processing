@@ -7,10 +7,13 @@ import sys
 from PIL import Image
 import io
 import logging
+import numpy as np
+from jdeskew.estimator import get_angle
+from jdeskew.utility import rotate
 
 def extract_images(input_pdf: Path, output_dir: Path, force: bool=False):
     """
-    Extract images from a PDF file, rotate them 180 degrees, and save them in grayscale.
+    Extract images from a PDF file, rotate them 180 degrees, deskew, and save them in grayscale.
 
     input_pdf: Path to the input PDF file
     output_dir: Directory to save the output images
@@ -45,12 +48,18 @@ def extract_images(input_pdf: Path, output_dir: Path, force: bool=False):
                 img = img.rotate(page.rotation)
             img = img.convert('L')
 
+            # Deskew
+            img_array = np.array(img)
+            angle = get_angle(img_array)
+            img_array = rotate(img_array, angle)
+            img = Image.fromarray(img_array)
+
             img.save(output_path)
 
-            logging.info(f'Extracted and processed page {page_num:02d} as {output_path}')
+            logging.info(f'Extracted, processed, and deskewed page {page_num:02d} as {output_path} (skew angle: {angle:.2f} degrees)')
 
     doc.close()
-    logging.info(f'PDF image extraction, rotation, and grayscale conversion completed.')
+    logging.info(f'PDF image extraction, rotation, deskewing, and grayscale conversion completed.')
 
 @click.command()
 @click.argument('input_pdf', type=click.Path(exists=True, path_type=Path))
