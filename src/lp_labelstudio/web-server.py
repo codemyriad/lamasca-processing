@@ -28,29 +28,21 @@ def predict():
 
     logger.info(f"Processing image: {image_url}")
 
-    try:
-        # Download the image
-        image = download_image(image_url)
-        
-        # Save the image to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-            image.save(tmp_file, format='JPEG')
-            tmp_file_path = tmp_file.name
+    image = download_image(image_url)
+    img_width, img_height = image.size
 
-        # Process the image
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+        image.save(tmp_file, format='JPEG')
+        tmp_file_path = tmp_file.name
+        import pdb; pdb.set_trace()
         layout = process_single_image(tmp_file_path, model)
-        img_width, img_height = image.size
 
-        # Convert to Label Studio format
-        annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
+    annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
 
-        logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+    logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
 
-        return jsonify(annotations)
-    finally:
-        # Clean up the temporary file
-        if 'tmp_file_path' in locals():
-            os.unlink(tmp_file_path)
+    return jsonify(annotations)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
