@@ -19,6 +19,7 @@ setup(
         'paddleocr>=2.0.1',
         'jdeskew',
         'PyMuPDF',
+        'Flask',
     ],
     entry_points={
         'console_scripts': [
