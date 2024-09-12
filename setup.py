@@ -20,6 +20,7 @@ setup(
         'jdeskew',
         'PyMuPDF',
         'Flask',
+        'requests',
     ],
     entry_points={
         'console_scripts': [

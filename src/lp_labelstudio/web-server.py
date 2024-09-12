@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
 
 def download_image(url):
-    response = requests.get(url)
+    response = requests.get(url, stream=True)
+    response.raise_for_status()  # Raise an exception for bad responses
     return Image.open(BytesIO(response.content))
 
 @app.route('/predict', methods=['POST'])
@@ -25,17 +26,21 @@ def predict():
 
     logger.info(f"Processing image: {image_url}")
 
-    # Download and process the image
-    image = download_image(image_url)
-    layout = process_single_image(image, model)
-    img_width, img_height = image.size
-    
-    # Convert to Label Studio format
-    annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
+    try:
+        # Download and process the image
+        image = download_image(image_url)
+        layout = process_single_image(image, model)
+        img_width, img_height = image.size
+        
+        # Convert to Label Studio format
+        annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
 
-    logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+        logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
 
-    return jsonify(annotations)
+        return jsonify(annotations)
+    except Exception as e:
+        logger.error(f"Error processing image {image_url}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
