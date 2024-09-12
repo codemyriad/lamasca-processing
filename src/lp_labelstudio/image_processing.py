@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 ocr: PaddleOCR = PaddleOCR(lang='it')
 
 def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel) -> List[Dict[str, Any]]:
-    if not image_path.lower().endswith(JPEG_EXTENSION):
-        raise ValueError(f"The file '{image_path}' is not a JPEG image.")
-
     logger.info(f"Processing image: {image_path}")
     image: Image.Image = Image.open(image_path)
     layout: List[lp.elements.layout_element.BaseLayoutElement] = model.detect(image)
