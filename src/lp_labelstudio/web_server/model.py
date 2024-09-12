@@ -19,16 +19,12 @@ logger = logging.getLogger(__name__)
 
 class NewModel(LabelStudioMLBase):
     """Custom ML Backend model"""
-    
+
     def setup(self):
         """Configure any parameters of your model here"""
         self.set("model_version", "0.0.1")
-        try:
-            self.model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
-            logger.info("ML model initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize ML model: {str(e)}")
-            self.model = None
+        self.model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
+        logger.info("ML model initialized successfully")
 
     def download_image(self, url):
         try:
@@ -55,24 +51,23 @@ class NewModel(LabelStudioMLBase):
     def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> ModelResponse:
         """Write your inference logic here"""
         predictions = []
+
         for task in tasks:
-            image_url = task['data']['image']
+            image_url = task['data']['ocr']
             logger.info(f"Processing image: {image_url}")
 
-            try:
-                if self.model is None:
-                    raise Exception("ML model not initialized")
+            if self.model is None:
+                raise Exception("ML model not initialized")
 
-                annotations = self.get_cached_predictions(image_url)
-                predictions.extend(annotations)
+            annotations = self.get_cached_predictions(image_url)
+            predictions.append([{
+                "result": annotations["predictions"][0],
+            }])
 
-                logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
-            except Exception as e:
-                logger.error(f"Error processing image {image_url}: {str(e)}")
-                return ModelResponse(predictions=[], errors=[str(e)])
+            logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+        response = ModelResponse(predictions=predictions)
+        return response
 
-        return ModelResponse(predictions=predictions)
-    
     def fit(self, event, data, **kwargs):
         """
         This method is called each time an annotation is created or updated
@@ -96,4 +91,3 @@ class NewModel(LabelStudioMLBase):
         print(f'New model version: {self.get("model_version")}')
 
         print('fit() completed successfully.')
-
