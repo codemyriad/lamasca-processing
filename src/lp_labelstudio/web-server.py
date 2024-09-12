@@ -3,6 +3,9 @@ import layoutparser as lp
 from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH
 from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 import logging
+import requests
+from io import BytesIO
+from PIL import Image
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -11,6 +14,10 @@ logger = logging.getLogger(__name__)
 # Initialize the model
 model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
 
+def download_image(url):
+    response = requests.get(url)
+    return Image.open(BytesIO(response.content))
+
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
@@ -18,9 +25,10 @@ def predict():
 
     logger.info(f"Processing image: {image_url}")
 
-    # Process the image
-    layout = process_single_image(image_url, model)
-    img_width, img_height = get_image_size(image_url)
+    # Download and process the image
+    image = download_image(image_url)
+    layout = process_single_image(image, model)
+    img_width, img_height = image.size
     
     # Convert to Label Studio format
     annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
