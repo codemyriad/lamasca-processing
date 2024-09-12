@@ -6,6 +6,8 @@ import logging
 import requests
 from io import BytesIO
 from PIL import Image
+import tempfile
+import os
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -26,17 +28,29 @@ def predict():
 
     logger.info(f"Processing image: {image_url}")
 
-    # Download and process the image
-    image = download_image(image_url)
-    layout = process_single_image(image, model)
-    img_width, img_height = image.size
+    try:
+        # Download the image
+        image = download_image(image_url)
+        
+        # Save the image to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+            image.save(tmp_file, format='JPEG')
+            tmp_file_path = tmp_file.name
 
-    # Convert to Label Studio format
-    annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
+        # Process the image
+        layout = process_single_image(tmp_file_path, model)
+        img_width, img_height = image.size
 
-    logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+        # Convert to Label Studio format
+        annotations = convert_to_label_studio_format(layout, img_width, img_height, image_url)
 
-    return jsonify(annotations)
+        logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+
+        return jsonify(annotations)
+    finally:
+        # Clean up the temporary file
+        if 'tmp_file_path' in locals():
+            os.unlink(tmp_file_path)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
