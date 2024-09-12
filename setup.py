@@ -21,6 +21,8 @@ setup(
         'PyMuPDF',
         'Flask',
         'requests',
+        'gunicorn==22.0.0',
+        'label-studio-ml @ git+https://github.com/HumanSignal/label-studio-ml-backend.git'
     ],
     entry_points={
         'console_scripts': [
