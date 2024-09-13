@@ -6,38 +6,29 @@ from pathlib import Path
 from collections import defaultdict
 
 def get_image_url(image_path: str) -> str:
-    """
-    Convert local image path to a URL for the image in cloud storage.
+    """Convert local image path to cloud storage URL.
 
-    Args:
-    image_path (str): Local path to the image file.
-
-    Returns:
-    str: URL for the image in cloud storage.
+    Example:
+    >>> get_image_url("/tmp/newspapers/image.jpg")
+    'https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers/image.jpg'
     """
     return image_path.replace("/tmp/newspapers", "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers")
 
 def get_page_number(jpeg_file: str) -> int:
-    """
-    Extract page number from the JPEG filename.
+    """Extract page number from JPEG filename.
 
-    Args:
-    jpeg_file (str): Name of the JPEG file.
-
-    Returns:
-    int: Page number extracted from the filename.
+    Example:
+    >>> get_page_number("page_01.jpeg")
+    1
     """
     return int(jpeg_file.split(".")[0].replace("page_", ""))
 
 def get_date(directory: str) -> str:
-    """
-    Extract date from the directory name.
+    """Extract date from directory name.
 
-    Args:
-    directory (str): Path to the directory containing the images.
-
-    Returns:
-    str: Date extracted from the directory name.
+    Example:
+    >>> get_date("/path/to/lamasca-2023-05-15")
+    '2023-05-15'
     """
     return directory.split('/')[-1].replace("lamasca-", "")
 
