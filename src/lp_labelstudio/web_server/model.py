@@ -11,7 +11,9 @@ from io import BytesIO
 from PIL import Image
 import tempfile
 import os
+import json
 from functools import lru_cache
+
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -65,6 +67,7 @@ class NewModel(LabelStudioMLBase):
             }])
 
             logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
+        logger.warn(f"Results:\n{json.dumps(predictions, indent=2)}")
         response = ModelResponse(predictions=predictions)
         return response
 

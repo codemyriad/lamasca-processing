@@ -1,27 +1,60 @@
 <View>
-  <View style="display:flex;align-items:start;gap:8px;flex-direction:row-reverse">
+    <View
+    style="display:flex;align-items:start;gap:8px;flex-direction:row-reverse"
+  >
 
-    <Image name="image" value="$ocr" zoom="true" zoomControl="true" rotateControl="false"/><Labels name="label" toName="image" showInline="false">
-    <Label value="Text" background="green"/>
-    <Label value="Title" background="#FFA39E"/>
-    <Label value="SubTitle" background="#FFA39E"/><Label value="Ad" background="#dc8add"/>
-    </Labels>
-  </View>
-  <Rectangle name="bbox" toName="image" strokeWidth="3"/>
-  <Polygon name="poly" toName="image" strokeWidth="3"/>
+        <!-- Image view with options -->
+        <Image name="image" value="$ocr" zoom="true" zoomControl="true" />
 
-  <Relations name="relations" toName="label">
-    <Relation value="Flow"/>
-    <Relation value="Title of"/>
-  </Relations>
+        <!-- Labels to mark different sections on the image -->
+        <Labels name="label" toName="image" showInline="false">
+        <Label value="Text" background="green" />
+        <Label value="Title" background="#FF3370" />
+        <Label value="SubTitle" background="#FFA39E" />
+        <Label value="Author" background="#22BBFF" />
+        <Label value="Ad" background="#dc8add" />
+        <Label value="PageNumber" background="#cCF910" />
+        <Label value="Date" background="#FFCC00" />
+        <Label value="PageTitle" background="#cF9910" />
+        </Labels>
 
-    <TextArea name="transcription" toName="image"
-            editable="true"
-            perRegion="true"
-            required="false"
-            maxSubmissions="1"
-            rows="5"
-            placeholder="Recognized Text"
-            displayMode="region-list"
-            />
-</View>
+    </View>
+
+    <!-- Tools for defining regions -->
+    <Rectangle name="bbox" toName="image" strokeWidth="3" />
+
+    <!-- Defining relationships between regions -->
+    <Relations name="relations" toName="label">
+        <Relation value="Flow" />
+        <Relation value="Title of" />
+    </Relations>
+
+    <!-- Text area for transcription and metadata capture -->
+    <TextArea
+    name="text"
+    toName="image"
+    editable="true"
+    perRegion="true"
+    required="false"
+    maxSubmissions="1"
+    rows="5"
+    placeholder="Recognized Text"
+    displayMode="region-list"
+  />
+
+    <!-- Fields for page metadata input -->
+    <Header value="Page Information" />
+    <Text
+    name="page_number"
+    value="$pageNumber"
+    placeholder="Enter page number here"
+    label="Page Number"
+  />
+    <Text
+    name="date"
+    value="$date"
+    placeholder="Enter date here"
+    label="Date"
+  />
+
+    </View>
