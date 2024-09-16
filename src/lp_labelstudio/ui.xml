@@ -35,6 +35,9 @@
         <Label value="Map" background="#FF3370" />
     </Labels>
 
+        <!-- Add the OCR button here -->
+        <HyperText name="ocr_button" value="$ocr_button"/>
+
     </View>
 
     <!-- Tools for defining regions -->
