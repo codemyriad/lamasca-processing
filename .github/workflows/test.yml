@@ -1,2 +1,29 @@
-# Test jobs
-#
+name: Run Install Script
+
+on:
+  push:
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Run install script
+        run: ./install.sh
+
+      - name: "Smoke test: try to annotate some images"
+        run: lp-labelstudio process-newspaper --redo src/lp_labelstudio/web_server/test_images/
+
+      - name: Show results for page 1
+        run: cat src/lp_labelstudio/web_server/test_images/page_01_annotations.json|jq -C
+
+      - name: Show results for page 2
+        run: cat src/lp_labelstudio/web_server/test_images/page_02_annotations.json|jq -C
