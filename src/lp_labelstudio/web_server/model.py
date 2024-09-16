@@ -9,7 +9,7 @@ from typing import List, Dict, Optional
 from requests_file import FileAdapter
 from label_studio_ml.model import LabelStudioMLBase
 import layoutparser as lp
-from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH
+from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
 from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 import logging
 import requests
@@ -30,7 +30,7 @@ class LayoutParserModel(LabelStudioMLBase):
     def setup(self):
         """Configure any parameters of your model here"""
         self.set("model_version", "0.0.1")
-        self.model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
+        self.model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP)
         logger.info("ML model initialized successfully")
 
     def download_image(self, url):

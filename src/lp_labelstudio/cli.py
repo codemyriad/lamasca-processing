@@ -20,7 +20,7 @@ def process_image(image_path: str, redo: bool) -> None:
     """Process a single JPEG image using layoutparser."""
     import json
     import layoutparser as lp  # type: ignore
-    from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH
+    from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
     from lp_labelstudio.image_processing import process_single_image, get_image_size
 
     output_path = os.path.splitext(image_path)[0] + '_annotations.json'
@@ -30,9 +30,9 @@ def process_image(image_path: str, redo: bool) -> None:
 
     click.echo(click.style(f"Processing {image_path}...", fg="blue"))
 
-    model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
+    model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP)
     result: List[Dict[str, Any]] = process_single_image(image_path, model)
-    
+
     with open(output_path, 'w') as f:
         json.dump({"result": result}, f, indent=2)
     logger.info(f"Annotations saved to {output_path}")
@@ -47,11 +47,11 @@ def process_newspaper(directory: str, redo: bool) -> None:
     """Process newspaper pages (JPEG images) recursively in a directory using layoutparser and convert to Label Studio format."""
     import json
     import layoutparser as lp  # type: ignore
-    from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH
+    from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
     from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 
     logger.info(f"Processing newspaper pages recursively in directory: {directory}")
-    model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
+    model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP)
 
     for root, _, files in os.walk(directory):
         for filename in files:
@@ -68,7 +68,7 @@ def process_newspaper(directory: str, redo: bool) -> None:
                 layout = process_single_image(image_path, model)
                 img_width, img_height = get_image_size(image_path)
                 label_studio_data = convert_to_label_studio_format(layout, img_width, img_height, filename)
-                
+
                 with open(output_path, 'w') as f:
                     json.dump(label_studio_data, f, indent=2)
                 logger.info(f"Annotations saved to {output_path}")

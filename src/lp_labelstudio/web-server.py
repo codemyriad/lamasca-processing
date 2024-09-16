@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import layoutparser as lp
-from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH
+from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
 from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 import logging
 import requests
@@ -15,12 +15,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize the model
-try:
-    model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH)
-    logger.info("ML model initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize ML model: {str(e)}")
-    model = None
+model = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP)
+logger.info("ML model initialized successfully")
+
 
 def download_image(url):
     try:

@@ -4,7 +4,8 @@ on:
   push:
 
 jobs:
-  install:
+  smoketest:
+    name: Smoke test
     runs-on: ubuntu-latest
 
     steps:
