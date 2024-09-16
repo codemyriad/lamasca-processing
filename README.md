@@ -66,15 +66,3 @@ lp-labelstudio process-newspaper /tmp/newspapers/lamasca-pages/1994/lamasca-1994
 ```
 
 This command will process all PNG images in the specified directory, treating them as newspaper pages. It will generate annotation JSON files next to each image, including OCR results for each detected block.
-
-## Note
-
-If you encounter issues with PyMuPDF installation, you can still use the core functionality of this project. PyMuPDF is only required for processing PDF files. If you don't need PDF support, you can ignore any PyMuPDF-related errors during installation.
-
-## Contributing
-
-[Add contribution guidelines here]
-
-## License
-
-[Add license information here]

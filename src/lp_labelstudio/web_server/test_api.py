@@ -1,24 +1,14 @@
-"""
-This file contains tests for the API of your model. You can run these tests by installing test requirements:
-
-    ```bash
-    pip install -r requirements-test.txt
-    ```
-Then execute `pytest` in the directory of this file.
-
-- Change `NewModel` to the name of the class in your model.py file.
-- Change the `request` and `expected_response` variables to match the input and output of your model.
-"""
-
 import pytest
 import json
-from model import NewModel
+import os
+from lp_labelstudio.constants import UI_CONFIG_XML
 
 
 @pytest.fixture
 def client():
+    from model import LayoutParserModel
     from _wsgi import init_app
-    app = init_app(model_class=NewModel)
+    app = init_app(model_class=LayoutParserModel)
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
@@ -26,13 +16,36 @@ def client():
 
 def test_predict(client):
     request = {
-        'tasks': [{
-            'data': {
-                # Your input test data here
-            }
-        }],
+        'tasks': [
+          {
+            "id": 51,
+            "data": {
+              "ocr": get_full_path("page_01.jpeg"),
+              "pageNumber": 1,
+              "date": "1994-01-12"
+            },
+            "meta": {},
+            "created_at": "2024-09-13T08:27:19.965258Z",
+            "updated_at": "2024-09-13T08:27:19.965294Z",
+            "is_labeled": False,
+            "overlap": 1,
+            "inner_id": 14,
+            "total_annotations": 0,
+            "cancelled_annotations": 0,
+            "total_predictions": 0,
+            "comment_count": 0,
+            "unresolved_comment_count": 0,
+            "last_comment_updated_at": None,
+            "project": 6,
+            "updated_by": None,
+            "file_upload": 15,
+            "comment_authors": [],
+            "annotations": [],
+            "predictions": []
+          }
+        ],
         # Your labeling configuration here
-        'label_config': '<View></View>'
+        'label_config': UI_CONFIG_XML
     }
 
     expected_response = {
@@ -45,3 +58,7 @@ def test_predict(client):
     assert response.status_code == 200
     response = json.loads(response.data)
     assert response == expected_response
+
+
+def get_full_path(filename):
+    return "file://" + os.path.join(os.path.dirname(__file__), 'test_images', filename)

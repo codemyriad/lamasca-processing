@@ -20,11 +20,8 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
 
     result: List[Dict[str, Any]] = []
     for i, block in enumerate(layout):
-        coordinates = block.block.coordinates
-        bbox: List[float] = list(coordinates)
-
         # Perform OCR on the block
-        crop: Image.Image = image.crop(tuple(map(int, bbox)))
+        crop: Image.Image = image.crop(tuple(map(int, block.block.coordinates)))
         ocr_result: List[List[Tuple[List[List[int]], Tuple[str, float]]]] = ocr.ocr(np.array(crop), cls=False)
 
         if ocr_result is None or not ocr_result[0]:
@@ -36,7 +33,7 @@ def process_single_image(image_path: str, model: lp.models.Detectron2LayoutModel
         result.append({
             'type': block.type,
             'score': float(block.score),
-            'bbox': bbox,
+            'bbox': block.block.coordinates,
             'text': text.strip()  # Add the OCR text to the result
         })
 

@@ -1,4 +1,5 @@
 from typing import List, Dict, Optional
+from requests_file import FileAdapter
 from label_studio_ml.model import LabelStudioMLBase
 from label_studio_ml.response import ModelResponse
 from flask import Flask, request, jsonify
@@ -19,7 +20,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NewModel(LabelStudioMLBase):
+class LayoutParserModel(LabelStudioMLBase):
     """Custom ML Backend model"""
 
     def setup(self):
@@ -29,13 +30,11 @@ class NewModel(LabelStudioMLBase):
         logger.info("ML model initialized successfully")
 
     def download_image(self, url):
-        try:
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-            return Image.open(BytesIO(response.content))
-        except Exception as e:
-            logger.error(f"Failed to download image from {url}: {str(e)}")
-            raise
+        session = requests.Session()
+        session.mount("file://", FileAdapter())
+        response = session.get(url, stream=True)
+        response.raise_for_status()
+        return Image.open(BytesIO(response.content))
 
     @lru_cache(maxsize=100)
     def get_cached_predictions(self, image_url):
@@ -52,6 +51,7 @@ class NewModel(LabelStudioMLBase):
 
     def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> ModelResponse:
         """Write your inference logic here"""
+        logger.warn(f"TASKS:\n{json.dumps(tasks, indent=2)}")
         predictions = []
 
         for task in tasks:

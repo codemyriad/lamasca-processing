@@ -21,6 +21,7 @@ setup(
         'PyMuPDF',
         'Flask',
         'requests',
+        'requests-file',
         'gunicorn==22.0.0',
         'label-studio-ml @ git+https://github.com/HumanSignal/label-studio-ml-backend.git'
     ],
