@@ -25,6 +25,11 @@ python3 -m pip > /dev/null || install_pip
 pip show Pillow || pip install pillow==9.5.0
 pip show torchvision | egrep 'Name|Version' || install_torch
 pip show detectron2 | egrep 'Name|Version' || install_detectron2
-pip show layoutparser | egrep 'Name|Version' || pip install layoutparser[ocr,paddledetection]
+pip show layoutparser | egrep 'Name|Version' || pip install layoutparser[ocr,paddledetection]==0.2.0
 
-pip show pdbpp || pip nsall pdbpp
+pip show pdbpp || pip install pdbpp
+
+pip install -e .
+
+python fix-paddleocr.py
+python fix-detectron2.py

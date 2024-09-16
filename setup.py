@@ -11,7 +11,7 @@ setup(
         'layoutparser[ocr]',
         'torch',
         'torchvision',
-        'Pillow',
+        'pillow~=10.3',
         'detectron2',
         'opencv-python',
         'numpy',
