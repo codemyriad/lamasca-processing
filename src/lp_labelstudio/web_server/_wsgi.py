@@ -4,10 +4,6 @@ import json
 import logging
 import logging.config
 
-# Set MODEL_DIR to system temporary directory:
-# the var is used to find a home for the `cache.db` sqlite3 database
-if os.environ.get('MODEL_DIR') is None:
-    os.environ['MODEL_DIR'] = '/tmp'
 
 logging.config.dictConfig({
   "version": 1,
@@ -34,7 +30,7 @@ logging.config.dictConfig({
 })
 
 from label_studio_ml.api import init_app
-from .model import LayoutParserModel
+from lp_labelstudio.web_server.model import LayoutParserModel
 
 
 _DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')

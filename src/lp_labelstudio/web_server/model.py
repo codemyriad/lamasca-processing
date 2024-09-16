@@ -1,8 +1,13 @@
+import os
+
+# Set MODEL_DIR to system temporary directory:
+# the var is used to find a home for the `cache.db` sqlite3 database
+if os.environ.get('MODEL_DIR') is None:
+    os.environ['MODEL_DIR'] = '/tmp'
+
 from typing import List, Dict, Optional
 from requests_file import FileAdapter
 from label_studio_ml.model import LabelStudioMLBase
-from label_studio_ml.response import ModelResponse
-from flask import Flask, request, jsonify
 import layoutparser as lp
 from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH
 from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
@@ -11,12 +16,11 @@ import requests
 from io import BytesIO
 from PIL import Image
 import tempfile
-import os
 import json
 from functools import lru_cache
 
 
-app = Flask(__name__)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -49,8 +53,7 @@ class LayoutParserModel(LabelStudioMLBase):
 
         return convert_to_label_studio_format(layout, img_width, img_height, image_url)
 
-    def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> ModelResponse:
-        """Write your inference logic here"""
+    def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> "label_studio_ml.response.ModelResponse":
         logger.warn(f"TASKS:\n{json.dumps(tasks, indent=2)}")
         predictions = []
 
@@ -68,6 +71,7 @@ class LayoutParserModel(LabelStudioMLBase):
 
             logger.info(f"Processed image {image_url}. Found {len(annotations)} annotations.")
         logger.warn(f"Results:\n{json.dumps(predictions, indent=2)}")
+        from label_studio_ml.response import ModelResponse
         response = ModelResponse(predictions=predictions)
         return response
 

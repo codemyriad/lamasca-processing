@@ -6,8 +6,8 @@ from lp_labelstudio.constants import UI_CONFIG_XML
 
 @pytest.fixture
 def client():
-    from model import LayoutParserModel
-    from _wsgi import init_app
+    from lp_labelstudio.web_server.model import LayoutParserModel
+    from lp_labelstudio.web_server._wsgi import init_app
     app = init_app(model_class=LayoutParserModel)
     app.config['TESTING'] = True
     with app.test_client() as client:
