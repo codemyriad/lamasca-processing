@@ -1,5 +1,20 @@
 <View>
-    <View
+    <!-- Fields for page metadata input -->
+    <Text
+    name="page_number"
+    value="$pageNumber"
+    placeholder="Page number"
+    label="Page Number"
+  />
+    <Text
+    name="date"
+    value="$date"
+    placeholder="Date"
+    label="Date"
+  />
+
+
+  <View
     style="display:flex;align-items:start;gap:8px;flex-direction:row-reverse"
   >
 
@@ -9,14 +24,16 @@
         <!-- Labels to mark different sections on the image -->
         <Labels name="label" toName="image" showInline="false">
         <Label value="Text" background="green" />
-        <Label value="Title" background="#FF3370" />
+        <Label value="Headline" background="#FF3370" />
         <Label value="SubTitle" background="#FFA39E" />
         <Label value="Author" background="#22BBFF" />
-        <Label value="Ad" background="#dc8add" />
+        <Label value="Advertisement" background="#dc8add" />
         <Label value="PageNumber" background="#cCF910" />
         <Label value="Date" background="#FFCC00" />
         <Label value="PageTitle" background="#cF9910" />
-        </Labels>
+        <Label value="Title" background="#FF3370" />
+        <Label value="Map" background="#FF3370" />
+    </Labels>
 
     </View>
 
@@ -31,7 +48,7 @@
 
     <!-- Text area for transcription and metadata capture -->
     <TextArea
-    name="text"
+    name="transcription"
     toName="image"
     editable="true"
     perRegion="true"
@@ -40,21 +57,7 @@
     rows="5"
     placeholder="Recognized Text"
     displayMode="region-list"
+              value="$transcription"
   />
 
-    <!-- Fields for page metadata input -->
-    <Header value="Page Information" />
-    <Text
-    name="page_number"
-    value="$pageNumber"
-    placeholder="Enter page number here"
-    label="Page Number"
-  />
-    <Text
-    name="date"
-    value="$date"
-    placeholder="Enter date here"
-    label="Date"
-  />
-
-    </View>
+</View>

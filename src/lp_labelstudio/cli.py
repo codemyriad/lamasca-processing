@@ -34,8 +34,8 @@ def process_image(image_path: str, redo: bool) -> None:
     result: List[Dict[str, Any]] = process_single_image(image_path, model)
 
     with open(output_path, 'w') as f:
-        json.dump({"result": result}, f, indent=2)
-    logger.info(f"Annotations saved to {output_path}")
+        json.dump({"predictions": result}, f, indent=2)
+    logger.info(f"Predictions saved to {output_path}")
 
     summary: str = generate_summary(image_path, result, output_path)
     click.echo(summary)
@@ -88,7 +88,7 @@ def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path:
     for element in result:
         element_type: str = element['type']
         element_counts[element_type] = element_counts.get(element_type, 0) + 1
-        total_chars += len(element['text'])
+        total_chars += len(element.get('text', ''))
 
     summary = click.style(f"Processed ", fg="green")
     summary += click.style(f"{image_path}", fg="bright_blue")
