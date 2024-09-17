@@ -3,6 +3,7 @@ import os
 import logging
 from typing import Any, Dict, List, Union
 from lp_labelstudio.generate_manifest import generate_datumaro_manifest
+from lp_labelstudio.generate_index_txt import generate_index_txt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,6 +17,14 @@ def cli():
 def generate_datumaro(directories: List[str]) -> None:
     """Generate Datumaro format ZIP file containing JSON manifest for the given directories."""
     generate_datumaro_manifest(directories)
+
+@cli.command()
+@click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--replace-from', required=True, help='The path prefix to replace')
+@click.option('--replace-to', required=True, help='The URL prefix to replace with')
+def generate_index_txt(directories: List[str], replace_from: str, replace_to: str) -> None:
+    """Generate index.txt files containing full URLs of JPEG files in the given directories."""
+    generate_index_txt(directories, replace_from, replace_to)
 
 @cli.command()
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
