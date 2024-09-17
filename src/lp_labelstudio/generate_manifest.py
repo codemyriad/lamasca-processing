@@ -1,6 +1,7 @@
 import click
 import os
 import json
+import zipfile
 from typing import List, Dict, Any
 from pathlib import Path
 from PIL import Image
@@ -24,9 +25,9 @@ def get_image_info(image_path: str) -> Dict[str, Any]:
 
 @click.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def generate_datumaro_manifest(directories: List[str]) -> None:
-    """Generate Datumaro format JSON manifest files for the given directories,
-    and save it in each dir as `datumaro_manifest.json`."""
+@click.option('--output', type=click.Path(file_okay=True, dir_okay=False), default='datumaro.zip', help='Output zip file path')
+def generate_datumaro_manifest(directories: List[str], output: str) -> None:
+    """Generate Datumaro format ZIP file containing JSON manifest for the given directories."""
 
     datumaro_format = {
         "items": []
@@ -48,11 +49,10 @@ def generate_datumaro_manifest(directories: List[str]) -> None:
                 "image": get_image_info(image_path)
             })
 
-        output = Path(directory) / "datumaro_manifest.json"
-        with output.open("w") as f:
-            json.dump(datumaro_format, f, indent=2)
-        click.echo(click.style(f"Datumaro manifest file generated: {output}", fg="green"))
+    with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        zipf.writestr('dataset/dataset.json', json.dumps(datumaro_format, indent=2))
 
+    click.echo(click.style(f"Datumaro ZIP file generated: {output}", fg="green"))
     click.echo(click.style(f"Total images included: {len(datumaro_format['items'])}", fg="green"))
 
 if __name__ == "__main__":
