@@ -3,88 +3,96 @@ import os
 import json
 from typing import List, Dict, Any
 from pathlib import Path
-from collections import defaultdict
+from PIL import Image
 
 def get_image_url(image_path: str) -> str:
-    """Convert local image path to cloud storage URL.
-
-    Example:
-    >>> get_image_url("/tmp/newspapers/image.jpg")
-    'https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers/image.jpg'
-    """
     return image_path.replace("/tmp/newspapers", "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers")
 
 def get_page_number(jpeg_file: str) -> int:
-    """Extract page number from JPEG filename.
-
-    Example:
-    >>> get_page_number("page_01.jpeg")
-    1
-    """
     return int(jpeg_file.split(".")[0].replace("page_", ""))
 
 def get_date(directory: str) -> str:
-    """Extract date from directory name.
-
-    Example:
-    >>> get_date("/path/to/lamasca-2023-05-15")
-    '2023-05-15'
-    """
     return directory.split('/')[-1].replace("lamasca-", "")
+
+def get_image_info(image_path: str, image_id: int) -> Dict[str, Any]:
+    with Image.open(image_path) as img:
+        width, height = img.size
+    return {
+        "id": image_id,
+        "file_name": os.path.basename(image_path),
+        "width": width,
+        "height": height,
+        "date_captured": get_date(os.path.dirname(image_path)),
+        "license": 1,
+        "coco_url": get_image_url(image_path),
+        "flickr_url": ""
+    }
 
 @click.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def generate_manifest(directories: List[str]) -> None:
-    """Generate Label Studio JSON manifest files for the given directories,
-    and save it in each dir as `manifest.json`."""
-    total_issues: int = 0
-    total_pages: int = 0
+def generate_coco_manifest(directories: List[str]) -> None:
+    """Generate COCO 1.0 format JSON manifest files for the given directories,
+    and save it in each dir as `coco_manifest.json`."""
+    
+    coco_format = {
+        "info": {
+            "year": 2023,
+            "version": "1.0",
+            "description": "Newspaper OCR Dataset",
+            "contributor": "Your Organization",
+            "url": "http://yourorganization.com",
+            "date_created": "2023-05-24"
+        },
+        "licenses": [
+            {
+                "id": 1,
+                "name": "Attribution-NonCommercial-ShareAlike License",
+                "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/"
+            }
+        ],
+        "images": [],
+        "annotations": [],
+        "categories": [
+            {"id": 1, "name": "text", "supercategory": "content"}
+        ]
+    }
+
+    image_id = 1
+    annotation_id = 1
 
     for directory in directories:
-        manifest: List[Dict[str, Any]] = []
         if directory.endswith('/'):
             directory = directory[:-1]
 
-        publication_name: str = os.path.basename(directory)
-        jpeg_files: List[str] = [f for f in os.listdir(directory) if f.lower().endswith('.jpeg')]
+        jpeg_files = [f for f in os.listdir(directory) if f.lower().endswith('.jpeg')]
 
         for jpeg_file in jpeg_files:
-            image_path: str = os.path.join(directory, jpeg_file)
-            image_url: str = get_image_url(image_path)
-            page_number: int = get_page_number(jpeg_file)
-            date: str = get_date(directory)
-            task_item: Dict[str, Any] = {
-                "id": get_task_id(directory, jpeg_file),
-                "data": {
-                    "ocr": image_url,
-                    "pageNumber": page_number,
-                    "date": date,
-                },
-            }
-            manifest.append(task_item)
+            image_path = os.path.join(directory, jpeg_file)
+            
+            # Add image info
+            coco_format["images"].append(get_image_info(image_path, image_id))
+            
+            # Add a dummy annotation (since we don't have actual annotations yet)
+            coco_format["annotations"].append({
+                "id": annotation_id,
+                "image_id": image_id,
+                "category_id": 1,
+                "bbox": [0, 0, 100, 100],  # Dummy bounding box
+                "area": 10000,
+                "segmentation": [],
+                "iscrowd": 0
+            })
+            
+            image_id += 1
+            annotation_id += 1
 
-        total_issues += 1
-        total_pages += len(manifest)
-
-        output = Path(directory) / "manifest.json"
+        output = Path(directory) / "coco_manifest.json"
         with output.open("w") as f:
-            json.dump(manifest, f, indent=2)
-        click.echo(click.style(f"Manifest file generated: {output}", fg="green"))
+            json.dump(coco_format, f, indent=2)
+        click.echo(click.style(f"COCO manifest file generated: {output}", fg="green"))
 
-    click.echo(click.style(f"Total issues included: {total_issues}", fg="green"))
-    click.echo(click.style(f"Total pages included: {total_pages}", fg="green"))
+    click.echo(click.style(f"Total images included: {image_id - 1}", fg="green"))
+    click.echo(click.style(f"Total annotations included: {annotation_id - 1}", fg="green"))
 
-def read_xml_file(file_path: str) -> str:
-    with open(file_path, 'r') as file:
-        return file.read()
-
-
-def get_task_id(directory_name: str, filename: str) -> str:
-    """
-    >>> directory_name = "/tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-12"
-    >>> filename = "page01.jpeg"
-    >>> get_task_id(directory_name, filename)
-    '1994-01-12-page01'
-    """
-    date = directory_name.split('/')[-1]
-    return f"{date}-{filename.split('.')[0]}"
+if __name__ == "__main__":
+    generate_coco_manifest()
