@@ -19,8 +19,10 @@ def get_image_info(image_path: str) -> Dict[str, Any]:
     with Image.open(image_path) as img:
         width, height = img.size
     return {
-        "path": get_image_url(image_path),
-        "size": [width, height]
+        "file_name": os.path.basename(image_path),
+        "height": height,
+        "width": width,
+        "url": get_image_url(image_path)
     }
 
 @click.command()
@@ -33,6 +35,19 @@ def generate_datumaro_manifest(directories: List[str]) -> None:
             directory = directory[:-1]
 
         datumaro_format = {
+            "info": {},
+            "categories": {
+                "label": {
+                    "labels": [
+                        {
+                            "name": "newspaper_page",
+                            "parent": "",
+                            "attributes": []
+                        }
+                    ],
+                    "attributes": []
+                }
+            },
             "items": []
         }
 
@@ -50,7 +65,7 @@ def generate_datumaro_manifest(directories: List[str]) -> None:
 
         output = os.path.join(directory, 'datumaro.zip')
         with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            zipf.writestr('dataset/dataset.json', json.dumps(datumaro_format, indent=2))
+            zipf.writestr('annotations/default.json', json.dumps(datumaro_format, indent=2))
 
         click.echo(click.style(f"Datumaro ZIP file generated: {output}", fg="green"))
         click.echo(click.style(f"Total images included: {len(datumaro_format['items'])}", fg="green"))
