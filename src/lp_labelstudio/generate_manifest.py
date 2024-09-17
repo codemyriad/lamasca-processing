@@ -33,15 +33,15 @@ def get_image_info(image_path: str, image_id: int) -> Dict[str, Any]:
 def generate_coco_manifest(directories: List[str]) -> None:
     """Generate COCO 1.0 format JSON manifest files for the given directories,
     and save it in each dir as `coco_manifest.json`."""
-    
+
     coco_format = {
         "info": {
             "year": 2023,
             "version": "1.0",
-            "description": "Newspaper OCR Dataset",
-            "contributor": "Your Organization",
-            "url": "http://yourorganization.com",
-            "date_created": "2023-05-24"
+            "description": "Archivio del settimanale la masca",
+            "contributor": "la masca",
+            "url": "http://codemyriad.io",
+            "date_created": "2024-10-01"
         },
         "licenses": [
             {
@@ -68,10 +68,10 @@ def generate_coco_manifest(directories: List[str]) -> None:
 
         for jpeg_file in jpeg_files:
             image_path = os.path.join(directory, jpeg_file)
-            
+
             # Add image info
             coco_format["images"].append(get_image_info(image_path, image_id))
-            
+
             # Add a dummy annotation (since we don't have actual annotations yet)
             coco_format["annotations"].append({
                 "id": annotation_id,
@@ -82,7 +82,7 @@ def generate_coco_manifest(directories: List[str]) -> None:
                 "segmentation": [],
                 "iscrowd": 0
             })
-            
+
             image_id += 1
             annotation_id += 1
 
