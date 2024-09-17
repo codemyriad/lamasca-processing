@@ -13,10 +13,9 @@ def cli():
 
 @cli.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--output', type=click.Path(file_okay=True, dir_okay=False), default='datumaro.zip', help='Output zip file path')
-def generate_datumaro(directories: List[str], output: str) -> None:
+def generate_datumaro(directories: List[str]) -> None:
     """Generate Datumaro format ZIP file containing JSON manifest for the given directories."""
-    generate_datumaro_manifest(directories, output)
+    generate_datumaro_manifest(directories)
 
 @cli.command()
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
