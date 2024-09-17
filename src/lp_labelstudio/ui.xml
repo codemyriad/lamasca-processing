@@ -1,56 +1,54 @@
 <View>
-    <!-- Fields for page metadata input -->
-    <Text
+  <!-- Fields for page metadata input -->
+  <Text
     name="page_number"
     value="$pageNumber"
     placeholder="Page number"
     label="Page Number"
   />
-    <Text
-    name="date"
-    value="$date"
-    placeholder="Date"
-    label="Date"
-  />
-
+  <Text name="date" value="$date" placeholder="Date" label="Date" />
 
   <View
     style="display:flex;align-items:start;gap:8px;flex-direction:row-reverse"
   >
+    <!-- Image view with options -->
+    <Image name="image" value="$ocr" zoom="true" zoomControl="true" />
 
-        <!-- Image view with options -->
-        <Image name="image" value="$ocr" zoom="true" zoomControl="true" />
+    <Labels name="label" toName="image" showInline="false">
+      <!-- Textual Content -->
+      <Label value="Text" background="#c8ffbe" hint="Columnar text (article body)" />
+      <Label value="Headline" background="#d8f1a0" hint="The bigger title or the only title" />
+      <Label value="SubHeadline" background="#dce593" hint="The smaller title when there are two" />
+      <Label value="Author" background="#dce593" hint="The bold signature at the bottom or top of an article\nOnly text, no spacer line in this box" />
 
-        <!-- Labels to mark different sections on the image -->
-        <Labels name="label" toName="image" showInline="false">
-        <Label value="Text" background="green" />
-        <Label value="Headline" background="#FF3370" />
-        <Label value="SubTitle" background="#FFA39E" />
-        <Label value="Author" background="#22BBFF" />
-        <Label value="Advertisement" background="#dc8add" />
-        <Label value="PageNumber" background="#cCF910" />
-        <Label value="Date" background="#FFCC00" />
-        <Label value="PageTitle" background="#cF9910" />
-        <Label value="Title" background="#FF3370" />
-        <Label value="Map" background="#FF3370" />
+      <!-- Metadata -->
+      <Label value="PageTitle" background="#efcb68" hint="The title at the very top of the page" />
+      <Label value="PageNumber" background="#dcc7be" hint="The number in the top left or right" />
+      <Label value="Date" background="#ab7968" hint="The date in the top left or right" />
+
+      <!-- Advertisement -->
+      <Label value="Advertisement" background="#f46036" />
+
+      <!-- Visuals -->
+      <Label value="Map" background="#6d72c3" />
+      <Label value="Photograph" background="#a8dadc" />
+      <Label value="Illustration" background="#5941a9" hint="Any table, graph or similar" />
+      <Label value="Comics/Cartoon" background="#e5d4ed" hidden="true" />
+      <Label value="Editorial Cartoon" background="#0b4f6c" />
     </Labels>
+  </View>
 
-        <!-- Add the OCR button here -->
-        <HyperText name="ocr_button" value="$ocr_button"/>
+  <!-- Tools for defining regions -->
+  <Rectangle name="bbox" toName="image" strokeWidth="3" />
 
-    </View>
+  <!-- Defining relationships between regions -->
+  <Relations name="relations" toName="label">
+    <Relation value="Flow" />
+    <Relation value="Title of" />
+  </Relations>
 
-    <!-- Tools for defining regions -->
-    <Rectangle name="bbox" toName="image" strokeWidth="3" />
-
-    <!-- Defining relationships between regions -->
-    <Relations name="relations" toName="label">
-        <Relation value="Flow" />
-        <Relation value="Title of" />
-    </Relations>
-
-    <!-- Text area for transcription and metadata capture -->
-    <TextArea
+  <!-- Text area for transcription and metadata capture -->
+  <TextArea
     name="transcription"
     toName="image"
     editable="true"
@@ -60,7 +58,5 @@
     rows="5"
     placeholder="Recognized Text"
     displayMode="region-list"
-              value="$transcription"
   />
-
 </View>
