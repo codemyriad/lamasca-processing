@@ -14,51 +14,23 @@ def get_page_number(jpeg_file: str) -> int:
 def get_date(directory: str) -> str:
     return directory.split('/')[-1].replace("lamasca-", "")
 
-def get_image_info(image_path: str, image_id: int) -> Dict[str, Any]:
+def get_image_info(image_path: str) -> Dict[str, Any]:
     with Image.open(image_path) as img:
         width, height = img.size
     return {
-        "id": image_id,
-        "file_name": os.path.basename(image_path),
-        "width": width,
-        "height": height,
-        "date_captured": get_date(os.path.dirname(image_path)),
-        "license": 1,
-        "coco_url": get_image_url(image_path),
-        "flickr_url": ""
+        "path": get_image_url(image_path),
+        "size": [width, height]
     }
 
 @click.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def generate_coco_manifest(directories: List[str]) -> None:
-    """Generate COCO 1.0 format JSON manifest files for the given directories,
-    and save it in each dir as `coco_manifest.json`."""
+def generate_datumaro_manifest(directories: List[str]) -> None:
+    """Generate Datumaro format JSON manifest files for the given directories,
+    and save it in each dir as `datumaro_manifest.json`."""
 
-    coco_format = {
-        "info": {
-            "year": 2023,
-            "version": "1.0",
-            "description": "Archivio del settimanale la masca",
-            "contributor": "la masca",
-            "url": "http://codemyriad.io",
-            "date_created": "2024-10-01"
-        },
-        "licenses": [
-            {
-                "id": 1,
-                "name": "Attribution-NonCommercial-ShareAlike License",
-                "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/"
-            }
-        ],
-        "images": [],
-        "annotations": [],
-        "categories": [
-            {"id": 1, "name": "text", "supercategory": "content"}
-        ]
+    datumaro_format = {
+        "items": []
     }
-
-    image_id = 1
-    annotation_id = 1
 
     for directory in directories:
         if directory.endswith('/'):
@@ -68,31 +40,20 @@ def generate_coco_manifest(directories: List[str]) -> None:
 
         for jpeg_file in jpeg_files:
             image_path = os.path.join(directory, jpeg_file)
+            item_id = os.path.splitext(jpeg_file)[0]
 
-            # Add image info
-            coco_format["images"].append(get_image_info(image_path, image_id))
-
-            # Add a dummy annotation (since we don't have actual annotations yet)
-            coco_format["annotations"].append({
-                "id": annotation_id,
-                "image_id": image_id,
-                "category_id": 1,
-                "bbox": [0, 0, 100, 100],  # Dummy bounding box
-                "area": 10000,
-                "segmentation": [],
-                "iscrowd": 0
+            datumaro_format["items"].append({
+                "id": item_id,
+                "annotations": [],
+                "image": get_image_info(image_path)
             })
 
-            image_id += 1
-            annotation_id += 1
-
-        output = Path(directory) / "coco_manifest.json"
+        output = Path(directory) / "datumaro_manifest.json"
         with output.open("w") as f:
-            json.dump(coco_format, f, indent=2)
-        click.echo(click.style(f"COCO manifest file generated: {output}", fg="green"))
+            json.dump(datumaro_format, f, indent=2)
+        click.echo(click.style(f"Datumaro manifest file generated: {output}", fg="green"))
 
-    click.echo(click.style(f"Total images included: {image_id - 1}", fg="green"))
-    click.echo(click.style(f"Total annotations included: {annotation_id - 1}", fg="green"))
+    click.echo(click.style(f"Total images included: {len(datumaro_format['items'])}", fg="green"))
 
 if __name__ == "__main__":
-    generate_coco_manifest()
+    generate_datumaro_manifest()

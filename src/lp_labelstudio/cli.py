@@ -2,7 +2,7 @@ import click
 import os
 import logging
 from typing import Any, Dict, List, Union
-from lp_labelstudio.generate_manifest import generate_coco_manifest
+from lp_labelstudio.generate_manifest import generate_datumaro_manifest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def cli():
     pass
 
-cli.add_command(generate_coco_manifest)
+cli.add_command(generate_datumaro_manifest)
 
 @cli.command()
 @click.argument('image_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
