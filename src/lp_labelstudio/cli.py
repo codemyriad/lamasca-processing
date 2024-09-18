@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, List, Union
 from lp_labelstudio.generate_manifest import generate_datumaro_manifest
 from lp_labelstudio.generate_index_txt import generate_index_txt
+from lp_labelstudio.escriptorium-cli import escriptorium
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,6 +59,8 @@ def process_image(image_path: str, redo: bool) -> None:
 @click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
 def process_newspaper(directory: str, redo: bool) -> None:
     """Process newspaper pages (JPEG images) recursively in a directory using layoutparser and convert to Label Studio format."""
+
+cli.add_command(escriptorium)
     import json
     import layoutparser as lp  # type: ignore
     from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
