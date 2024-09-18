@@ -105,7 +105,11 @@ def create_project(name, description):
         console.print(f"Project created successfully!", style="green")
         console.print(f"Project ID: {project['id']}", style="cyan")
         console.print(f"Project Name: {project['name']}", style="magenta")
-        console.print(f"Project Description: {project.get('description', 'N/A')}", style="yellow")
+        console.print(f"Project Description: {project.get('description') or 'N/A'}", style="yellow")
+        
+        # Print the raw response for debugging
+        console.print("Raw response:", style="dim")
+        console.print(json.dumps(project, indent=2), style="dim")
     except requests.RequestException as e:
         click.echo(f"Error: Failed to create project. {str(e)}", err=True)
 
