@@ -1,10 +1,14 @@
 import click
 import os
 import logging
+import json
 from typing import Any, Dict, List, Union
+import layoutparser as lp  # type: ignore
 from lp_labelstudio.generate_manifest import generate_datumaro_manifest
 from lp_labelstudio.generate_index_txt import generate_index_txt
 from lp_labelstudio.escriptorium_cli import escriptorium
+from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
+from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,13 +63,6 @@ def process_image(image_path: str, redo: bool) -> None:
 @click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
 def process_newspaper(directory: str, redo: bool) -> None:
     """Process newspaper pages (JPEG images) recursively in a directory using layoutparser and convert to Label Studio format."""
-
-cli.add_command(escriptorium)
-    import json
-    import layoutparser as lp  # type: ignore
-    from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
-    from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
-
     logger.info(f"Processing newspaper pages recursively in directory: {directory}")
     model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP)
 
@@ -93,6 +90,8 @@ cli.add_command(escriptorium)
                 click.echo(summary)
 
     click.echo(click.style("Processing complete.", fg="green"))
+
+cli.add_command(escriptorium)
 
 def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path: str) -> str:
     from lp_labelstudio.image_processing import get_image_size
