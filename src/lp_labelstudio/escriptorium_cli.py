@@ -29,12 +29,19 @@ def list_projects():
 
         if not projects:
             click.echo("No projects found.")
-        else:
+        elif isinstance(projects, list):
             click.echo("Projects:")
             for project in projects:
-                click.echo(f"- {project['name']} (ID: {project['id']})")
+                if isinstance(project, dict) and 'name' in project and 'id' in project:
+                    click.echo(f"- {project['name']} (ID: {project['id']})")
+                else:
+                    click.echo(f"- Unexpected project format: {project}")
+        else:
+            click.echo(f"Unexpected response format. Response: {projects}")
     except requests.RequestException as e:
         click.echo(f"Error: Failed to fetch projects. {str(e)}", err=True)
+    except ValueError as e:
+        click.echo(f"Error: Failed to parse JSON response. {str(e)}", err=True)
 
 if __name__ == '__main__':
     escriptorium()
