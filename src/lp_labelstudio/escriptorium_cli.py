@@ -122,10 +122,16 @@ def create_project(name, description):
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--replace-from', required=True, help='String to replace in local paths')
 @click.option('--replace-to', required=True, help='String to replace with in URLs')
-@click.option('--project-id', required=True, type=int, help='ID of the project to add the document to')
+@click.option('--project-id', required=True, help='ID or slug of the project to add the document to')
 @click.option('--name', required=True, help='Name of the document')
 @click.option('--main-script', default='Latin', help='Main script of the document')
 def create_document(directory, replace_from, replace_to, project_id, name, main_script):
+    # Convert project_id to int if it's a numeric string
+    try:
+        project_id = int(project_id)
+    except ValueError:
+        # If it's not a number, assume it's a slug and leave it as a string
+        pass
     """Create a new document in eScriptorium"""
     api_key, base_url = get_escriptorium_config()
     if not api_key or not base_url:
@@ -154,6 +160,11 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         "main_script": main_script,
         "parts": [{"image": url} for url in image_urls]
     }
+
+    # If project_id is a string (slug), we need to use a different field name
+    if isinstance(project_id, str):
+        data["project_slug"] = project_id
+        del data["project"]
 
     try:
         response = requests.post(url, headers=headers, json=data)
