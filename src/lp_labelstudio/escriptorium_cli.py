@@ -14,8 +14,36 @@ def escriptorium():
 def list_projects():
     """List all projects in eScriptorium"""
     api_key, base_url = get_escriptorium_config()
-    if not api_key:
+    if not api_key or not base_url:
         return
+
+    url = f"{base_url.rstrip('/')}/api/projects/"
+    headers = {
+        "Authorization": f"Token {api_key}",
+        "Accept": "application/json"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        projects = response.json()
+
+        console = Console()
+        table = Table(title="eScriptorium Projects")
+        table.add_column("ID", style="cyan")
+        table.add_column("Name", style="magenta")
+        table.add_column("Description", style="green")
+
+        for project in projects:
+            table.add_row(
+                str(project['id']),
+                project['name'],
+                project.get('description', '')[:50] + ('...' if len(project.get('description', '')) > 50 else '')
+            )
+
+        console.print(table)
+    except requests.RequestException as e:
+        click.echo(f"Error: Failed to list projects. {str(e)}", err=True)
 
 @escriptorium.command()
 @click.option('--name', required=True, help='Name of the project')
