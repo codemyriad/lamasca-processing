@@ -27,7 +27,7 @@ def list_projects():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        
+
         try:
             data = response.json()
         except json.JSONDecodeError:
@@ -61,7 +61,7 @@ def list_projects():
                 description = (description[:47] + '...') if len(description) > 50 else description
             else:
                 description = 'N/A'
-        
+
             table.add_row(
                 str(project.get('id', 'N/A')),
                 project.get('name', 'N/A'),
@@ -106,7 +106,7 @@ def create_project(name, description):
         console.print(f"Project ID: {project['id']}", style="cyan")
         console.print(f"Project Name: {project['name']}", style="magenta")
         console.print(f"Project Description: {project.get('description') or 'N/A'}", style="yellow")
-        
+
         # Print the raw response for debugging
         console.print("Raw response:", style="dim")
         console.print(json.dumps(project, indent=2), style="dim")
@@ -120,7 +120,7 @@ def get_escriptorium_config():
         return None, None
 
     base_url = os.environ.get('ESCRIPTORIUM_URL', 'http://localhost:8080/')
-    
+
     # Validate the URL
     parsed_url = urlparse(base_url)
     if not parsed_url.scheme or not parsed_url.netloc:
