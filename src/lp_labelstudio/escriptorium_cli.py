@@ -4,7 +4,7 @@ import requests
 import json
 from rich.console import Console
 from rich.table import Table
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 @click.group()
 def escriptorium():
@@ -60,7 +60,12 @@ def list_projects():
 
         console.print(table)
     except requests.RequestException as e:
-        click.echo(f"Error: Failed to list projects. {str(e)}", err=True)
+        if "NameResolutionError" in str(e):
+            click.echo(f"Error: Failed to resolve the eScriptorium URL. Please check if the URL is correct and accessible.", err=True)
+        elif "ConnectionError" in str(e):
+            click.echo(f"Error: Failed to connect to eScriptorium. Please check if the server is running and accessible.", err=True)
+        else:
+            click.echo(f"Error: Failed to list projects. {str(e)}", err=True)
 
 @escriptorium.command()
 @click.option('--name', required=True, help='Name of the project')
@@ -100,6 +105,13 @@ def get_escriptorium_config():
         return None, None
 
     base_url = os.environ.get('ESCRIPTORIUM_URL', 'http://localhost:8080/')
+    
+    # Validate the URL
+    parsed_url = urlparse(base_url)
+    if not parsed_url.scheme or not parsed_url.netloc:
+        click.echo(f"Error: Invalid ESCRIPTORIUM_URL '{base_url}'. Please provide a valid URL including the scheme (http:// or https://).", err=True)
+        return None, None
+
     return api_key, base_url
 
 def get_api_url(base_url, endpoint):
