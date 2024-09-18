@@ -26,7 +26,20 @@ def list_projects():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        projects = response.json()
+        
+        try:
+            projects = response.json()
+        except json.JSONDecodeError:
+            click.echo(f"Error: Received non-JSON response: {response.text}", err=True)
+            return
+
+        if not isinstance(projects, list):
+            click.echo(f"Error: Unexpected response format. Expected a list of projects, got: {type(projects)}", err=True)
+            return
+
+        if not projects:
+            click.echo("No projects found.")
+            return
 
         console = Console()
         table = Table(title="eScriptorium Projects")
@@ -35,10 +48,13 @@ def list_projects():
         table.add_column("Description", style="green")
 
         for project in projects:
+            if not isinstance(project, dict):
+                click.echo(f"Warning: Skipping invalid project data: {project}", err=True)
+                continue
             table.add_row(
-                str(project['id']),
-                project['name'],
-                project.get('description', '')[:50] + ('...' if len(project.get('description', '')) > 50 else '')
+                str(project.get('id', 'N/A')),
+                project.get('name', 'N/A'),
+                (project.get('description', '')[:50] + '...') if project.get('description', '') else 'N/A'
             )
 
         console.print(table)
