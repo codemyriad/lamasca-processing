@@ -160,11 +160,9 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         "parts": [{"image": url} for url in image_urls]
     }
 
-    # Include both project and project_slug fields
-    if isinstance(project_id, int):
-        data["project"] = project_id
-    else:
-        data["project"] = ""  # Send an empty string for the project field
+    # Always include the project field, and include project_slug if it's not a numeric ID
+    data["project"] = project_id
+    if not isinstance(project_id, int):
         data["project_slug"] = project_id
 
     try:
@@ -193,6 +191,12 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         if hasattr(e, 'response') and e.response is not None:
             console.print(f"Response status code: {e.response.status_code}", style="yellow")
             console.print(f"Response content: {e.response.text}", style="yellow")
+            try:
+                response_json = e.response.json()
+                console.print("Detailed error information:", style="yellow")
+                console.print(json.dumps(response_json, indent=2), style="yellow")
+            except json.JSONDecodeError:
+                console.print("Unable to parse response as JSON", style="yellow")
 
 def get_escriptorium_config():
     api_key = os.environ.get('ESCRIPTORIUM_API_KEY')
