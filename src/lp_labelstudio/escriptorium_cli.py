@@ -156,15 +156,16 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
     }
     data = {
         "name": name,
-        "project": project_id,
         "main_script": main_script,
         "parts": [{"image": url} for url in image_urls]
     }
 
-    # If project_id is a string (slug), we need to use a different field name
-    if isinstance(project_id, str):
+    # Include both project and project_slug fields
+    if isinstance(project_id, int):
+        data["project"] = project_id
+    else:
+        data["project"] = ""  # Send an empty string for the project field
         data["project_slug"] = project_id
-        del data["project"]
 
     try:
         response = requests.post(url, headers=headers, json=data)
