@@ -15,7 +15,8 @@ def list_projects():
         click.echo("Error: ESCRIPTORIUM_API_KEY environment variable is not set.", err=True)
         return
 
-    url = "https://escriptorium.fr/api/projects/"
+    base_url = os.environ.get('ESCRIPTORIUM_URL', 'http://localhost:8080')
+    url = f"{base_url.rstrip('/')}/api/projects/"
     headers = {
         "Authorization": f"Token {api_key}",
         "Accept": "application/json"
