@@ -109,6 +109,10 @@ def create_project(name, description):
 
         # Print the raw response for debugging
         console.print("Raw response:", style="dim")
+        console.print(response.text, style="dim")
+        
+        # Print the parsed JSON response
+        console.print("Parsed JSON response:", style="dim")
         console.print(json.dumps(project, indent=2), style="dim")
     except requests.RequestException as e:
         click.echo(f"Error: Failed to create project. {str(e)}", err=True)
