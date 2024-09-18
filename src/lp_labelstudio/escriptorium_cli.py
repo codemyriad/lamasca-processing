@@ -4,6 +4,7 @@ import requests
 import json
 from rich.console import Console
 from rich.table import Table
+from urllib.parse import urljoin
 
 @click.group()
 def escriptorium():
@@ -17,7 +18,7 @@ def list_projects():
     if not api_key or not base_url:
         return
 
-    url = f"{base_url.rstrip('/')}/api/projects/"
+    url = get_api_url(base_url, "projects/")
     headers = {
         "Authorization": f"Token {api_key}",
         "Accept": "application/json"
@@ -70,7 +71,7 @@ def create_project(name, description):
     if not api_key or not base_url:
         return
 
-    url = f"{base_url.rstrip('/')}/api/projects/"
+    url = get_api_url(base_url, "projects/")
     headers = {
         "Authorization": f"Token {api_key}",
         "Content-Type": "application/json",
@@ -98,8 +99,11 @@ def get_escriptorium_config():
         click.echo("Error: ESCRIPTORIUM_API_KEY environment variable is not set.", err=True)
         return None, None
 
-    base_url = os.environ.get('ESCRIPTORIUM_URL', 'http://localhost:8080')
+    base_url = os.environ.get('ESCRIPTORIUM_URL', 'http://localhost:8080/')
     return api_key, base_url
+
+def get_api_url(base_url, endpoint):
+    return urljoin(base_url, f"api/{endpoint}")
 
 if __name__ == '__main__':
     escriptorium()
