@@ -3,7 +3,7 @@ import os
 import logging
 import json
 from typing import Any, Dict, List, Union
-from lp_labelstudio.escriptorium_cli import escriptorium
+from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
 from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
 
 logging.basicConfig(level=logging.INFO)
@@ -99,7 +99,7 @@ def process_newspaper(directory: str, redo: bool) -> None:
 
     click.echo(click.style("Processing complete.", fg="green"))
 
-cli.add_command(escriptorium)
+cli.add_command(escriptorium_group)
 
 def generate_summary(image_path: str, result: List[Dict[str, Any]], output_path: str) -> str:
     from lp_labelstudio.image_processing import get_image_size
