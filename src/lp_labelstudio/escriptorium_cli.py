@@ -1,6 +1,8 @@
 import click
 import os
 import requests
+from rich.console import Console
+from rich.table import Table
 
 @click.group()
 def escriptorium():
@@ -25,19 +27,33 @@ def list_projects():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        projects = response.json()
+        data = response.json()
 
-        if not projects:
-            click.echo("No projects found.")
-        elif isinstance(projects, list):
-            click.echo("Projects:")
-            for project in projects:
-                if isinstance(project, dict) and 'name' in project and 'id' in project:
-                    click.echo(f"- {project['name']} (ID: {project['id']})")
-                else:
-                    click.echo(f"- Unexpected project format: {project}")
+        if 'results' in data and isinstance(data['results'], list):
+            projects = data['results']
+            if not projects:
+                click.echo("No projects found.")
+            else:
+                console = Console()
+                table = Table(title="eScriptorium Projects")
+                table.add_column("ID", style="cyan", no_wrap=True)
+                table.add_column("Name", style="magenta")
+                table.add_column("Owner", style="green")
+                table.add_column("Documents", style="yellow")
+                table.add_column("Created At", style="blue")
+
+                for project in projects:
+                    table.add_row(
+                        str(project['id']),
+                        project['name'],
+                        project['owner'],
+                        str(project['documents_count']),
+                        project['created_at']
+                    )
+
+                console.print(table)
         else:
-            click.echo(f"Unexpected response format. Response: {projects}")
+            click.echo(f"Unexpected response format. Response: {data}")
     except requests.RequestException as e:
         click.echo(f"Error: Failed to fetch projects. {str(e)}", err=True)
     except ValueError as e:
