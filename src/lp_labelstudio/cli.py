@@ -3,12 +3,8 @@ import os
 import logging
 import json
 from typing import Any, Dict, List, Union
-import layoutparser as lp  # type: ignore
-from lp_labelstudio.generate_manifest import generate_datumaro_manifest
-from lp_labelstudio.generate_index_txt import generate_index_txt
 from lp_labelstudio.escriptorium_cli import escriptorium
 from lp_labelstudio.constants import JPEG_EXTENSION, NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
-from lp_labelstudio.image_processing import process_single_image, convert_to_label_studio_format, get_image_size
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +17,8 @@ def cli():
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def generate_datumaro(directories: List[str]) -> None:
     """Generate Datumaro format ZIP file containing JSON manifest for the given directories."""
+    # We import here for performance reasons. Don't move up!
+    from lp_labelstudio.generate_manifest import generate_datumaro_manifest
     generate_datumaro_manifest(directories)
 
 @cli.command(name='generate-index-txt')
@@ -29,6 +27,9 @@ def generate_datumaro(directories: List[str]) -> None:
 @click.option('--replace-to', required=True, help='The URL prefix to replace with')
 def cli_generate_index_txt(directories: List[str], replace_from: str, replace_to: str) -> None:
     """Generate index.txt files containing full URLs of JPEG files in the given directories."""
+    # We import here for performance reasons. Don't move up!
+    from lp_labelstudio.generate_index_txt import generate_index_txt
+
     generate_index_txt(directories, replace_from, replace_to)
 
 @cli.command()
@@ -36,6 +37,7 @@ def cli_generate_index_txt(directories: List[str], replace_from: str, replace_to
 @click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
 def process_image(image_path: str, redo: bool) -> None:
     """Process a single JPEG image using layoutparser."""
+    # We import here for performance reasons. Don't move up!
     import json
     import layoutparser as lp  # type: ignore
     from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
@@ -63,6 +65,12 @@ def process_image(image_path: str, redo: bool) -> None:
 @click.option('--redo', is_flag=True, help='Reprocess and replace existing annotations')
 def process_newspaper(directory: str, redo: bool) -> None:
     """Process newspaper pages (JPEG images) recursively in a directory using layoutparser and convert to Label Studio format."""
+    # We import here for performance reasons. Don't move up!
+    from lp_labelstudio.image_processing import process_single_image, get_image_size
+    from lp_labelstudio.image_processing import convert_to_label_studio_format
+    import layoutparser as lp  # type: ignore
+
+
     logger.info(f"Processing newspaper pages recursively in directory: {directory}")
     model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP)
 
