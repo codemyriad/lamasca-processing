@@ -5,6 +5,7 @@ import json
 from rich.console import Console
 from rich.table import Table
 from urllib.parse import urljoin, urlparse
+from pathlib import Path
 
 @click.group()
 def escriptorium():
@@ -116,6 +117,60 @@ def create_project(name, description):
         console.print(json.dumps(project, indent=2), style="dim")
     except requests.RequestException as e:
         click.echo(f"Error: Failed to create project. {str(e)}", err=True)
+
+@escriptorium.command()
+@click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--replace-from', required=True, help='String to replace in local paths')
+@click.option('--replace-to', required=True, help='String to replace with in URLs')
+@click.option('--project-id', required=True, type=int, help='ID of the project to add the document to')
+@click.option('--name', required=True, help='Name of the document')
+def create_document(directory, replace_from, replace_to, project_id, name):
+    """Create a new document in eScriptorium"""
+    api_key, base_url = get_escriptorium_config()
+    if not api_key or not base_url:
+        return
+
+    # Get list of image files in the directory
+    image_files = list(Path(directory).glob('**/*.jpg')) + list(Path(directory).glob('**/*.png'))
+    
+    if not image_files:
+        click.echo("Error: No image files found in the specified directory.", err=True)
+        return
+
+    # Create image URLs
+    image_urls = [str(file).replace(replace_from, replace_to) for file in image_files]
+
+    # Prepare data for API request
+    url = get_api_url(base_url, f"projects/{project_id}/documents/")
+    headers = {
+        "Authorization": f"Token {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    data = {
+        "name": name,
+        "parts": [{"image": url} for url in image_urls]
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        document = response.json()
+        console = Console()
+        console.print(f"Document created successfully!", style="green")
+        console.print(f"Document ID: {document['id']}", style="cyan")
+        console.print(f"Document Name: {document['name']}", style="magenta")
+        console.print(f"Number of parts: {len(document['parts'])}", style="yellow")
+
+        # Print the raw response for debugging
+        console.print("Raw response:", style="dim")
+        console.print(response.text, style="dim")
+        
+        # Print the parsed JSON response
+        console.print("Parsed JSON response:", style="dim")
+        console.print(json.dumps(document, indent=2), style="dim")
+    except requests.RequestException as e:
+        click.echo(f"Error: Failed to create document. {str(e)}", err=True)
 
 def get_escriptorium_config():
     api_key = os.environ.get('ESCRIPTORIUM_API_KEY')
