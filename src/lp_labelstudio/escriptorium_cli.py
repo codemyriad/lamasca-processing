@@ -56,10 +56,16 @@ def list_projects():
             if not isinstance(project, dict):
                 click.echo(f"Warning: Skipping invalid project data: {project}", err=True)
                 continue
+            description = project.get('description', '')
+            if description:
+                description = (description[:47] + '...') if len(description) > 50 else description
+            else:
+                description = 'N/A'
+        
             table.add_row(
                 str(project.get('id', 'N/A')),
                 project.get('name', 'N/A'),
-                (project.get('description', '')[:50] + '...') if project.get('description', '') else 'N/A'
+                description
             )
 
         console.print(table)
@@ -99,6 +105,7 @@ def create_project(name, description):
         console.print(f"Project created successfully!", style="green")
         console.print(f"Project ID: {project['id']}", style="cyan")
         console.print(f"Project Name: {project['name']}", style="magenta")
+        console.print(f"Project Description: {project.get('description', 'N/A')}", style="yellow")
     except requests.RequestException as e:
         click.echo(f"Error: Failed to create project. {str(e)}", err=True)
 
