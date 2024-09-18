@@ -124,7 +124,8 @@ def create_project(name, description):
 @click.option('--replace-to', required=True, help='String to replace with in URLs')
 @click.option('--project-id', required=True, type=int, help='ID of the project to add the document to')
 @click.option('--name', required=True, help='Name of the document')
-def create_document(directory, replace_from, replace_to, project_id, name):
+@click.option('--main-script', default='Latin', help='Main script of the document')
+def create_document(directory, replace_from, replace_to, project_id, name, main_script):
     """Create a new document in eScriptorium"""
     api_key, base_url = get_escriptorium_config()
     if not api_key or not base_url:
@@ -149,6 +150,8 @@ def create_document(directory, replace_from, replace_to, project_id, name):
     }
     data = {
         "name": name,
+        "project": project_id,
+        "main_script": main_script,
         "parts": [{"image": url} for url in image_urls]
     }
 
