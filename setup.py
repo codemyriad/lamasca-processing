@@ -23,7 +23,8 @@ setup(
         'requests',
         'requests-file',
         'gunicorn==22.0.0',
-        'label-studio-ml @ git+https://github.com/HumanSignal/label-studio-ml-backend.git'
+        'label-studio-ml @ git+https://github.com/HumanSignal/label-studio-ml-backend.git',
+        'rich',
     ],
     entry_points={
         'console_scripts': [

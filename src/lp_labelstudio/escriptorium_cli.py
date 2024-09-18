@@ -174,10 +174,10 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         console.print(json.dumps(document, indent=2), style="dim")
     except requests.RequestException as e:
         console = Console()
-        console.print(f"Error: Failed to create document. {str(e)}", style="red")
-        console.print(f"URL: {url}", style="yellow")
-        console.print(f"Headers: {headers}", style="yellow")
         console.print(f"Data: {json.dumps(data, indent=2)}", style="yellow")
+        console.print(f"Headers: {headers}", style="yellow")
+        console.print(f"URL: {url}", style="yellow")
+        console.print(f"Error: Failed to create document. {str(e)}", style="red")
         if hasattr(e, 'response') and e.response is not None:
             console.print(f"Response status code: {e.response.status_code}", style="yellow")
             console.print(f"Response content: {e.response.text}", style="yellow")
