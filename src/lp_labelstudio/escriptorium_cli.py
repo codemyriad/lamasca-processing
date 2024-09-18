@@ -111,7 +111,7 @@ def create_project(name, description):
         # Print the raw response for debugging
         console.print("Raw response:", style="dim")
         console.print(response.text, style="dim")
-        
+
         # Print the parsed JSON response
         console.print("Parsed JSON response:", style="dim")
         console.print(json.dumps(project, indent=2), style="dim")
@@ -131,8 +131,8 @@ def create_document(directory, replace_from, replace_to, project_id, name):
         return
 
     # Get list of image files in the directory
-    image_files = list(Path(directory).glob('**/*.jpg')) + list(Path(directory).glob('**/*.png'))
-    
+    image_files = list(Path(directory).glob('**/*.jpeg')) + list(Path(directory).glob('**/*.png'))
+
     if not image_files:
         click.echo("Error: No image files found in the specified directory.", err=True)
         return
@@ -165,7 +165,7 @@ def create_document(directory, replace_from, replace_to, project_id, name):
         # Print the raw response for debugging
         console.print("Raw response:", style="dim")
         console.print(response.text, style="dim")
-        
+
         # Print the parsed JSON response
         console.print("Parsed JSON response:", style="dim")
         console.print(json.dumps(document, indent=2), style="dim")
