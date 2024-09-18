@@ -141,7 +141,7 @@ def create_document(directory, replace_from, replace_to, project_id, name):
     image_urls = [str(file).replace(replace_from, replace_to) for file in image_files]
 
     # Prepare data for API request
-    url = get_api_url(base_url, f"projects/{project_id}/documents/")
+    url = get_api_url(base_url, f"documents/")
     headers = {
         "Authorization": f"Token {api_key}",
         "Content-Type": "application/json",
@@ -170,7 +170,14 @@ def create_document(directory, replace_from, replace_to, project_id, name):
         console.print("Parsed JSON response:", style="dim")
         console.print(json.dumps(document, indent=2), style="dim")
     except requests.RequestException as e:
-        click.echo(f"Error: Failed to create document. {str(e)}", err=True)
+        console = Console()
+        console.print(f"Error: Failed to create document. {str(e)}", style="red")
+        console.print(f"URL: {url}", style="yellow")
+        console.print(f"Headers: {headers}", style="yellow")
+        console.print(f"Data: {json.dumps(data, indent=2)}", style="yellow")
+        if hasattr(e, 'response') and e.response is not None:
+            console.print(f"Response status code: {e.response.status_code}", style="yellow")
+            console.print(f"Response content: {e.response.text}", style="yellow")
 
 def get_escriptorium_config():
     api_key = os.environ.get('ESCRIPTORIUM_API_KEY')
