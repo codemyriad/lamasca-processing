@@ -4,7 +4,7 @@ import logging
 from typing import Any, Dict, List, Union
 from lp_labelstudio.generate_manifest import generate_datumaro_manifest
 from lp_labelstudio.generate_index_txt import generate_index_txt
-from lp_labelstudio.escriptorium-cli import escriptorium
+from lp_labelstudio.escriptorium_cli import escriptorium
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
