@@ -29,13 +29,17 @@ def list_projects():
         response.raise_for_status()
         
         try:
-            projects = response.json()
+            data = response.json()
         except json.JSONDecodeError:
             click.echo(f"Error: Received non-JSON response: {response.text}", err=True)
             return
 
-        if not isinstance(projects, list):
-            click.echo(f"Error: Unexpected response format. Expected a list of projects, got: {type(projects)}", err=True)
+        if isinstance(data, dict) and 'results' in data:
+            projects = data['results']
+        elif isinstance(data, list):
+            projects = data
+        else:
+            click.echo(f"Error: Unexpected response format. Unable to extract projects list.", err=True)
             return
 
         if not projects:
