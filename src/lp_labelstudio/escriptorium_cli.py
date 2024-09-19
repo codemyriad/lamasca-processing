@@ -121,14 +121,14 @@ def create_project(name, description):
         click.echo(f"Error: Failed to create project. {str(e)}", err=True)
 
 @escriptorium.command()
-@click.argument('project_slug', type=str)
-def list_documents(project_slug):
+@click.argument('project_pk', type=str)
+def list_documents(project_pk):
     """List all documents in a project"""
     api_key, base_url = get_escriptorium_config()
     if not api_key or not base_url:
         return
 
-    url = get_api_url(base_url, f"projects/{project_slug}/documents/")
+    url = get_api_url(base_url, f"documents/?project={project_pk}")
     headers = {
         "Authorization": f"Token {api_key}",
         "Accept": "application/json"
