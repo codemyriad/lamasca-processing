@@ -170,20 +170,26 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         response.raise_for_status()
         document = response.json()
         console = Console()
-        console.print(f"Document: {document}", style="cyan")
-
         console.print(f"Document created successfully!", style="green")
-        console.print(f"Document PK: {document['pk']}", style="cyan")
-        console.print(f"Document Name: {document['name']}", style="magenta")
-        console.print(f"Number of parts: {len(document['parts'])}", style="yellow")
+        console.print(f"Document PK: {document.get('pk', 'N/A')}", style="cyan")
+        console.print(f"Document Name: {document.get('name', 'N/A')}", style="magenta")
+        console.print(f"Project: {document.get('project', 'N/A')}", style="yellow")
+        console.print(f"Main Script: {document.get('main_script', 'N/A')}", style="yellow")
+        console.print(f"Created At: {document.get('created_at', 'N/A')}", style="yellow")
+
+        # Print the number of parts if available
+        if 'parts' in document:
+            console.print(f"Number of parts: {len(document['parts'])}", style="yellow")
+        else:
+            console.print("Number of parts: Not available in the response", style="yellow")
+
+        # Print the full document details
+        console.print("\nFull Document Details:", style="bold")
+        console.print(json.dumps(document, indent=2), style="dim")
 
         # Print the raw response for debugging
-        console.print("Raw response:", style="dim")
+        console.print("\nRaw Response:", style="bold")
         console.print(response.text, style="dim")
-
-        # Print the parsed JSON response
-        console.print("Parsed JSON response:", style="dim")
-        console.print(json.dumps(document, indent=2), style="dim")
     except requests.RequestException as e:
         console = Console()
         console.print(f"Data: {json.dumps(data, indent=2)}", style="yellow")
