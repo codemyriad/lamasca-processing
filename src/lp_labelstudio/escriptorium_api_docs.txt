@@ -1,0 +1,50 @@
+eScriptorium API Documentation (Inferred)
+
+Base URL: {ESCRIPTORIUM_URL}/api/
+
+Endpoints:
+
+1. List Projects
+   GET /projects/
+   Headers:
+     - Authorization: Token {API_KEY}
+     - Accept: application/json
+
+2. Create Project
+   POST /projects/
+   Headers:
+     - Authorization: Token {API_KEY}
+     - Content-Type: application/json
+     - Accept: application/json
+   Body:
+     {
+       "name": string,
+       "description": string
+     }
+
+3. List Documents in a Project
+   GET /projects/{project_slug}/documents/
+   Headers:
+     - Authorization: Token {API_KEY}
+     - Accept: application/json
+
+4. Create Document
+   POST /documents/
+   Headers:
+     - Authorization: Token {API_KEY}
+     - Content-Type: application/json
+     - Accept: application/json
+   Body:
+     {
+       "name": string,
+       "main_script": string,
+       "project": int or string,
+       "project_slug": string (if project is not an int),
+       "parts": [
+         {
+           "image": string (URL)
+         }
+       ]
+     }
+
+Note: This documentation is inferred from the existing CLI implementation and may not be complete or fully accurate. Refer to the official eScriptorium API documentation for the most up-to-date and complete information.

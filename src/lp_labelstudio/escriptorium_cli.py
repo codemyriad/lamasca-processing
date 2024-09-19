@@ -171,16 +171,17 @@ def list_documents(project_slug):
 @click.option('--name', required=True, help='Name of the document')
 @click.option('--main-script', default='Latin', help='Main script of the document')
 def create_document(directory, replace_from, replace_to, project_id, name, main_script):
+    """Create a new document in eScriptorium"""
+    api_key, base_url = get_escriptorium_config()
+    if not api_key or not base_url:
+        return
+
     # Convert project_id to int if it's a numeric string
     try:
         project_id = int(project_id)
     except ValueError:
         # If it's not a number, assume it's a slug and leave it as a string
         pass
-    """Create a new document in eScriptorium"""
-    api_key, base_url = get_escriptorium_config()
-    if not api_key or not base_url:
-        return
 
     # Get list of image files in the directory
     image_files = list(Path(directory).glob('**/*.jpeg')) + list(Path(directory).glob('**/*.png'))
@@ -210,11 +211,11 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
     if not isinstance(project_id, int):
         data["project_slug"] = project_id
 
+    console = Console()
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()
         document = response.json()
-        console = Console()
         console.print(f"Document created successfully!", style="green")
         console.print(f"Document PK: {document.get('pk', 'N/A')}", style="cyan")
         console.print(f"Document Name: {document.get('name', 'N/A')}", style="magenta")
@@ -222,34 +223,48 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         console.print(f"Main Script: {document.get('main_script', 'N/A')}", style="yellow")
         console.print(f"Created At: {document.get('created_at', 'N/A')}", style="yellow")
 
-        # Print the number of parts if available
         if 'parts' in document:
             console.print(f"Number of parts: {len(document['parts'])}", style="yellow")
         else:
             console.print("Number of parts: Not available in the response", style="yellow")
 
-        # Print the full document details
         console.print("\nFull Document Details:", style="bold")
         console.print(json.dumps(document, indent=2), style="dim")
-
-        # Print the raw response for debugging
-        console.print("\nRaw Response:", style="bold")
-        console.print(response.text, style="dim")
     except requests.RequestException as e:
-        console = Console()
-        console.print(f"Data: {json.dumps(data, indent=2)}", style="yellow")
-        console.print(f"Headers: {headers}", style="yellow")
-        console.print(f"URL: {url}", style="yellow")
         console.print(f"Error: Failed to create document. {str(e)}", style="red")
         if hasattr(e, 'response') and e.response is not None:
-            console.print(f"Response status code: {e.response.status_code}", style="yellow")
+            status_code = e.response.status_code
+            console.print(f"Response status code: {status_code}", style="yellow")
             console.print(f"Response content: {e.response.text}", style="yellow")
+            if status_code == 400:
+                console.print("Bad Request: The server could not understand the request.", style="red")
+            elif status_code == 401:
+                console.print("Unauthorized: Authentication failed. Check your API key.", style="red")
+            elif status_code == 403:
+                console.print("Forbidden: You don't have permission to create documents in this project.", style="red")
+            elif status_code == 404:
+                console.print("Not Found: The specified project or endpoint could not be found.", style="red")
+            elif status_code == 500:
+                console.print("Internal Server Error: Something went wrong on the server side.", style="red")
             try:
                 response_json = e.response.json()
                 console.print("Detailed error information:", style="yellow")
                 console.print(json.dumps(response_json, indent=2), style="yellow")
             except json.JSONDecodeError:
                 console.print("Unable to parse response as JSON", style="yellow")
+    except Exception as e:
+        console.print(f"An unexpected error occurred: {str(e)}", style="red")
+    finally:
+        console.print("\nRequest Details (for debugging):", style="dim")
+        console.print(f"URL: {url}", style="dim")
+        console.print("Headers:", style="dim")
+        for key, value in headers.items():
+            if key.lower() == 'authorization':
+                console.print(f"  {key}: Token <redacted>", style="dim")
+            else:
+                console.print(f"  {key}: {value}", style="dim")
+        console.print("Data:", style="dim")
+        console.print(json.dumps(data, indent=2), style="dim")
 
 def get_escriptorium_config():
     api_key = os.environ.get('ESCRIPTORIUM_API_KEY')
