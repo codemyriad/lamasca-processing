@@ -1,50 +1,329 @@
-eScriptorium API Documentation (Inferred)
+# eScriptorium API Documentation
 
-Base URL: {ESCRIPTORIUM_URL}/api/
+This documentation provides guidance on how to interact with the eScriptorium API, focusing on:
 
-Endpoints:
+- Listing documents in a project
+- Listing images (parts) in a document
+- Uploading images to a document
 
-1. List Projects
-   GET /projects/
-   Headers:
-     - Authorization: Token {API_KEY}
-     - Accept: application/json
+## Table of Contents
 
-2. Create Project
-   POST /projects/
-   Headers:
-     - Authorization: Token {API_KEY}
-     - Content-Type: application/json
-     - Accept: application/json
-   Body:
-     {
-       "name": string,
-       "description": string
-     }
+1. [Authentication](#authentication)
+2. [Listing Documents in a Project](#listing-documents-in-a-project)
+3. [Listing Images (Parts) in a Document](#listing-images-parts-in-a-document)
+4. [Uploading Images to a Document](#uploading-images-to-a-document)
+5. [Additional Information](#additional-information)
 
-3. List Documents in a Project
-   GET /projects/{project_slug}/documents/
-   Headers:
-     - Authorization: Token {API_KEY}
-     - Accept: application/json
+---
 
-4. Create Document
-   POST /documents/
-   Headers:
-     - Authorization: Token {API_KEY}
-     - Content-Type: application/json
-     - Accept: application/json
-   Body:
-     {
-       "name": string,
-       "main_script": string,
-       "project": int or string,
-       "project_slug": string (if project is not an int),
-       "parts": [
-         {
-           "image": string (URL)
-         }
-       ]
-     }
+## Authentication
 
-Note: This documentation is inferred from the existing CLI implementation and may not be complete or fully accurate. Refer to the official eScriptorium API documentation for the most up-to-date and complete information.
+The eScriptorium API uses token-based authentication. Before making API requests, you need to obtain an authentication token.
+
+### Obtain an Authentication Token
+
+**Endpoint:**
+
+```
+POST /token-auth/
+```
+
+**Request Body:**
+
+```json
+{
+    "username": "your_username",
+    "password": "your_password"
+}
+```
+
+**Example Request using `curl`:**
+
+```bash
+curl -X POST http://localhost:8080/api/token-auth/ \
+     -H "Content-Type: application/json" \
+     -d '{"username": "your_username", "password": "your_password"}'
+```
+
+**Response:**
+
+```json
+{
+    "token": "your_auth_token"
+}
+```
+
+**Usage:**
+
+Include the obtained token in the `Authorization` header for subsequent API requests:
+
+```
+Authorization: $ESCRIPTORIUM_API_KEY
+```
+
+---
+
+## Listing Documents in a Project
+
+To retrieve a list of documents within a specific project, use the `/documents/` endpoint with the `project` query parameter.
+
+### Endpoint
+
+```
+GET /documents/
+```
+
+### Parameters
+
+- `project` (required): The **slug** of the project whose documents you want to list.
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:8080/api/documents/?project=project_slug" \
+     -H "Authorization: $ESCRIPTORIUM_API_KEY"
+```
+
+### Response
+
+A JSON array of documents in the specified project.
+
+```json
+[
+    {
+        "pk": 1,
+        "name": "Document Name",
+        "project": "project_slug",
+        "transcriptions": [...],
+        "main_script": "Latin",
+        "read_direction": "LTR",
+        "line_offset": 0,
+        "show_confidence_viz": false,
+        "valid_block_types": [...],
+        "valid_line_types": [...],
+        "valid_part_types": [...],
+        "parts_count": 10,
+        "tags": [...],
+        "created_at": "2021-01-01T12:00:00Z",
+        "updated_at": "2021-01-02T12:00:00Z",
+        "project_name": "Project Name",
+        "project_id": 1,
+        "shared_with_users": [...],
+        "shared_with_groups": [...]
+    },
+    ...
+]
+```
+
+### Notes
+
+- The `project` parameter is required and should be the slug (unique identifier) of the project.
+- The response includes detailed information about each document.
+
+---
+
+## Listing Images (Parts) in a Document
+
+To get all images (parts) associated with a document, use the `/documents/{document_pk}/parts/` endpoint.
+
+### Endpoint
+
+```
+GET /documents/{document_pk}/parts/
+```
+
+### Parameters
+
+- `document_pk` (required): The primary key (ID) of the document.
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:8080/api/documents/1/parts/" \
+     -H "Authorization: $ESCRIPTORIUM_API_KEY"
+```
+
+### Response
+
+A JSON array of parts (images) within the specified document.
+
+```json
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "pk": 1,
+      "name": "Prima",
+      "filename": "page_01.jpeg",
+      "title": "Prima",
+      "typology": null,
+      "image": {
+        "uri": "/media/documents/1/page_01.jpeg",
+        "size": [
+          4665,
+          6601
+        ],
+        "thumbnails": {
+          "card": "/media/documents/1/page_01.jpeg.180x180_q85_crop-smart.jpg",
+          "large": "/media/documents/1/page_01.jpeg.1000x1000_q85.jpg"
+        }
+      },
+      "image_file_size": 6605000,
+      "original_filename": "page_01.jpeg",
+      "bw_image": null,
+      "workflow": {},
+      "order": 0,
+      "recoverable": false,
+      "transcription_progress": 0,
+      "source": "",
+      "max_avg_confidence": null,
+      "comments": null,
+      "updated_at": "2024-09-18T09:46:59.480044Z"
+    },
+    {
+      "pk": 2,
+      "name": "",
+    ...
+}
+```
+
+### Notes
+
+- The `document_pk` is the ID of the document whose parts you want to list.
+- Each part includes details like `name`, `filename`, `order`, and image information.
+
+---
+
+## Uploading Images to a Document
+
+To upload images to a document, send a `POST` request to the `/documents/{document_pk}/parts/` endpoint with the image file and metadata.
+
+### Endpoint
+
+```
+POST /documents/{document_pk}/parts/
+```
+
+### Parameters
+
+- `document_pk` (required): The primary key (ID) of the document.
+
+### Request Body
+
+Send the image and metadata as `multipart/form-data`.
+
+#### Fields
+
+- `image` (required): The image file to upload.
+- `name` (optional): A name for the part.
+- `title` (optional): A title for the part.
+- `order` (optional): The position of the part in the document.
+
+### Example Request
+
+```bash
+curl -X POST "http://localhost:8080/api/documents/1/parts/" \
+     -H "Authorization: $ESCRIPTORIUM_API_KEY" \
+     -F "image=@/path/to/your/image.jpg" \
+     -F "name=Page 1" \
+     -F "title=First Page" \
+     -F "order=0"
+```
+
+### Response
+
+A JSON object representing the newly created part.
+
+```json
+{
+    "pk": 1,
+    "name": "Page 1",
+    "filename": "image.jpg",
+    "title": "First Page",
+    "typology": null,
+    "image": {
+        "uri": "/media/documents/1/pages/image.jpg",
+        "size": [2480, 3508],
+        "thumbnails": {
+            "card": "/media/documents/1/pages/thumbnails/card/image.jpg",
+            "large": "/media/documents/1/pages/thumbnails/large/image.jpg"
+        }
+    },
+    "image_file_size": 2048000,
+    "original_filename": "image.jpg",
+    "workflow": {},
+    "order": 0,
+    "recoverable": false,
+    "transcription_progress": 0,
+    "source": "",
+    "max_avg_confidence": null,
+    "comments": "",
+    "updated_at": "2021-01-02T12:00:00Z"
+}
+```
+
+### Notes
+
+- Make sure you have the necessary permissions and quota to upload images.
+- The `image` field is required and must be a valid image file.
+- The server may perform additional processing on the uploaded image (e.g., generating thumbnails).
+
+### Error Handling
+
+If the upload fails, the API will return an error message.
+
+**Example Error Response:**
+
+```json
+{
+    "status": "error",
+    "error": "You don't have any disk storage left."
+}
+```
+
+---
+
+## Additional Information
+
+### Authentication and Permissions
+
+- **Authentication:** All API requests require authentication using the token obtained from `/token-auth/`.
+- **Permissions:** Ensure you have the necessary permissions to access or modify the requested resources.
+
+### Pagination
+
+- The API supports pagination for list endpoints.
+- Use query parameters `page` and `page_size` to control pagination.
+- Default `page_size` may vary; check the `next` and `previous` links in the response.
+
+### Filtering and Ordering
+
+- **Filtering:** Use query parameters to filter results (e.g., `?project=project_slug`).
+- **Ordering:** Use the `ordering` query parameter to sort results (e.g., `?ordering=-created_at`).
+
+### Error Responses
+
+- The API returns appropriate HTTP status codes and error messages.
+- Common status codes:
+  - `400 Bad Request`: Invalid request data.
+  - `401 Unauthorized`: Missing or invalid authentication token.
+  - `403 Forbidden`: Insufficient permissions.
+  - `404 Not Found`: Resource not found.
+
+---
+
+## Conclusion
+
+This documentation covered how to:
+
+- List documents within a specific project.
+- List images (parts) associated with a document.
+- Upload images to a document.
+
+For more advanced usage and additional endpoints, refer to the full eScriptorium API documentation or contact the support team.
+
+---
+
+*Note: Replace `http://localhost:8080` with the actual URL of your eScriptorium instance.*

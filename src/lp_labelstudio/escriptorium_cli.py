@@ -137,7 +137,7 @@ def list_documents(project_pk):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        
+
         try:
             data = response.json()
         except json.JSONDecodeError:
@@ -145,7 +145,7 @@ def list_documents(project_pk):
             return
 
         console = Console()
-        
+
         if not isinstance(data, dict) or 'results' not in data:
             console.print(f"[red]Error: Unexpected response format. Expected a dictionary with 'results' key.[/red]")
             console.print("Raw response:", style="dim")
@@ -210,7 +210,7 @@ def list_images(document_id):
     if not api_key or not base_url:
         return
 
-    url = get_api_url(base_url, f"documents/{document_id}/")
+    url = get_api_url(base_url, f"documents/{document_id}/parts/")
     headers = {
         "Authorization": f"Token {api_key}",
         "Accept": "application/json"
@@ -218,42 +218,27 @@ def list_images(document_id):
 
     console = Console()
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        
-        try:
-            document = response.json()
-        except json.JSONDecodeError:
-            console.print(f"[red]Error: Received non-JSON response: {response.text}[/red]")
-            return
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    document = response.json()
 
-        if 'parts' not in document:
-            console.print(f"[yellow]No parts found in document with ID: {document_id}[/yellow]")
-            return
+    table = Table(title=f"Images in Document: {document_id}")
+    table.add_column("Part ID", style="cyan")
+    table.add_column("Page title", style="magenta")
+    table.add_column("Image size", style="green")
+    table.add_column("Order", style="yellow")
 
-        table = Table(title=f"Images in Document: {document_id}")
-        table.add_column("Part ID", style="cyan")
-        table.add_column("Image Name", style="magenta")
-        table.add_column("Image URL", style="green")
-        table.add_column("Order", style="yellow")
+    for part in document['results']:
+        image_size = 'x'.join(map(str, part["image"]["size"]))
+        table.add_row(
+            str(part.get('id', 'N/A')),
+            part.get('name', 'N/A'),
+            image_size,
+            str(part.get('order', 'N/A'))
+        )
 
-        for part in document['parts']:
-            table.add_row(
-                str(part.get('id', 'N/A')),
-                part.get('filename', 'N/A'),
-                part.get('image', 'N/A'),
-                str(part.get('order', 'N/A'))
-            )
-
-        console.print(table)
-        console.print(f"\nTotal images: {len(document['parts'])}", style="bold")
-
-    except requests.RequestException as e:
-        console.print(f"[red]Error: Failed to list images. {str(e)}[/red]")
-        if hasattr(e, 'response') and e.response is not None:
-            console.print(f"Response status code: {e.response.status_code}", style="yellow")
-            console.print(f"Response content: {e.response.text}", style="yellow")
+    console.print(table)
+    console.print(f"\nTotal images: {len(document['results'])}", style="bold")
 
 def get_escriptorium_config():
     api_key = os.environ.get('ESCRIPTORIUM_API_KEY')
