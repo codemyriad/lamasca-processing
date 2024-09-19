@@ -119,6 +119,49 @@ def create_project(name, description):
         click.echo(f"Error: Failed to create project. {str(e)}", err=True)
 
 @escriptorium.command()
+@click.argument('project_slug', type=str)
+def list_documents(project_slug):
+    """List all documents in a project"""
+    api_key, base_url = get_escriptorium_config()
+    if not api_key or not base_url:
+        return
+
+    url = get_api_url(base_url, f"projects/{project_slug}/documents/")
+    headers = {
+        "Authorization": f"Token {api_key}",
+        "Accept": "application/json"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        documents = response.json()
+
+        console = Console()
+        table = Table(title=f"Documents in Project: {project_slug}")
+        table.add_column("ID", style="cyan")
+        table.add_column("Name", style="magenta")
+        table.add_column("Created At", style="green")
+        table.add_column("Main Script", style="yellow")
+
+        for document in documents:
+            table.add_row(
+                str(document['pk']),
+                document['name'],
+                document['created_at'],
+                document['main_script']
+            )
+
+        console.print(table)
+
+        # Print the raw response for debugging
+        console.print("\nRaw response:", style="dim")
+        console.print(response.text, style="dim")
+
+    except requests.RequestException as e:
+        click.echo(f"Error: Failed to list documents. {str(e)}", err=True)
+
+@escriptorium.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--replace-from', required=True, help='String to replace in local paths')
 @click.option('--replace-to', required=True, help='String to replace with in URLs')
