@@ -140,7 +140,7 @@ def list_documents(project_pk):
         documents = response.json()
 
         console = Console()
-        table = Table(title=f"Documents in Project: {project_slug}")
+        table = Table(title=f"Documents in Project: {project_pk}")
         table.add_column("ID", style="cyan")
         table.add_column("Name", style="magenta")
         table.add_column("Created At", style="green")
