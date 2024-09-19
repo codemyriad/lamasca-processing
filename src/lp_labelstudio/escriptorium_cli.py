@@ -137,9 +137,25 @@ def list_documents(project_pk):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        documents = response.json()
+        
+        try:
+            documents = response.json()
+        except json.JSONDecodeError:
+            click.echo(f"Error: Received non-JSON response: {response.text}", err=True)
+            return
 
         console = Console()
+        
+        if not isinstance(documents, list):
+            click.echo(f"Error: Unexpected response format. Expected a list of documents.", err=True)
+            console.print("Raw response:", style="dim")
+            console.print(response.text, style="dim")
+            return
+
+        if not documents:
+            click.echo("No documents found in this project.")
+            return
+
         table = Table(title=f"Documents in Project: {project_pk}")
         table.add_column("ID", style="cyan")
         table.add_column("Name", style="magenta")
@@ -147,11 +163,14 @@ def list_documents(project_pk):
         table.add_column("Main Script", style="yellow")
 
         for document in documents:
+            if not isinstance(document, dict):
+                click.echo(f"Warning: Skipping invalid document data: {document}", err=True)
+                continue
             table.add_row(
-                str(document['pk']),
-                document['name'],
-                document['created_at'],
-                document['main_script']
+                str(document.get('pk', 'N/A')),
+                document.get('name', 'N/A'),
+                document.get('created_at', 'N/A'),
+                document.get('main_script', 'N/A')
             )
 
         console.print(table)
@@ -162,6 +181,9 @@ def list_documents(project_pk):
 
     except requests.RequestException as e:
         click.echo(f"Error: Failed to list documents. {str(e)}", err=True)
+        if hasattr(e, 'response') and e.response is not None:
+            click.echo(f"Response status code: {e.response.status_code}", err=True)
+            click.echo(f"Response content: {e.response.text}", err=True)
 
 @escriptorium.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
