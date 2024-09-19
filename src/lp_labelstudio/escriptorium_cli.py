@@ -51,6 +51,7 @@ def list_projects():
         table = Table(title="eScriptorium Projects")
         table.add_column("ID", style="cyan")
         table.add_column("Name", style="magenta")
+        table.add_column("Slug", style="yellow")
         table.add_column("Description", style="green")
 
         for project in projects:
@@ -66,6 +67,7 @@ def list_projects():
             table.add_row(
                 str(project.get('id', 'N/A')),
                 project.get('name', 'N/A'),
+                project.get('slug', 'N/A'),
                 description
             )
 
