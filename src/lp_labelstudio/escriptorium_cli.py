@@ -200,6 +200,61 @@ def list_documents(project_pk):
 @click.option('--main-script', default='Latin', help='Main script of the document')
 def create_document(directory, replace_from, replace_to, project_id, name, main_script):
     """Create a new document in eScriptorium"""
+    # ... (existing implementation)
+
+@escriptorium.command()
+@click.argument('document_id', type=int)
+def list_images(document_id):
+    """List all images in a document"""
+    api_key, base_url = get_escriptorium_config()
+    if not api_key or not base_url:
+        return
+
+    url = get_api_url(base_url, f"documents/{document_id}/")
+    headers = {
+        "Authorization": f"Token {api_key}",
+        "Accept": "application/json"
+    }
+
+    console = Console()
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        try:
+            document = response.json()
+        except json.JSONDecodeError:
+            console.print(f"[red]Error: Received non-JSON response: {response.text}[/red]")
+            return
+
+        if 'parts' not in document:
+            console.print(f"[yellow]No parts found in document with ID: {document_id}[/yellow]")
+            return
+
+        table = Table(title=f"Images in Document: {document_id}")
+        table.add_column("Part ID", style="cyan")
+        table.add_column("Image Name", style="magenta")
+        table.add_column("Image URL", style="green")
+        table.add_column("Order", style="yellow")
+
+        for part in document['parts']:
+            table.add_row(
+                str(part.get('id', 'N/A')),
+                part.get('filename', 'N/A'),
+                part.get('image', 'N/A'),
+                str(part.get('order', 'N/A'))
+            )
+
+        console.print(table)
+        console.print(f"\nTotal images: {len(document['parts'])}", style="bold")
+
+    except requests.RequestException as e:
+        console.print(f"[red]Error: Failed to list images. {str(e)}[/red]")
+        if hasattr(e, 'response') and e.response is not None:
+            console.print(f"Response status code: {e.response.status_code}", style="yellow")
+            console.print(f"Response content: {e.response.text}", style="yellow")
+    """Create a new document in eScriptorium"""
     api_key, base_url = get_escriptorium_config()
     if not api_key or not base_url:
         return
