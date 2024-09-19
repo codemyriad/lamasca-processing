@@ -139,21 +139,23 @@ def list_documents(project_pk):
         response.raise_for_status()
         
         try:
-            documents = response.json()
+            data = response.json()
         except json.JSONDecodeError:
             click.echo(f"Error: Received non-JSON response: {response.text}", err=True)
             return
 
         console = Console()
         
-        if not isinstance(documents, list):
-            click.echo(f"Error: Unexpected response format. Expected a list of documents.", err=True)
+        if not isinstance(data, dict) or 'results' not in data:
+            console.print(f"[red]Error: Unexpected response format. Expected a dictionary with 'results' key.[/red]")
             console.print("Raw response:", style="dim")
             console.print(response.text, style="dim")
             return
 
+        documents = data['results']
+
         if not documents:
-            click.echo("No documents found in this project.")
+            console.print("[yellow]No documents found in this project.[/yellow]")
             return
 
         table = Table(title=f"Documents in Project: {project_pk}")
@@ -161,29 +163,33 @@ def list_documents(project_pk):
         table.add_column("Name", style="magenta")
         table.add_column("Created At", style="green")
         table.add_column("Main Script", style="yellow")
+        table.add_column("Parts Count", style="blue")
 
         for document in documents:
             if not isinstance(document, dict):
-                click.echo(f"Warning: Skipping invalid document data: {document}", err=True)
+                console.print(f"[yellow]Warning: Skipping invalid document data: {document}[/yellow]")
                 continue
             table.add_row(
                 str(document.get('pk', 'N/A')),
                 document.get('name', 'N/A'),
                 document.get('created_at', 'N/A'),
-                document.get('main_script', 'N/A')
+                document.get('main_script', 'N/A'),
+                str(document.get('parts_count', 'N/A'))
             )
 
         console.print(table)
 
-        # Print the raw response for debugging
-        console.print("\nRaw response:", style="dim")
-        console.print(response.text, style="dim")
+        # Print pagination information
+        console.print(f"\nTotal documents: {data.get('count', 'N/A')}", style="bold")
+        if data.get('next'):
+            console.print("There are more documents. Use pagination to see them.", style="italic")
 
     except requests.RequestException as e:
-        click.echo(f"Error: Failed to list documents. {str(e)}", err=True)
+        console = Console()
+        console.print(f"[red]Error: Failed to list documents. {str(e)}[/red]")
         if hasattr(e, 'response') and e.response is not None:
-            click.echo(f"Response status code: {e.response.status_code}", err=True)
-            click.echo(f"Response content: {e.response.text}", err=True)
+            console.print(f"Response status code: {e.response.status_code}", style="yellow")
+            console.print(f"Response content: {e.response.text}", style="yellow")
 
 @escriptorium.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, dir_okay=True))
