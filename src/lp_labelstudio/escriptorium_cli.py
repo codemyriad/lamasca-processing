@@ -170,8 +170,10 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         response.raise_for_status()
         document = response.json()
         console = Console()
+        console.print(f"Document: {document}", style="cyan")
+
         console.print(f"Document created successfully!", style="green")
-        console.print(f"Document ID: {document['id']}", style="cyan")
+        console.print(f"Document PK: {document['pk']}", style="cyan")
         console.print(f"Document Name: {document['name']}", style="magenta")
         console.print(f"Number of parts: {len(document['parts'])}", style="yellow")
 
