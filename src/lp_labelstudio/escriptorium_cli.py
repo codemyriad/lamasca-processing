@@ -236,20 +236,21 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()
         document = response.json()
+        import pdb; pdb.set_trace()
         console.print(f"Document created successfully!", style="green")
         console.print(f"Document ID: {document['id']}", style="cyan")
         console.print(f"Document Name: {document['name']}", style="magenta")
         console.print(f"Number of parts added: {len(document['parts'])}", style="yellow")
     except requests.RequestException as e:
-        console.print(f"[red]Error: Failed to create document. {str(e)}[/red]")
-        if hasattr(e, 'response') and e.response is not None:
-            console.print(f"Response status code: {e.response.status_code}", style="yellow")
-            console.print(f"Response content: {e.response.text}", style="yellow")
         console.print("\nDebugging information:", style="bold")
         console.print(f"API URL: {url}", style="dim")
         console.print(f"Headers: {headers}", style="dim")
         console.print("Request data:", style="dim")
         console.print(json.dumps(data, indent=2), style="dim")
+        console.print(f"[red]Error: Failed to create document. {str(e)}[/red]")
+        if hasattr(e, 'response') and e.response is not None:
+            console.print(f"Response status code: {e.response.status_code}", style="yellow")
+            console.print(f"Response content: {e.response.text}", style="yellow")
 
 @escriptorium.command()
 @click.argument('document_id', type=int)
