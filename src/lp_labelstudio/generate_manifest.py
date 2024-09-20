@@ -135,6 +135,11 @@ def generate_iiif_manifest(directories: List[str]) -> None:
                 "width": int(200 * (first_image["width"] / first_image["height"]))
             }
 
+        # Add required fields
+        iiif_manifest["@context"] = ["http://iiif.io/api/presentation/2/context.json"]
+        iiif_manifest["@id"] = f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/manifest.json"
+        iiif_manifest["@type"] = "sc:Manifest"
+
         output = os.path.join(directory, "manifest.json")
         with open(output, "w") as f:
             json.dump(iiif_manifest, f, indent=2)
@@ -146,6 +151,31 @@ def generate_iiif_manifest(directories: List[str]) -> None:
             )
         )
 
+        # Validate the manifest
+        if validate_manifest(iiif_manifest):
+            click.echo(click.style("IIIF manifest validation successful", fg="green"))
+        else:
+            click.echo(click.style("IIIF manifest validation failed", fg="red"))
+
 
 if __name__ == "__main__":
     generate_iiif_manifest()
+def validate_manifest(manifest):
+    """
+    Validate the IIIF manifest.
+    """
+    required_fields = ["@context", "@id", "@type", "label", "sequences"]
+    for field in required_fields:
+        if field not in manifest:
+            click.echo(click.style(f"Missing required field: {field}", fg="red"))
+            return False
+
+    if not manifest["sequences"]:
+        click.echo(click.style("No sequences found in manifest", fg="red"))
+        return False
+
+    if not manifest["sequences"][0]["canvases"]:
+        click.echo(click.style("No canvases found in manifest", fg="red"))
+        return False
+
+    return True
