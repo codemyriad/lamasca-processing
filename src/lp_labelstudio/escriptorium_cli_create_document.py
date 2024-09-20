@@ -3,6 +3,7 @@ import requests
 import json
 import click
 from rich.console import Console
+import mimetypes
 from lp_labelstudio.escriptorium_cli import (
     get_escriptorium_config,
     get_api_url,
@@ -60,15 +61,23 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
 @click.option(
     "--document-id",
     required=True,
-    help="ID or slug of the project to add the document to",
+    help="ID of the document to add images to",
 )
-def upload_images(directory, replace_from, replace_to, document_id,):
+def upload_images(directory, replace_from, replace_to, document_id):
     api_key, base_url = get_escriptorium_config()
-    headers = {"Authorization": f"Token {api_key}", "Accept": "application/json"}
-    parts_url = get_api_url(base_url, f"documents/{document_id}/parts/")
-    headers["Content-Type"] = "multipart/form-data"
+    if not api_key or not base_url:
+        return
 
+    parts_url = get_api_url(base_url, f"documents/{document_id}/parts/")
+    headers = {
+        "Authorization": f"Token {api_key}",
+        "Accept": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+
+    console = Console()
     parts_added = 0
+
     for root, _, files in os.walk(directory):
         for file in files:
             if file.lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".tif")):
@@ -76,19 +85,23 @@ def upload_images(directory, replace_from, replace_to, document_id,):
                 relative_path = os.path.relpath(file_path, directory)
                 url_path = relative_path.replace(replace_from, replace_to)
 
+                mime_type, _ = mimetypes.guess_type(file_path)
+                if not mime_type:
+                    mime_type = "application/octet-stream"
+
                 with open(file_path, "rb") as image_file:
-                    files = {"image": (file, image_file)}
+                    files = {"image": (file, image_file, mime_type)}
                     data = {
                         "name": file,
                         "document": document_id,
                         "order": parts_added + 1,
                     }
-                    response = requests.post(
-                        parts_url, headers=headers, data=data, files=files
-                    )
-                    import pdb; pdb.set_trace()
-                    response.raise_for_status()
-                    parts_added += 1
-                    console.print(f"Uploaded part: {file}", style="blue")
+                    try:
+                        response = requests.post(parts_url, headers=headers, data=data, files=files)
+                        response.raise_for_status()
+                        parts_added += 1
+                        console.print(f"Uploaded part: {file}", style="green")
+                    except requests.RequestException as e:
+                        console.print(f"Failed to upload {file}: {str(e)}", style="red")
 
     console.print(f"Number of parts added: {parts_added}", style="yellow")
