@@ -278,3 +278,6 @@ def get_api_url(base_url, endpoint):
 
 if __name__ == "__main__":
     escriptorium()
+
+
+import lp_labelstudio.escriptorium_cli_create_document
