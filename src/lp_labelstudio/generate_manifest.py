@@ -7,10 +7,8 @@ from PIL import Image
 
 
 def get_image_url(image_path: str) -> str:
-    return image_path.replace(
-        "/tmp/newspapers",
-        "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers",
-    )
+    # Ensure the URL uses HTTPS and is properly formatted
+    return f"https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers/{'/'.join(image_path.split('/')[3:])}"
 
 
 def get_page_number(jpeg_file: str) -> int:
@@ -70,6 +68,7 @@ def generate_iiif_manifest(directories: List[str]) -> None:
             canvas = {
                 "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}",
                 "type": "Canvas",
+                "label": {"en": [f"Page {i+1}"]},
                 "height": image_info["height"],
                 "width": image_info["width"],
                 "items": [
@@ -87,6 +86,13 @@ def generate_iiif_manifest(directories: List[str]) -> None:
                                     "format": "image/jpeg",
                                     "height": image_info["height"],
                                     "width": image_info["width"],
+                                    "service": [
+                                        {
+                                            "@id": image_info["url"],
+                                            "type": "ImageService3",
+                                            "profile": "level1"
+                                        }
+                                    ]
                                 },
                                 "target": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}"
                             }
