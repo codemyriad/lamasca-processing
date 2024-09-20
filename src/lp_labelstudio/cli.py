@@ -25,12 +25,12 @@ def cli():
     nargs=-1,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-def generate_datumaro(directories: List[str]) -> None:
-    """Generate Datumaro format ZIP file containing JSON manifest for the given directories."""
+def generate_iiif(directories: List[str]) -> None:
+    """Generate IIIF manifest JSON file for the given directories."""
     # We import here for performance reasons. Don't move up!
-    from lp_labelstudio.generate_manifest import generate_datumaro_manifest
+    from lp_labelstudio.generate_manifest import generate_iiif_manifest
 
-    generate_datumaro_manifest(directories)
+    generate_iiif_manifest(directories)
 
 
 @cli.command(name="generate-index-txt")

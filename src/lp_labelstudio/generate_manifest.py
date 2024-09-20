@@ -1,7 +1,6 @@
 import click
 import os
 import json
-import zipfile
 from typing import List, Dict, Any
 from pathlib import Path
 from PIL import Image
@@ -39,49 +38,67 @@ def get_image_info(image_path: str) -> Dict[str, Any]:
     nargs=-1,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-def generate_datumaro_manifest(directories: List[str]) -> None:
-    """Generate Datumaro format ZIP file containing JSON manifest for the given directories."""
+def generate_iiif_manifest(directories: List[str]) -> None:
+    """Generate IIIF manifest JSON file for the given directories."""
 
     for directory in directories:
         if directory.endswith("/"):
             directory = directory[:-1]
 
-        datumaro_format = {
-            "info": {},
-            "categories": {
-                "label": {
-                    "labels": [
-                        {"name": "newspaper_page", "parent": "", "attributes": []}
-                    ],
-                    "attributes": [],
-                }
-            },
+        iiif_manifest = {
+            "@context": "http://iiif.io/api/presentation/3/context.json",
+            "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/manifest",
+            "type": "Manifest",
+            "label": {"en": [f"Newspaper: {os.path.basename(directory)}"]},
             "items": [],
         }
 
-        jpeg_files = [f for f in os.listdir(directory) if f.lower().endswith(".jpeg")]
+        jpeg_files = sorted([f for f in os.listdir(directory) if f.lower().endswith(".jpeg")])
 
-        for jpeg_file in jpeg_files:
+        for i, jpeg_file in enumerate(jpeg_files):
             image_path = os.path.join(directory, jpeg_file)
-            item_id = os.path.splitext(jpeg_file)[0]
+            image_info = get_image_info(image_path)
+            
+            canvas = {
+                "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}",
+                "type": "Canvas",
+                "height": image_info["height"],
+                "width": image_info["width"],
+                "items": [
+                    {
+                        "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/page/p{i+1}/1",
+                        "type": "AnnotationPage",
+                        "items": [
+                            {
+                                "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/annotation/p{i+1}-image",
+                                "type": "Annotation",
+                                "motivation": "painting",
+                                "body": {
+                                    "id": image_info["url"],
+                                    "type": "Image",
+                                    "format": "image/jpeg",
+                                    "height": image_info["height"],
+                                    "width": image_info["width"],
+                                },
+                                "target": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}"
+                            }
+                        ]
+                    }
+                ]
+            }
+            iiif_manifest["items"].append(canvas)
 
-            datumaro_format["items"].append(
-                {"id": item_id, "annotations": [], "image": get_image_info(image_path)}
-            )
+        output = os.path.join(directory, "manifest.json")
+        with open(output, "w") as f:
+            json.dump(iiif_manifest, f, indent=2)
 
-        output = os.path.join(directory, "datumaro.zip")
-        with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zipf:
-            zipf.writestr(
-                "annotations/default.json", json.dumps(datumaro_format, indent=2)
-            )
-
-        click.echo(click.style(f"Datumaro ZIP file generated: {output}", fg="green"))
+        click.echo(click.style(f"IIIF manifest generated: {output}", fg="green"))
         click.echo(
             click.style(
-                f"Total images included: {len(datumaro_format['items'])}", fg="green"
+                f"Total images included: {len(iiif_manifest['items'])}", fg="green"
             )
         )
 
 
 if __name__ == "__main__":
-    generate_datumaro_manifest()
+    generate_iiif_manifest()
