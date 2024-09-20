@@ -58,6 +58,7 @@ def generate_iiif_manifest(directories: List[str]) -> None:
             "description": f"IIIF manifest for {newspaper_name} published on {publication_date}",
             "license": "https://creativecommons.org/licenses/by/4.0/",
             "attribution": "Provided by Example Organization",
+            "viewingDirection": "left-to-right",
             "sequences": [
                 {
                     "@id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/sequence/normal",
@@ -68,6 +69,10 @@ def generate_iiif_manifest(directories: List[str]) -> None:
         }
 
         jpeg_files = sorted([f for f in os.listdir(directory) if f.lower().endswith(".jpeg")])
+
+        if not jpeg_files:
+            click.echo(click.style(f"No JPEG files found in {directory}", fg="red"))
+            continue
 
         for i, jpeg_file in enumerate(jpeg_files):
             image_path = os.path.join(directory, jpeg_file)
@@ -107,6 +112,10 @@ def generate_iiif_manifest(directories: List[str]) -> None:
                 }
             }
             iiif_manifest["sequences"][0]["canvases"].append(canvas)
+
+        if not iiif_manifest["sequences"][0]["canvases"]:
+            click.echo(click.style(f"No valid images found in {directory}", fg="red"))
+            continue
 
         # Add thumbnail for the manifest
         if jpeg_files:
