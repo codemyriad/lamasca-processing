@@ -45,11 +45,19 @@ def generate_iiif_manifest(directories: List[str]) -> None:
         if directory.endswith("/"):
             directory = directory[:-1]
 
+        newspaper_name = os.path.basename(directory).split('-')[0]
+        publication_date = get_date(directory)
+
         iiif_manifest = {
             "@context": "http://iiif.io/api/presentation/3/context.json",
             "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/manifest",
             "type": "Manifest",
-            "label": {"en": [f"Newspaper: {os.path.basename(directory)}"]},
+            "label": {"en": [f"Newspaper: {newspaper_name}"]},
+            "behavior": ["paged"],
+            "metadata": [
+                {"label": {"en": ["Publication"]}, "value": {"en": [newspaper_name]}},
+                {"label": {"en": ["Date"]}, "value": {"en": [publication_date]}},
+            ],
             "items": [],
         }
 
