@@ -20,14 +20,17 @@ def get_date(directory: str) -> str:
 
 
 def get_image_info(image_path: str) -> Dict[str, Any]:
-    with Image.open(image_path) as img:
-        width, height = img.size
-    return {
-        "file_name": os.path.basename(image_path),
-        "height": height,
-        "width": width,
-        "url": get_image_url(image_path),
-    }
+    try:
+        with Image.open(image_path) as img:
+            width, height = img.size
+        return {
+            "file_name": os.path.basename(image_path),
+            "height": height,
+            "width": width,
+            "url": get_image_url(image_path),
+        }
+    except Exception as e:
+        raise ValueError(f"Error processing image {image_path}: {str(e)}")
 
 
 @click.command()
@@ -68,7 +71,7 @@ def generate_iiif_manifest(directories: List[str]) -> None:
             ]
         }
 
-        jpeg_files = sorted([f for f in os.listdir(directory) if f.lower().endswith(".jpeg")])
+        jpeg_files = sorted([f for f in os.listdir(directory) if f.lower().endswith((".jpeg", ".jpg"))])
 
         if not jpeg_files:
             click.echo(click.style(f"No JPEG files found in {directory}", fg="red"))
@@ -76,7 +79,11 @@ def generate_iiif_manifest(directories: List[str]) -> None:
 
         for i, jpeg_file in enumerate(jpeg_files):
             image_path = os.path.join(directory, jpeg_file)
-            image_info = get_image_info(image_path)
+            try:
+                image_info = get_image_info(image_path)
+            except Exception as e:
+                click.echo(click.style(f"Error processing {image_path}: {str(e)}", fg="red"))
+                continue
             
             canvas = {
                 "@id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}",
