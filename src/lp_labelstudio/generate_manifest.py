@@ -47,16 +47,24 @@ def generate_iiif_manifest(directories: List[str]) -> None:
         publication_date = get_date(directory)
 
         iiif_manifest = {
-            "@context": "http://iiif.io/api/presentation/3/context.json",
-            "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/manifest",
-            "type": "Manifest",
-            "label": {"en": [f"Newspaper: {newspaper_name}"]},
-            "behavior": ["paged"],
+            "@context": "http://iiif.io/api/presentation/2/context.json",
+            "@id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/manifest.json",
+            "@type": "sc:Manifest",
+            "label": f"Newspaper: {newspaper_name}",
             "metadata": [
-                {"label": {"en": ["Publication"]}, "value": {"en": [newspaper_name]}},
-                {"label": {"en": ["Date"]}, "value": {"en": [publication_date]}},
+                {"label": "Publication", "value": newspaper_name},
+                {"label": "Date", "value": publication_date},
             ],
-            "items": [],
+            "description": f"IIIF manifest for {newspaper_name} published on {publication_date}",
+            "license": "https://creativecommons.org/licenses/by/4.0/",
+            "attribution": "Provided by Example Organization",
+            "sequences": [
+                {
+                    "@id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/sequence/normal",
+                    "@type": "sc:Sequence",
+                    "canvases": []
+                }
+            ]
         }
 
         jpeg_files = sorted([f for f in os.listdir(directory) if f.lower().endswith(".jpeg")])
@@ -66,41 +74,50 @@ def generate_iiif_manifest(directories: List[str]) -> None:
             image_info = get_image_info(image_path)
             
             canvas = {
-                "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}",
-                "type": "Canvas",
-                "label": {"en": [f"Page {i+1}"]},
+                "@id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}",
+                "@type": "sc:Canvas",
+                "label": f"Page {i+1}",
                 "height": image_info["height"],
                 "width": image_info["width"],
-                "items": [
+                "images": [
                     {
-                        "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/page/p{i+1}/1",
-                        "type": "AnnotationPage",
-                        "items": [
-                            {
-                                "id": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/annotation/p{i+1}-image",
-                                "type": "Annotation",
-                                "motivation": "painting",
-                                "body": {
-                                    "id": image_info["url"],
-                                    "type": "Image",
-                                    "format": "image/jpeg",
-                                    "height": image_info["height"],
-                                    "width": image_info["width"],
-                                    "service": [
-                                        {
-                                            "@id": image_info["url"],
-                                            "type": "ImageService3",
-                                            "profile": "level1"
-                                        }
-                                    ]
-                                },
-                                "target": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}"
+                        "@type": "oa:Annotation",
+                        "motivation": "sc:painting",
+                        "resource": {
+                            "@id": image_info["url"],
+                            "@type": "dctypes:Image",
+                            "format": "image/jpeg",
+                            "height": image_info["height"],
+                            "width": image_info["width"],
+                            "service": {
+                                "@context": "http://iiif.io/api/image/2/context.json",
+                                "@id": image_info["url"],
+                                "profile": "http://iiif.io/api/image/2/level1.json"
                             }
-                        ]
+                        },
+                        "on": f"https://example.org/iiif/newspaper/{os.path.basename(directory)}/canvas/p{i+1}"
                     }
-                ]
+                ],
+                "thumbnail": {
+                    "@id": f"{image_info['url']}/full/200,/0/default.jpg",
+                    "@type": "dctypes:Image",
+                    "format": "image/jpeg",
+                    "height": 200,
+                    "width": int(200 * (image_info["width"] / image_info["height"]))
+                }
             }
-            iiif_manifest["items"].append(canvas)
+            iiif_manifest["sequences"][0]["canvases"].append(canvas)
+
+        # Add thumbnail for the manifest
+        if jpeg_files:
+            first_image = get_image_info(os.path.join(directory, jpeg_files[0]))
+            iiif_manifest["thumbnail"] = {
+                "@id": f"{first_image['url']}/full/200,/0/default.jpg",
+                "@type": "dctypes:Image",
+                "format": "image/jpeg",
+                "height": 200,
+                "width": int(200 * (first_image["width"] / first_image["height"]))
+            }
 
         output = os.path.join(directory, "manifest.json")
         with open(output, "w") as f:
@@ -109,7 +126,7 @@ def generate_iiif_manifest(directories: List[str]) -> None:
         click.echo(click.style(f"IIIF manifest generated: {output}", fg="green"))
         click.echo(
             click.style(
-                f"Total images included: {len(iiif_manifest['items'])}", fg="green"
+                f"Total images included: {len(iiif_manifest['sequences'][0]['canvases'])}", fg="green"
             )
         )
 
