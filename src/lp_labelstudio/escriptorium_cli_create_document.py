@@ -56,14 +56,12 @@ def create_document(directory, replace_from, replace_to, project_id, name, main_
 @click.argument(
     "directory", type=click.Path(exists=True, file_okay=False, dir_okay=True)
 )
-@click.option("--replace-from", required=True, help="String to replace in local paths")
-@click.option("--replace-to", required=True, help="String to replace with in URLs")
 @click.option(
     "--document-id",
     required=True,
     help="ID of the document to add images to",
 )
-def upload_images(directory, replace_from, replace_to, document_id):
+def upload_images(directory, document_id):
     api_key, base_url = get_escriptorium_config()
     if not api_key or not base_url:
         return
@@ -83,7 +81,6 @@ def upload_images(directory, replace_from, replace_to, document_id):
             if file.lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".tif")):
                 file_path = os.path.join(root, file)
                 relative_path = os.path.relpath(file_path, directory)
-                url_path = relative_path.replace(replace_from, replace_to)
 
                 mime_type, _ = mimetypes.guess_type(file_path)
                 if not mime_type:
@@ -96,12 +93,9 @@ def upload_images(directory, replace_from, replace_to, document_id):
                         "document": document_id,
                         "order": parts_added + 1,
                     }
-                    try:
-                        response = requests.post(parts_url, headers=headers, data=data, files=files)
-                        response.raise_for_status()
-                        parts_added += 1
-                        console.print(f"Uploaded part: {file}", style="green")
-                    except requests.RequestException as e:
-                        console.print(f"Failed to upload {file}: {str(e)}", style="red")
+                    response = requests.post(parts_url, headers=headers, data=data, files=files)
+                    response.raise_for_status()
+                    parts_added += 1
+                    console.print(f"Uploaded part: {file}", style="green")
 
     console.print(f"Number of parts added: {parts_added}", style="yellow")
