@@ -48,6 +48,8 @@
   </Relations>
 
   <!-- Text area for transcription and metadata capture -->
+  <!--
+  This is commented out for now: people won't be transcribing
   <TextArea
     name="transcription"
     toName="image"
@@ -59,4 +61,5 @@
     placeholder="Recognized Text"
     displayMode="region-list"
   />
+  -->
 </View>

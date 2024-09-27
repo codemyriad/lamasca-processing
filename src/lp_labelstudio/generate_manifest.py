@@ -32,13 +32,18 @@ def get_date(directory: str) -> str:
     """
     return directory.split('/')[-1].replace("lamasca-", "")
 
-@click.command()
-@click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def generate_manifest(directories: List[str]) -> None:
+@click.argument(
+    "directories",
+    nargs=-1,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+)
+@click.option('--annotations-base-path', required=False, help='If specified, search here for annotations')
+def generate_labelstudio_manifest(directories: List[str], annotations_base_path) -> None:
     """Generate Label Studio JSON manifest files for the given directories,
     and save it in each dir as `manifest.json`."""
     total_issues: int = 0
     total_pages: int = 0
+    total_annotations: int = 0
 
     for directory in directories:
         manifest: List[Dict[str, Any]] = []
@@ -62,22 +67,45 @@ def generate_manifest(directories: List[str]) -> None:
                 },
             }
             manifest.append(task_item)
-
+        num_annotations = 0
+        if annotations_base_path is not None:
+            num_annotations = augment_manifest_with_annotations(manifest, directory, annotations_base_path)
         total_issues += 1
         total_pages += len(manifest)
+        total_annotations += num_annotations
 
         output = Path(directory) / "manifest.json"
         with output.open("w") as f:
             json.dump(manifest, f, indent=2)
-        click.echo(click.style(f"Manifest file generated: {output}", fg="green"))
+        click.echo(click.style(f"Manifest file generated with {num_annotations} annotations: {output}", fg="green"))
 
     click.echo(click.style(f"Total issues included: {total_issues}", fg="green"))
     click.echo(click.style(f"Total pages included: {total_pages}", fg="green"))
+    click.echo(click.style(f"Total annotations included: {total_annotations}", fg="green"))
 
 def read_xml_file(file_path: str) -> str:
     with open(file_path, 'r') as file:
         return file.read()
 
+
+def augment_manifest_with_annotations(manifest, directory, annotations_base_path):
+    """Finds JSON files for annotations and amends the passed `manifest` dict.
+    Returns the number of pages that received annotations
+    """
+    annotations_dir = Path(annotations_base_path) / os.path.basename(directory)
+    if not annotations_dir.exists():
+        return
+    manifest_by_page = {}
+    for page in manifest:
+        manifest_by_page[page["data"]["pageNumber"]] = page
+    total_annotated = 0
+    for file in annotations_dir.iterdir():
+        annotation = json.loads(file.read_text())
+        annotation.pop("completed_by", None)
+        page_number = annotation["task"]["data"]["pageNumber"]
+        manifest_by_page[page_number]["annotations"] = [annotation]
+        total_annotated += 1
+    return total_annotated
 
 def get_task_id(directory_name: str, filename: str) -> str:
     """
