@@ -28,15 +28,24 @@ def list(ctx):
         "Content-Type": "application/json"
     }
     
-    response = requests.get(url, headers=headers)
-    
-    if response.status_code == 200:
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
         projects = response.json()
-        if projects:
+        if isinstance(projects, list) and projects:
             click.echo("Existing projects:")
             for project in projects:
-                click.echo(f"ID: {project['id']}, Title: {project['title']}")
+                if isinstance(project, dict) and 'id' in project and 'title' in project:
+                    click.echo(f"ID: {project['id']}, Title: {project['title']}")
+                else:
+                    click.echo(f"Unexpected project format: {project}")
+        elif isinstance(projects, dict):
+            click.echo("Unexpected response format. Received a dictionary instead of a list.")
+            click.echo(f"Response content: {projects}")
         else:
-            click.echo("No projects found.")
-    else:
-        click.echo(f"Error: Unable to fetch projects. Status code: {response.status_code}")
+            click.echo("No projects found or unexpected response format.")
+    except requests.exceptions.RequestException as e:
+        click.echo(f"Error: Unable to fetch projects. {str(e)}")
+    except ValueError as e:
+        click.echo(f"Error: Unable to parse JSON response. {str(e)}")
