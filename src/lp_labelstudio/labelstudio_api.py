@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
+from rich.columns import Columns
 
 @click.group()
 @click.option('--url', required=True, envvar='LABELSTUDIO_URL', help='Label Studio API URL')
@@ -198,23 +199,21 @@ def view(ctx, project_id):
             expand=False
         )
 
-        console.print(panel)
-
         # Fetch and display tasks
         tasks_response = requests.get(tasks_url, headers=headers)
         tasks_response.raise_for_status()
         tasks_data = tasks_response.json()
 
+        tasks_table = Table(title="Tasks")
+        tasks_table.add_column("ID", style="cyan")
+        tasks_table.add_column("Page Number", style="magenta")
+        tasks_table.add_column("Date", style="yellow")
+        tasks_table.add_column("Annotations", style="green")
+
         if tasks_data:
             tasks = tasks_data.get('tasks', []) if isinstance(tasks_data, dict) else tasks_data
 
             if tasks:
-                tasks_table = Table(title="Tasks")
-                tasks_table.add_column("ID", style="cyan")
-                tasks_table.add_column("Page Number", style="magenta")
-                tasks_table.add_column("Date", style="yellow")
-                tasks_table.add_column("Annotations", style="green")
-
                 for task in tasks:
                     if isinstance(task, dict):
                         task_id = str(task.get('id', 'N/A'))
@@ -226,12 +225,16 @@ def view(ctx, project_id):
                         tasks_table.add_row(task_id, page_number, date, annotations_count)
                     else:
                         console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
-
-                console.print(tasks_table)
             else:
+                tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
                 console.print("[bold yellow]No tasks found for this project.[/bold yellow]")
         else:
+            tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
             console.print("[bold yellow]No task data available.[/bold yellow]")
+
+        # Display project details and tasks side by side
+        columns = Columns([panel, tasks_table], equal=True, expand=True)
+        console.print(columns)
 
         # Display members if available
         if 'members' in project and project['members']:
