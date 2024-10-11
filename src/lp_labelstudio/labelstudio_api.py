@@ -3,6 +3,8 @@ import os
 import requests
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
 
 @click.group()
 @click.option('--url', required=True, envvar='LABELSTUDIO_URL', help='Label Studio API URL')
@@ -155,3 +157,63 @@ def create(ctx, directories, annotations_base_path):
         click.echo(f"Uploaded {len(tasks)} tasks to project '{project_name}'")
 
     click.echo("All projects created successfully.")
+
+@projects.command()
+@click.argument('project_id', type=int)
+@click.pass_context
+def view(ctx, project_id):
+    """View details of a specific project."""
+    url = f"{ctx.obj['url']}/api/projects/{project_id}/"
+    headers = {
+        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Content-Type": "application/json"
+    }
+    
+    console = Console()
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        project = response.json()
+        
+        title = Text(f"Project Details: {project['title']}", style="bold magenta")
+        panel = Panel(
+            Text.assemble(
+                ("ID: ", "bold cyan"), f"{project['id']}\n",
+                ("Description: ", "bold green"), f"{project.get('description', 'N/A')}\n",
+                ("Created: ", "bold yellow"), f"{project['created_at']}\n",
+                ("Updated: ", "bold yellow"), f"{project['updated_at']}\n",
+                ("Label Config: ", "bold blue"), f"{project.get('label_config', 'N/A')}\n",
+                ("Task Number: ", "bold red"), f"{project.get('task_number', 0)}\n",
+                ("Total Annotations: ", "bold red"), f"{project.get('total_annotations_number', 0)}\n",
+                ("Completed Tasks: ", "bold red"), f"{project.get('num_tasks_with_annotations', 0)}"
+            ),
+            title=title,
+            expand=False
+        )
+        
+        console.print(panel)
+        
+        # Display members if available
+        if 'members' in project and project['members']:
+            members_table = Table(title="Project Members")
+            members_table.add_column("ID", style="cyan")
+            members_table.add_column("Email", style="magenta")
+            members_table.add_column("First Name", style="green")
+            members_table.add_column("Last Name", style="green")
+            
+            for member in project['members']:
+                members_table.add_row(
+                    str(member['id']),
+                    member['email'],
+                    member.get('first_name', 'N/A'),
+                    member.get('last_name', 'N/A')
+                )
+            
+            console.print(members_table)
+        
+    except requests.exceptions.RequestException as e:
+        console.print(f"[bold red]Error:[/bold red] Unable to fetch project details. {str(e)}")
+    except ValueError as e:
+        console.print(f"[bold red]Error:[/bold red] Unable to parse JSON response. {str(e)}")
