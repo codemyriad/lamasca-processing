@@ -180,10 +180,10 @@ def view(ctx, project_id):
         title = Text(f"Project Details: {project['title']}", style="bold magenta")
         panel = Panel(
             Text.assemble(
-                ("ID: ", "bold cyan"), f"{project['id']}\n",
+                ("ID: ", "bold cyan"), f"{project.get('id', 'N/A')}\n",
                 ("Description: ", "bold green"), f"{project.get('description', 'N/A')}\n",
-                ("Created: ", "bold yellow"), f"{project['created_at']}\n",
-                ("Updated: ", "bold yellow"), f"{project['updated_at']}\n",
+                ("Created: ", "bold yellow"), f"{project.get('created_at', 'N/A')}\n",
+                ("Updated: ", "bold yellow"), f"{project.get('updated_at', 'N/A')}\n",
                 ("Label Config: ", "bold blue"), f"{project.get('label_config', 'N/A')}\n",
                 ("Task Number: ", "bold red"), f"{project.get('task_number', 0)}\n",
                 ("Total Annotations: ", "bold red"), f"{project.get('total_annotations_number', 0)}\n",
