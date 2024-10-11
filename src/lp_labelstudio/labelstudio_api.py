@@ -75,3 +75,13 @@ def delete(ctx, project_id):
         click.echo(f"Project with ID {project_id} has been successfully deleted.")
     except requests.exceptions.RequestException as e:
         click.echo(f"Error: Unable to delete project. {str(e)}")
+
+@projects.command()
+@click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--annotations-base-path', required=True, type=click.Path(exists=True, file_okay=False, dir_okay=True), help='Base path for annotations')
+@click.pass_context
+def create(ctx, directories, annotations_base_path):
+    """Create a new project using the specified directories and annotations base path."""
+    click.echo("Creating a new project with the following parameters:")
+    click.echo(f"Directories: {', '.join(directories)}")
+    click.echo(f"Annotations base path: {annotations_base_path}")
