@@ -22,9 +22,9 @@ def projects(ctx):
     """Manage Label Studio projects."""
     pass
 
-@projects.command()
+@projects.command(name="list")
 @click.pass_context
-def list(ctx):
+def list_projects(ctx):
     """List existing projects with annotation summaries."""
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
