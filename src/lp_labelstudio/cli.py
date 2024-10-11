@@ -5,6 +5,7 @@ import json
 from typing import Any, Dict, List, Union
 from lp_labelstudio.generate_manifest import generate_labelstudio_manifest
 from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
+from lp_labelstudio.labelstudio_api import labelstudio_api
 from lp_labelstudio.constants import (
     JPEG_EXTENSION,
     NEWSPAPER_MODEL_PATH,
@@ -128,6 +129,7 @@ def process_newspaper(directory: str, redo: bool) -> None:
 
 
 cli.add_command(escriptorium_group)
+cli.add_command(labelstudio_api)
 
 
 def generate_summary(
