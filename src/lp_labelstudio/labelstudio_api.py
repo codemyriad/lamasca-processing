@@ -205,7 +205,10 @@ def view(ctx, project_id):
         tasks_response.raise_for_status()
         tasks_data = tasks_response.json()
         
-        if isinstance(tasks_data, dict) and 'results' in tasks_data:
+        if tasks_data is None:
+            console.print("[bold yellow]No tasks data available.[/bold yellow]")
+            return
+        elif isinstance(tasks_data, dict) and 'results' in tasks_data:
             tasks = tasks_data['results']
         elif isinstance(tasks_data, list):
             tasks = tasks_data
