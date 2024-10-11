@@ -164,6 +164,7 @@ def create(ctx, directories, annotations_base_path):
 def view(ctx, project_id):
     """View details of a specific project."""
     url = f"{ctx.obj['url']}/api/projects/{project_id}/"
+    tasks_url = f"{ctx.obj['url']}/api/tasks?project={project_id}"
     headers = {
         "Authorization": f"Token {ctx.obj['api_key']}",
         "Content-Type": "application/json"
@@ -177,6 +178,11 @@ def view(ctx, project_id):
         
         project = response.json()
         
+        # Extract labels from label_config
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(project.get('label_config', ''))
+        labels = [label.get('value') for label in root.findall(".//Label")]
+        
         title = Text(f"Project Details: {project['title']}", style="bold magenta")
         panel = Panel(
             Text.assemble(
@@ -184,9 +190,8 @@ def view(ctx, project_id):
                 ("Description: ", "bold green"), f"{project.get('description', 'N/A')}\n",
                 ("Created: ", "bold yellow"), f"{project.get('created_at', 'N/A')}\n",
                 ("Updated: ", "bold yellow"), f"{project.get('updated_at', 'N/A')}\n",
-                ("Label Config: ", "bold blue"), f"{project.get('label_config', 'N/A')}\n",
+                ("Labels: ", "bold blue"), f"{', '.join(labels)}\n",
                 ("Task Number: ", "bold red"), f"{project.get('task_number', 0)}\n",
-                ("Total Annotations: ", "bold red"), f"{project.get('total_annotations_number', 0)}\n",
                 ("Completed Tasks: ", "bold red"), f"{project.get('num_tasks_with_annotations', 0)}"
             ),
             title=title,
@@ -194,6 +199,31 @@ def view(ctx, project_id):
         )
         
         console.print(panel)
+        
+        # Fetch and display tasks
+        tasks_response = requests.get(tasks_url, headers=headers)
+        tasks_response.raise_for_status()
+        tasks = tasks_response.json()
+        
+        if isinstance(tasks, dict) and 'results' in tasks:
+            tasks = tasks['results']
+        
+        if tasks:
+            tasks_table = Table(title="Tasks")
+            tasks_table.add_column("ID", style="cyan")
+            tasks_table.add_column("Data", style="magenta")
+            tasks_table.add_column("Annotations", style="green")
+            
+            for task in tasks:
+                tasks_table.add_row(
+                    str(task['id']),
+                    str(task.get('data', {})),
+                    str(len(task.get('annotations', [])))
+                )
+            
+            console.print(tasks_table)
+        else:
+            console.print("[bold yellow]No tasks found for this project.[/bold yellow]")
         
         # Display members if available
         if 'members' in project and project['members']:
