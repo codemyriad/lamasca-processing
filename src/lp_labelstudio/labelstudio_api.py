@@ -6,6 +6,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
 from rich.columns import Columns
+from rich.columns import Columns
 
 @click.group()
 @click.option('--url', required=True, envvar='LABELSTUDIO_URL', help='Label Studio API URL')
