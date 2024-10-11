@@ -207,10 +207,9 @@ def view(ctx, project_id):
         tasks_response.raise_for_status()
         tasks_data = tasks_response.json()
 
-        tasks_table = Table(title="Tasks", expand=True)
+        tasks_table = Table(title="Tasks")
         tasks_table.add_column("ID", style="cyan", no_wrap=True)
         tasks_table.add_column("Page Number", style="magenta")
-        tasks_table.add_column("Date", style="yellow")
         tasks_table.add_column("Annotations", style="green")
         tasks_table.add_column("Status", style="blue")
 
@@ -223,20 +222,19 @@ def view(ctx, project_id):
                         task_id = str(task.get('id', 'N/A'))
                         data = task.get('data', {})
                         page_number = str(data.get('pageNumber', 'N/A'))
-                        date = data.get('date', 'N/A')
                         annotations_count = str(task.get('total_annotations', 0))
                         status = "Completed" if int(annotations_count) > 0 else "Pending"
 
-                        tasks_table.add_row(task_id, page_number, date, annotations_count, status)
+                        tasks_table.add_row(task_id, page_number, annotations_count, status)
                     else:
                         console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
             else:
-                tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
+                tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
         else:
-            tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
+            tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
 
         # Display project details and tasks side by side
-        columns = Columns([panel, tasks_table], equal=True, expand=True)
+        columns = Columns([panel, tasks_table], equal=True, expand=False)
         console.print(columns)
 
         # Display summary
