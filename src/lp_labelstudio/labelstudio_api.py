@@ -194,10 +194,12 @@ def view(ctx, project_id):
                 ("Updated: ", "bold yellow"), f"{project.get('updated_at', 'N/A')}\n",
                 ("Labels: ", "bold blue"), f"{', '.join(labels)}\n",
                 ("Task Number: ", "bold red"), f"{project.get('task_number', 0)}\n",
-                ("Completed Tasks: ", "bold red"), f"{project.get('num_tasks_with_annotations', 0)}"
+                ("Completed Tasks: ", "bold red"), f"{project.get('num_tasks_with_annotations', 0)}\n",
+                ("Total Annotations: ", "bold green"), f"{project.get('total_annotations_number', 0)}\n",
+                ("Average Annotations: ", "bold magenta"), f"{project.get('avg_annotations_per_task', 0):.2f}"
             ),
             title=title,
-            expand=False
+            expand=True
         )
 
         # Fetch and display tasks
@@ -205,11 +207,12 @@ def view(ctx, project_id):
         tasks_response.raise_for_status()
         tasks_data = tasks_response.json()
 
-        tasks_table = Table(title="Tasks")
-        tasks_table.add_column("ID", style="cyan")
+        tasks_table = Table(title="Tasks", expand=True)
+        tasks_table.add_column("ID", style="cyan", no_wrap=True)
         tasks_table.add_column("Page Number", style="magenta")
         tasks_table.add_column("Date", style="yellow")
         tasks_table.add_column("Annotations", style="green")
+        tasks_table.add_column("Status", style="blue")
 
         if tasks_data:
             tasks = tasks_data.get('tasks', []) if isinstance(tasks_data, dict) else tasks_data
@@ -222,20 +225,29 @@ def view(ctx, project_id):
                         page_number = str(data.get('pageNumber', 'N/A'))
                         date = data.get('date', 'N/A')
                         annotations_count = str(task.get('total_annotations', 0))
+                        status = "Completed" if int(annotations_count) > 0 else "Pending"
 
-                        tasks_table.add_row(task_id, page_number, date, annotations_count)
+                        tasks_table.add_row(task_id, page_number, date, annotations_count, status)
                     else:
                         console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
             else:
-                tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
-                console.print("[bold yellow]No tasks found for this project.[/bold yellow]")
+                tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
         else:
-            tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
-            console.print("[bold yellow]No task data available.[/bold yellow]")
+            tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
 
         # Display project details and tasks side by side
         columns = Columns([panel, tasks_table], equal=True, expand=True)
         console.print(columns)
+
+        # Display summary
+        summary = Table.grid(expand=True)
+        summary.add_column(style="cyan", justify="right")
+        summary.add_column(style="magenta")
+        summary.add_row("Total Tasks:", str(project.get('task_number', 0)))
+        summary.add_row("Completed Tasks:", str(project.get('num_tasks_with_annotations', 0)))
+        summary.add_row("Completion Rate:", f"{project.get('num_tasks_with_annotations', 0) / project.get('task_number', 1) * 100:.2f}%")
+        
+        console.print(Panel(summary, title="Project Summary", expand=False))
 
         # Display members if available
         if 'members' in project and project['members']:
