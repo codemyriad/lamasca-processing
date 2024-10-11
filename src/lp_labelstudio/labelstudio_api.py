@@ -1,6 +1,8 @@
 import click
 import os
 import requests
+from rich.console import Console
+from rich.table import Table
 
 @click.group()
 @click.option('--url', required=True, envvar='LABELSTUDIO_URL', help='Label Studio API URL')
@@ -21,12 +23,14 @@ def projects(ctx):
 @projects.command()
 @click.pass_context
 def list(ctx):
-    """List existing projects."""
+    """List existing projects with annotation summaries."""
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
         "Authorization": f"Token {ctx.obj['api_key']}",
         "Content-Type": "application/json"
     }
+    
+    console = Console()
     
     try:
         response = requests.get(url, headers=headers)
@@ -39,23 +43,50 @@ def list(ctx):
         elif isinstance(data, list):
             projects = data
         else:
-            click.echo("Unexpected response format.")
-            click.echo(f"Response content: {data}")
+            console.print("[bold red]Unexpected response format.[/bold red]")
+            console.print(f"Response content: {data}")
             return
 
         if projects:
-            click.echo("Existing projects:")
+            table = Table(title="Existing Projects")
+            table.add_column("ID", style="cyan", no_wrap=True)
+            table.add_column("Title", style="magenta")
+            table.add_column("Tasks", style="green")
+            table.add_column("Annotations", style="yellow")
+            table.add_column("Completed", style="blue")
+
             for project in projects:
                 if isinstance(project, dict) and 'id' in project and 'title' in project:
-                    click.echo(f"ID: {project['id']}, Title: {project['title']}")
+                    project_id = project['id']
+                    project_title = project['title']
+                    
+                    # Fetch project details
+                    project_url = f"{ctx.obj['url']}/api/projects/{project_id}/"
+                    project_response = requests.get(project_url, headers=headers)
+                    project_response.raise_for_status()
+                    project_details = project_response.json()
+                    
+                    tasks_count = project_details.get('task_number', 0)
+                    total_annotations = project_details.get('total_annotations_number', 0)
+                    completed_tasks = project_details.get('num_tasks_with_annotations', 0)
+                    
+                    table.add_row(
+                        str(project_id),
+                        project_title,
+                        str(tasks_count),
+                        str(total_annotations),
+                        f"{completed_tasks}/{tasks_count}"
+                    )
                 else:
-                    click.echo(f"Unexpected project format: {project}")
+                    console.print(f"[bold red]Unexpected project format:[/bold red] {project}")
+            
+            console.print(table)
         else:
-            click.echo("No projects found.")
+            console.print("[bold yellow]No projects found.[/bold yellow]")
     except requests.exceptions.RequestException as e:
-        click.echo(f"Error: Unable to fetch projects. {str(e)}")
+        console.print(f"[bold red]Error:[/bold red] Unable to fetch projects. {str(e)}")
     except ValueError as e:
-        click.echo(f"Error: Unable to parse JSON response. {str(e)}")
+        console.print(f"[bold red]Error:[/bold red] Unable to parse JSON response. {str(e)}")
 
 @projects.command()
 @click.argument('project_ids', nargs=-1, type=int)
