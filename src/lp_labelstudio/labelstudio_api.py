@@ -56,3 +56,22 @@ def list(ctx):
         click.echo(f"Error: Unable to fetch projects. {str(e)}")
     except ValueError as e:
         click.echo(f"Error: Unable to parse JSON response. {str(e)}")
+
+@projects.command()
+@click.argument('project_id', type=int)
+@click.pass_context
+def delete(ctx, project_id):
+    """Delete a project by ID."""
+    url = f"{ctx.obj['url']}/api/projects/{project_id}/"
+    headers = {
+        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.delete(url, headers=headers)
+        response.raise_for_status()
+        
+        click.echo(f"Project with ID {project_id} has been successfully deleted.")
+    except requests.exceptions.RequestException as e:
+        click.echo(f"Error: Unable to delete project. {str(e)}")
