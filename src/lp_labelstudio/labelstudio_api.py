@@ -58,23 +58,23 @@ def list(ctx):
         click.echo(f"Error: Unable to parse JSON response. {str(e)}")
 
 @projects.command()
-@click.argument('project_id', type=int)
+@click.argument('project_ids', nargs=-1, type=int)
 @click.pass_context
-def delete(ctx, project_id):
-    """Delete a project by ID."""
-    url = f"{ctx.obj['url']}/api/projects/{project_id}/"
+def delete(ctx, project_ids):
+    """Delete one or more projects by ID."""
     headers = {
         "Authorization": f"Token {ctx.obj['api_key']}",
         "Content-Type": "application/json"
     }
     
-    try:
-        response = requests.delete(url, headers=headers)
-        response.raise_for_status()
-        
-        click.echo(f"Project with ID {project_id} has been successfully deleted.")
-    except requests.exceptions.RequestException as e:
-        click.echo(f"Error: Unable to delete project. {str(e)}")
+    for project_id in project_ids:
+        url = f"{ctx.obj['url']}/api/projects/{project_id}/"
+        try:
+            response = requests.delete(url, headers=headers)
+            response.raise_for_status()
+            click.echo(f"Project with ID {project_id} has been successfully deleted.")
+        except requests.exceptions.RequestException as e:
+            click.echo(f"Error: Unable to delete project {project_id}. {str(e)}")
 
 import json
 from pathlib import Path
