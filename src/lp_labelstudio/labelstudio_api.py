@@ -203,10 +203,15 @@ def view(ctx, project_id):
         # Fetch and display tasks
         tasks_response = requests.get(tasks_url, headers=headers)
         tasks_response.raise_for_status()
-        tasks = tasks_response.json()
+        tasks_data = tasks_response.json()
         
-        if isinstance(tasks, dict) and 'results' in tasks:
-            tasks = tasks['results']
+        if isinstance(tasks_data, dict) and 'results' in tasks_data:
+            tasks = tasks_data['results']
+        elif isinstance(tasks_data, list):
+            tasks = tasks_data
+        else:
+            console.print("[bold yellow]Unexpected tasks data format.[/bold yellow]")
+            return
         
         if tasks:
             tasks_table = Table(title="Tasks")
@@ -215,11 +220,14 @@ def view(ctx, project_id):
             tasks_table.add_column("Annotations", style="green")
             
             for task in tasks:
-                tasks_table.add_row(
-                    str(task['id']),
-                    str(task.get('data', {})),
-                    str(len(task.get('annotations', [])))
-                )
+                if isinstance(task, dict):
+                    tasks_table.add_row(
+                        str(task.get('id', 'N/A')),
+                        str(task.get('data', {})),
+                        str(len(task.get('annotations', [])))
+                    )
+                else:
+                    console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
             
             console.print(tasks_table)
         else:
