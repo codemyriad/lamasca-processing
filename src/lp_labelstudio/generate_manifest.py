@@ -38,12 +38,13 @@ def get_date(directory: str) -> str:
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
 @click.option('--annotations-base-path', required=False, help='If specified, search here for annotations')
-def generate_labelstudio_manifest(directories: List[str], annotations_base_path) -> None:
-    """Generate Label Studio JSON manifest files for the given directories,
-    and save it in each dir as `manifest.json`."""
+def generate_labelstudio_manifest(directories: List[str], annotations_base_path) -> List[Dict[str, Any]]:
+    """Generate Label Studio JSON manifest for the given directories."""
     total_issues: int = 0
     total_pages: int = 0
     total_annotations: int = 0
+
+    all_manifests = []
 
     for directory in directories:
         manifest: List[Dict[str, Any]] = []
@@ -74,6 +75,8 @@ def generate_labelstudio_manifest(directories: List[str], annotations_base_path)
         total_pages += len(manifest)
         total_annotations += num_annotations
 
+        all_manifests.extend(manifest)
+
         output = Path(directory) / "manifest.json"
         with output.open("w") as f:
             json.dump(manifest, f, indent=2)
@@ -82,6 +85,8 @@ def generate_labelstudio_manifest(directories: List[str], annotations_base_path)
     click.echo(click.style(f"Total issues included: {total_issues}", fg="green"))
     click.echo(click.style(f"Total pages included: {total_pages}", fg="green"))
     click.echo(click.style(f"Total annotations included: {total_annotations}", fg="green"))
+
+    return all_manifests
 
 def read_xml_file(file_path: str) -> str:
     with open(file_path, 'r') as file:

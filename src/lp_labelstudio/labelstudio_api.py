@@ -76,12 +76,51 @@ def delete(ctx, project_id):
     except requests.exceptions.RequestException as e:
         click.echo(f"Error: Unable to delete project. {str(e)}")
 
+import json
+from pathlib import Path
+from .generate_manifest import generate_labelstudio_manifest
+
 @projects.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--annotations-base-path', required=True, type=click.Path(exists=True, file_okay=False, dir_okay=True), help='Base path for annotations')
 @click.pass_context
 def create(ctx, directories, annotations_base_path):
-    """Create a new project using the specified directories and annotations base path."""
-    click.echo("Creating a new project with the following parameters:")
-    click.echo(f"Directories: {', '.join(directories)}")
-    click.echo(f"Annotations base path: {annotations_base_path}")
+    """Create a new project for each specified directory."""
+    for directory in directories:
+        project_name = Path(directory).name
+        click.echo(f"Creating project for directory: {project_name}")
+
+        # Generate manifest file
+        generate_labelstudio_manifest([directory], annotations_base_path)
+        manifest_path = Path(directory) / "manifest.json"
+
+        # Read UI XML
+        ui_xml_path = Path(__file__).parent / "ui.xml"
+        with ui_xml_path.open() as f:
+            ui_xml = f.read()
+
+        # Create project
+        create_url = f"{ctx.obj['url']}/api/projects/"
+        headers = {
+            "Authorization": f"Token {ctx.obj['api_key']}",
+            "Content-Type": "application/json"
+        }
+        project_data = {
+            "title": project_name,
+            "label_config": ui_xml
+        }
+        response = requests.post(create_url, headers=headers, json=project_data)
+        response.raise_for_status()
+        project_id = response.json()['id']
+        click.echo(f"Created project '{project_name}' with ID: {project_id}")
+
+        # Upload tasks
+        with manifest_path.open() as f:
+            tasks = json.load(f)
+        
+        tasks_url = f"{ctx.obj['url']}/api/projects/{project_id}/import"
+        response = requests.post(tasks_url, headers=headers, json=tasks)
+        response.raise_for_status()
+        click.echo(f"Uploaded {len(tasks)} tasks to project '{project_name}'")
+
+    click.echo("All projects created successfully.")
