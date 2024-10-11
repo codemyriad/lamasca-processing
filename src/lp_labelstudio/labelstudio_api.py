@@ -211,27 +211,33 @@ def view(ctx, project_id):
 
         """
 
-        # TODO: extract tasks from task data
+        if tasks_data:
+            tasks = tasks_data.get('tasks', []) if isinstance(tasks_data, dict) else tasks_data
 
-        if tasks:
-            tasks_table = Table(title="Tasks")
-            tasks_table.add_column("ID", style="cyan")
-            tasks_table.add_column("Data", style="magenta")
-            tasks_table.add_column("Annotations", style="green")
+            if tasks:
+                tasks_table = Table(title="Tasks")
+                tasks_table.add_column("ID", style="cyan")
+                tasks_table.add_column("Page Number", style="magenta")
+                tasks_table.add_column("Date", style="yellow")
+                tasks_table.add_column("Annotations", style="green")
 
-            for task in tasks:
-                if isinstance(task, dict):
-                    tasks_table.add_row(
-                        str(task.get('id', 'N/A')),
-                        str(task.get('data', {})),
-                        str(len(task.get('annotations', [])))
-                    )
-                else:
-                    console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
+                for task in tasks:
+                    if isinstance(task, dict):
+                        task_id = str(task.get('id', 'N/A'))
+                        data = task.get('data', {})
+                        page_number = str(data.get('pageNumber', 'N/A'))
+                        date = data.get('date', 'N/A')
+                        annotations_count = str(task.get('total_annotations', 0))
 
-            console.print(tasks_table)
+                        tasks_table.add_row(task_id, page_number, date, annotations_count)
+                    else:
+                        console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
+
+                console.print(tasks_table)
+            else:
+                console.print("[bold yellow]No tasks found for this project.[/bold yellow]")
         else:
-            console.print("[bold yellow]No tasks found for this project.[/bold yellow]")
+            console.print("[bold yellow]No task data available.[/bold yellow]")
 
         # Display members if available
         if 'members' in project and project['members']:
