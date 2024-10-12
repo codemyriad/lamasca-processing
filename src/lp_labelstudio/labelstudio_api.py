@@ -207,11 +207,12 @@ def view(ctx, project_id):
         tasks_response.raise_for_status()
         tasks_data = tasks_response.json()
 
-        tasks_table = Table(title="Tasks")
+        tasks_table = Table(title="Tasks", show_header=True, header_style="bold magenta")
         tasks_table.add_column("ID", style="cyan", no_wrap=True)
         tasks_table.add_column("Page Number", style="magenta")
         tasks_table.add_column("Annotations", style="green")
         tasks_table.add_column("Status", style="blue")
+        tasks_table.add_column("Contributors", style="yellow")
 
         if tasks_data:
             tasks = tasks_data.get('tasks', []) if isinstance(tasks_data, dict) else tasks_data
@@ -225,16 +226,30 @@ def view(ctx, project_id):
                         annotations_count = str(task.get('total_annotations', 0))
                         status = "Completed" if int(annotations_count) > 0 else "Pending"
 
-                        tasks_table.add_row(task_id, page_number, annotations_count, status)
+                        # Fetch annotations for this task
+                        annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
+                        annotations_response = requests.get(annotations_url, headers=headers)
+                        annotations_response.raise_for_status()
+                        annotations_data = annotations_response.json()
+
+                        # Extract unique contributor emails
+                        contributors = set()
+                        for annotation in annotations_data:
+                            if isinstance(annotation, dict) and 'completed_by' in annotation:
+                                contributors.add(annotation['completed_by'].get('email', 'Unknown'))
+                        
+                        contributors_str = ", ".join(contributors) if contributors else "N/A"
+
+                        tasks_table.add_row(task_id, page_number, annotations_count, status, contributors_str)
                     else:
                         console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
             else:
-                tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
+                tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
         else:
-            tasks_table.add_row("N/A", "N/A", "N/A", "N/A")
+            tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
 
         # Display project details and tasks side by side
-        columns = Columns([panel, tasks_table], equal=True, expand=False)
+        columns = Columns([panel, tasks_table], equal=True, expand=True)
         console.print(columns)
 
         # Display summary
