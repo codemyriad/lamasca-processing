@@ -177,14 +177,16 @@ def get_local_annotations_info(local_root, project_name, remote_annotations_coun
 
 @projects.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--prefix', default='', help='Prefix for the project name')
 @click.pass_context
-def create(ctx, directories):
+def create(ctx, directories, prefix):
     """Create a new project for each specified directory."""
     generate_labelstudio_manifest(directories)
-    import pdb; pdb.set_trace()
     for directory in directories:
-        project_name = Path(directory).name
-        click.echo(f"Creating project for directory: {project_name}")
+        base_name = Path(directory).name
+        project_name = f"{prefix}{base_name}" if prefix else base_name
+        click.echo(f"Creating project for directory: {base_name}")
+        click.echo(f"Project name: {project_name}")
 
         # Generate manifest file
         manifest_path = Path(directory) / "manifest.json"
