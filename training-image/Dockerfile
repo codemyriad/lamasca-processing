@@ -27,15 +27,15 @@ RUN python3 -m pip install --upgrade pip
 # Set the working directory
 WORKDIR /app
 
-# Install Python dependencies (using cache)
-COPY requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements.txt
-
 # Install torch and detectron2 with cache support
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html \
     && pip install detectron2==0.6 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
+
+# Install Python dependencies (using cache)
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 # Run fix scripts
 COPY fix-paddleocr.py fix-detectron2.py ./
@@ -100,6 +100,8 @@ RUN pip install --no-cache-dir torch==1.10.0+cu113 torchvision==0.11.1+cu113 tor
 
 # Install detectron2 with CUDA support
 RUN pip install --no-cache-dir detectron2==0.6 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
+
+RUN pip install layoutparser[ocr,paddledetection]==0.2.0
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
