@@ -60,6 +60,7 @@ def list_projects(ctx, local_root):
             table.add_column("Title", style="magenta")
             table.add_column("Completed", style="bold")
             table.add_column("Local Annotations", style="green")
+            table.add_column("To fetch", style="yellow")
 
             for project in projects:
                 if isinstance(project, dict) and 'id' in project and 'title' in project:
@@ -91,13 +92,14 @@ def list_projects(ctx, local_root):
                     completed_str = f"[{color}]{completed_tasks}/{tasks_count} ({completion_percentage:.1f}%)[/{color}]"
 
                     # Get local annotations info
-                    local_annotations = get_local_annotations_info(local_root, project_title)
+                    local_annotations, to_fetch = get_local_annotations_info(local_root, project_title, completed_tasks)
 
                     table.add_row(
                         str(project_id),
                         project_title,
                         completed_str,
-                        local_annotations
+                        local_annotations,
+                        str(to_fetch)
                     )
                 else:
                     console.print(f"[bold red]Unexpected project format:[/bold red] {project}")
@@ -144,31 +146,34 @@ def local_dir_name(project_name):
         if match:
             return word
 
-def get_local_annotations_info(local_root, project_name):
+def get_local_annotations_info(local_root, project_name, remote_annotations_count):
     if not local_root:
-        return "N/A"
+        return "N/A", remote_annotations_count
 
     dir_name = local_dir_name(project_name)
     if not dir_name:
-        return "No matching local directory"
+        return "No matching local directory", remote_annotations_count
 
     full_path = os.path.join(local_root, dir_name, "annotations")
     if not os.path.exists(full_path):
-        return "No local annotations"
+        return "No local annotations", remote_annotations_count
 
     annotators = defaultdict(int)
+    local_annotations_count = 0
 
     for root, dirs, files in os.walk(full_path):
         for file in files:
             if file.endswith('.json'):
                 annotator = os.path.basename(os.path.dirname(os.path.join(root, file)))
                 annotators[annotator] += 1
+                local_annotations_count += 1
 
     if not annotators:
-        return "No annotations found"
+        return "No annotations found", remote_annotations_count
 
     annotator_info = "\n".join(f"{annotator}: {count}" for annotator, count in annotators.items())
-    return annotator_info
+    to_fetch = max(0, remote_annotations_count - local_annotations_count)
+    return annotator_info, to_fetch
 
 @projects.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
