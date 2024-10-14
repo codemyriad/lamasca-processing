@@ -41,12 +41,6 @@
   <!-- Tools for defining regions -->
   <Rectangle name="bbox" toName="image" strokeWidth="3" />
 
-  <!-- Defining relationships between regions -->
-  <Relations name="relations" toName="label">
-    <Relation value="Flow" />
-    <Relation value="Title of" />
-  </Relations>
-
   <!-- Text area for transcription and metadata capture -->
   <!--
   This is commented out for now: people won't be transcribing

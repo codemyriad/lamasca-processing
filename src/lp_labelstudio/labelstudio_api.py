@@ -272,6 +272,8 @@ def fetch(ctx, local_root):
             annotations = annotations_response.json()
 
             for annotation in annotations:
+                assert annotation["task"] == task["id"]
+                annotation["task"] = task
                 # Extract necessary information
                 annotator_email = extract_email(annotation["created_username"])
                 page_number = task['data'].get('pageNumber', 'unknown')

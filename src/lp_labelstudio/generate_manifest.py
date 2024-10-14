@@ -108,7 +108,7 @@ def augment_manifest_with_annotations(manifest, directory, annotations_path):
             annotation = json.loads(file.read_text())
             annotation.pop("completed_by", None)
             page_number = annotation["task"]["data"]["pageNumber"]
-            if not manifest_by_page[page_number]["annotations"]:
+            if not manifest_by_page[page_number].get("annotations"):
                 manifest_by_page[page_number]["annotations"] = []
             manifest_by_page[page_number]["annotations"].append(annotation)
             total_annotated += 1
