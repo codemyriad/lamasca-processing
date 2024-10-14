@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a symlink for python3
-RUN ln -s /usr/bin/python3.8 /usr/bin/python3
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip
@@ -58,7 +58,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python3
-RUN ln -s /usr/bin/python3.8 /usr/bin/python3
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 # Copy installed dependencies from the build stage
 COPY --from=build /usr/local/lib/python3.8 /usr/local/lib/python3.8
@@ -87,7 +87,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a symlink for python3
-RUN ln -s /usr/bin/python3.8 /usr/bin/python3
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip
