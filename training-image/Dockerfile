@@ -44,6 +44,8 @@ RUN python3 fix-detectron2.py
 
 # Stage 2: Final runtime stage
 FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
 # Install minimal runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
