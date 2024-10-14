@@ -26,14 +26,17 @@ def projects(ctx):
     pass
 
 @projects.command(name="list")
+@click.option('--local-root', type=click.Path(exists=True, file_okay=False, dir_okay=True), default=None, envvar='LOCAL_NEWSPAPER_ROOT', help='Local root directory for newspaper files')
 @click.pass_context
-def list_projects(ctx):
+def list_projects(ctx, local_root):
     """List existing projects with annotation summaries."""
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
         "Authorization": f"Token {ctx.obj['api_key']}",
         "Content-Type": "application/json"
     }
+    
+    # For now, we're not using local_root, but it's available if needed in the future
 
     console = Console()
 
