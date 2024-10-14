@@ -184,7 +184,7 @@ def create(ctx, directories, prefix):
     generate_labelstudio_manifest(directories)
     for directory in directories:
         base_name = Path(directory).name
-        project_name = f"{prefix}{base_name}" if prefix else base_name
+        project_name = f"{prefix} {base_name}" if prefix else base_name
         click.echo(f"Creating project for directory: {base_name}")
         click.echo(f"Project name: {project_name}")
 
