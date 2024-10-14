@@ -2,11 +2,12 @@ import click
 import os
 import re
 import requests
+import json
+from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
-from rich.columns import Columns
 from rich.columns import Columns
 
 @click.group()
@@ -209,6 +210,80 @@ def create(ctx, directories, annotations_base_path):
         click.echo(f"Uploaded {len(tasks)} tasks to project '{project_name}'")
 
     click.echo("All projects created successfully.")
+
+@projects.command()
+@click.argument('project_id', type=int)
+@click.pass_context
+def view(ctx, project_id):
+    """View details of a specific project."""
+    # ... (existing code remains unchanged)
+
+@projects.command()
+@click.option('--local-root', type=click.Path(exists=True, file_okay=False, dir_okay=True), required=True, envvar='LOCAL_NEWSPAPER_ROOT', help='Local root directory for newspaper files')
+@click.pass_context
+def fetch(ctx, local_root):
+    """Fetch all remote annotations that are not saved locally yet."""
+    url = f"{ctx.obj['url']}/api/projects/"
+    headers = {
+        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Content-Type": "application/json"
+    }
+
+    console = Console()
+
+    try:
+        # Fetch all projects
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        projects = response.json()['results']
+
+        for project in projects:
+            project_id = project['id']
+            project_title = project['title']
+            console.print(f"[bold]Fetching annotations for project: {project_title}[/bold]")
+
+            # Fetch tasks for the project
+            tasks_url = f"{ctx.obj['url']}/api/tasks?project={project_id}"
+            tasks_response = requests.get(tasks_url, headers=headers)
+            tasks_response.raise_for_status()
+            tasks = tasks_response.json()
+
+            for task in tasks:
+                task_id = task['id']
+                annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
+                annotations_response = requests.get(annotations_url, headers=headers)
+                annotations_response.raise_for_status()
+                annotations = annotations_response.json()
+
+                for annotation in annotations:
+                    # Extract necessary information
+                    annotator_email = extract_email(annotation["created_username"])
+                    page_number = task['data'].get('pageNumber', 'unknown')
+                    date_match = re.search(r'\d{4}-\d{2}-\d{2}', project_title)
+                    date = date_match.group(0) if date_match else 'unknown_date'
+                    newspaper_name = project_title.split()[0]
+
+                    # Construct the local path
+                    local_path = Path(local_root) / f"{newspaper_name}-pages" / date[:4] / f"{newspaper_name}-{date}" / "annotations" / annotator_email
+                    local_path.mkdir(parents=True, exist_ok=True)
+                    file_name = f"page{page_number:02d}.json"
+                    full_path = local_path / file_name
+
+                    # Check if the annotation already exists locally
+                    if not full_path.exists():
+                        # Save the annotation locally
+                        with full_path.open('w') as f:
+                            json.dump(annotation, f, indent=2)
+                        console.print(f"Saved new annotation: {full_path}")
+                    else:
+                        console.print(f"Annotation already exists: {full_path}")
+
+        console.print("[bold green]Finished fetching annotations.[/bold green]")
+
+    except requests.exceptions.RequestException as e:
+        console.print(f"[bold red]Error:[/bold red] Unable to fetch annotations. {str(e)}")
+    except ValueError as e:
+        console.print(f"[bold red]Error:[/bold red] Unable to parse JSON response. {str(e)}")
 
 @projects.command()
 @click.argument('project_id', type=int)
