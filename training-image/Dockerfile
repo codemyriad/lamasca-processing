@@ -66,17 +66,17 @@ RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 #COPY --from=build /root/.cache /root/.cache
 
 # Install torch with CUDA support
-RUN --mount=type=cache,target=/root/.cache/pip install \
+RUN --mount=type=cache,target=/root/.cache/pip pip install \
    torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 
 # Install detectron2 with CUDA support
-RUN --mount=type=cache,target=/root/.cache/pip install \
+RUN --mount=type=cache,target=/root/.cache/pip pip install \
    detectron2==0.6 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
 
 RUN pip install layoutparser[ocr,paddledetection]==0.2.0
 
 COPY requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 
 # Run fix scripts
 RUN python3 fix-paddleocr.py
