@@ -62,6 +62,8 @@ def list_projects(ctx, local_root):
             table.add_column("Local Annotations", style="green")
             table.add_column("To fetch", style="yellow")
 
+            total_annotated_tasks = 0
+
             for project in projects:
                 if isinstance(project, dict) and 'id' in project and 'title' in project:
                     project_id = project['id']
@@ -75,6 +77,7 @@ def list_projects(ctx, local_root):
 
                     tasks_count = project_details.get('task_number', 0)
                     completed_tasks = project_details.get('num_tasks_with_annotations', 0)
+                    total_annotated_tasks += completed_tasks
 
                     # Calculate completion percentage and determine color
                     if tasks_count > 0:
@@ -105,6 +108,7 @@ def list_projects(ctx, local_root):
                     console.print(f"[bold red]Unexpected project format:[/bold red] {project}")
 
             console.print(table)
+            console.print(Panel(f"[bold green]Total annotated tasks: {total_annotated_tasks}[/bold green]", expand=False))
         else:
             console.print("[bold yellow]No projects found.[/bold yellow]")
     except requests.exceptions.RequestException as e:
