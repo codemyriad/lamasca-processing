@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Union
 from lp_labelstudio.generate_manifest import generate_labelstudio_manifest
 from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
 from lp_labelstudio.labelstudio_api import labelstudio_api
+from lp_labelstudio.collect_coco import collect_coco
 from lp_labelstudio.constants import (
     JPEG_EXTENSION,
     NEWSPAPER_MODEL_PATH,
@@ -130,6 +131,13 @@ def process_newspaper(directory: str, redo: bool) -> None:
 
 cli.add_command(escriptorium_group)
 cli.add_command(labelstudio_api)
+
+@cli.command()
+@click.argument('json_files', nargs=-1, type=click.Path(exists=True, file_okay=True, dir_okay=False))
+def collect_coco(json_files):
+    """Collect COCO data from multiple JSON files into a single output file."""
+    collect_coco(json_files)
+    click.echo(f"COCO data collected and saved to /tmp/coco-out.json")
 
 
 def generate_summary(
