@@ -61,39 +61,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 # Copy installed dependencies from the build stage
-COPY --from=build /usr/local/lib/python3.8 /usr/local/lib/python3.8
-COPY --from=build /usr/lib/python3.8 /usr/lib/python3.8
-COPY --from=build /root/.cache /root/.cache
-
-# Copy the application
-WORKDIR /app
-COPY --from=build /app /app
-
-# Set the entrypoint for the application if needed
-# ENTRYPOINT ["python3", "your_script.py"]
-
-# Install Python and system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.8 \
-    python3.8-dev \
-    python3-pip \
-    build-essential \
-    cmake \
-    libglib2.0-0 \
-    libsm6 \
-    libxrender1 \
-    libxext6 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create a symlink for python3
-RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
-
-# Upgrade pip
-RUN python3 -m pip install --upgrade pip
-
-# Set the working directory
-WORKDIR /app
+#COPY --from=build /usr/local/lib/python3.8 /usr/local/lib/python3.8
+#COPY --from=build /usr/lib/python3.8 /usr/lib/python3.8
+#COPY --from=build /root/.cache /root/.cache
 
 # Install torch with CUDA support
 RUN pip install --no-cache-dir torch==1.10.0+cu113 torchvision==0.11.1+cu113 torchaudio==0.10.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
