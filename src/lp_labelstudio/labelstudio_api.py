@@ -56,9 +56,7 @@ def list_projects(ctx):
             table = Table(title="Existing Projects")
             table.add_column("ID", style="cyan", no_wrap=True)
             table.add_column("Title", style="magenta")
-            table.add_column("Tasks", style="green")
-            table.add_column("Annotations", style="yellow")
-            table.add_column("Completed", style="blue")
+            table.add_column("Completed", style="bold")
 
             for project in projects:
                 if isinstance(project, dict) and 'id' in project and 'title' in project:
@@ -72,15 +70,27 @@ def list_projects(ctx):
                     project_details = project_response.json()
 
                     tasks_count = project_details.get('task_number', 0)
-                    total_annotations = project_details.get('total_annotations_number', 0)
                     completed_tasks = project_details.get('num_tasks_with_annotations', 0)
+
+                    # Calculate completion percentage and determine color
+                    if tasks_count > 0:
+                        completion_percentage = (completed_tasks / tasks_count) * 100
+                        if completion_percentage == 0:
+                            color = "red"
+                        elif completion_percentage == 100:
+                            color = "green"
+                        else:
+                            color = f"rgb({int(255 - 2.55 * completion_percentage)},{int(2.55 * completion_percentage)},0)"
+                    else:
+                        completion_percentage = 0
+                        color = "red"
+
+                    completed_str = f"[{color}]{completed_tasks}/{tasks_count} ({completion_percentage:.1f}%)[/{color}]"
 
                     table.add_row(
                         str(project_id),
                         project_title,
-                        str(tasks_count),
-                        str(total_annotations),
-                        f"{completed_tasks}/{tasks_count}"
+                        completed_str
                     )
                 else:
                     console.print(f"[bold red]Unexpected project format:[/bold red] {project}")
