@@ -30,10 +30,23 @@ def collect_coco(json_files: List[str]) -> None:
 
         for item in data:
             # Process images
+            # Extract filename from the URL
+            filename = item["data"]["ocr"].split("/")[-1]
+            
+            # Default dimensions if we can't extract them
+            width, height = 0, 0
+            
+            # Try to extract dimensions from filename if it matches the expected pattern
+            if "x" in filename:
+                try:
+                    width, height = map(int, filename.split("x"))
+                except ValueError:
+                    pass
+            
             image = {
                 "id": image_id,
-                "width": int(item["data"]["ocr"].split("/")[-1].split("x")[0]),
-                "height": int(item["data"]["ocr"].split("/")[-1].split("x")[1].split(".")[0]),
+                "width": width,
+                "height": height,
                 "file_name": item["data"]["ocr"]
             }
             coco_data["images"].append(image)
