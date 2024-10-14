@@ -70,7 +70,6 @@ def generate_labelstudio_manifest(directories: List[str]) -> List[Dict[str, Any]
         num_annotations = 0
         annotations_path = Path(directory) / "annotations"
         if annotations_path.exists():
-            import pdb; pdb.set_trace()
             num_annotations = augment_manifest_with_annotations(manifest, directory, annotations_path)
         total_issues += 1
         total_pages += len(manifest)
@@ -104,13 +103,15 @@ def augment_manifest_with_annotations(manifest, directory, annotations_path):
     for page in manifest:
         manifest_by_page[page["data"]["pageNumber"]] = page
     total_annotated = 0
-    import pdb; pdb.set_trace()
-    for file in annotations_path.iterdir():
-        annotation = json.loads(file.read_text())
-        annotation.pop("completed_by", None)
-        page_number = annotation["task"]["data"]["pageNumber"]
-        manifest_by_page[page_number]["annotations"] = [annotation]
-        total_annotated += 1
+    for contributor_dir in annotations_path.iterdir():
+        for file in contributor_dir.iterdir():
+            annotation = json.loads(file.read_text())
+            annotation.pop("completed_by", None)
+            page_number = annotation["task"]["data"]["pageNumber"]
+            if not manifest_by_page[page_number]["annotations"]:
+                manifest_by_page[page_number]["annotations"] = []
+            manifest_by_page[page_number]["annotations"].append(annotation)
+            total_annotated += 1
     return total_annotated
 
 def get_task_id(directory_name: str, filename: str) -> str:
