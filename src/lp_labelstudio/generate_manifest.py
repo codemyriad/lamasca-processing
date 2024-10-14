@@ -37,8 +37,7 @@ def get_date(directory: str) -> str:
     nargs=-1,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-@click.option('--annotations-base-path', required=False, help='If specified, search here for annotations')
-def generate_labelstudio_manifest(directories: List[str], annotations_base_path) -> List[Dict[str, Any]]:
+def generate_labelstudio_manifest(directories: List[str]) -> List[Dict[str, Any]]:
     """Generate Label Studio JSON manifest for the given directories."""
     total_issues: int = 0
     total_pages: int = 0
@@ -69,8 +68,10 @@ def generate_labelstudio_manifest(directories: List[str], annotations_base_path)
             }
             manifest.append(task_item)
         num_annotations = 0
-        if annotations_base_path is not None:
-            num_annotations = augment_manifest_with_annotations(manifest, directory, annotations_base_path)
+        annotations_path = Path(directory) / "annotations"
+        if annotations_path.exists():
+            import pdb; pdb.set_trace()
+            num_annotations = augment_manifest_with_annotations(manifest, directory, annotations_path)
         total_issues += 1
         total_pages += len(manifest)
         total_annotations += num_annotations
@@ -93,18 +94,18 @@ def read_xml_file(file_path: str) -> str:
         return file.read()
 
 
-def augment_manifest_with_annotations(manifest, directory, annotations_base_path):
+def augment_manifest_with_annotations(manifest, directory, annotations_path):
     """Finds JSON files for annotations and amends the passed `manifest` dict.
     Returns the number of pages that received annotations
     """
-    annotations_dir = Path(annotations_base_path) / os.path.basename(directory)
-    if not annotations_dir.exists():
+    if not annotations_path.exists():
         return 0
     manifest_by_page = {}
     for page in manifest:
         manifest_by_page[page["data"]["pageNumber"]] = page
     total_annotated = 0
-    for file in annotations_dir.iterdir():
+    import pdb; pdb.set_trace()
+    for file in annotations_path.iterdir():
         annotation = json.loads(file.read_text())
         annotation.pop("completed_by", None)
         page_number = annotation["task"]["data"]["pageNumber"]

@@ -12,13 +12,13 @@ from rich.columns import Columns
 
 @click.group()
 @click.option('--url', required=True, envvar='LABELSTUDIO_URL', help='Label Studio API URL')
-@click.option('--api-key', required=True, envvar='LABELSTUDIO_API_KEY', help='Label Studio API Key')
+@click.option('--api-auth', required=True, envvar='LABELSTUDIO_CREDENTIALS', help='Authorization header value for Label Studio API requests')
 @click.pass_context
-def labelstudio_api(ctx, url, api_key):
+def labelstudio_api(ctx, url, api_auth):
     """Command group for Label Studio API operations."""
     ctx.ensure_object(dict)
     ctx.obj['url'] = url
-    ctx.obj['api_key'] = api_key
+    ctx.obj['api_auth'] = api_auth
 
 @labelstudio_api.group()
 @click.pass_context
@@ -33,7 +33,7 @@ def list_projects(ctx, local_root):
     """List existing projects with annotation summaries."""
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
-        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Authorization": ctx.obj['api_auth'],
         "Content-Type": "application/json"
     }
 
@@ -118,7 +118,7 @@ def list_projects(ctx, local_root):
 def delete(ctx, project_ids):
     """Delete one or more projects by ID."""
     headers = {
-        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Authorization": ctx.obj['api_auth'],
         "Content-Type": "application/json"
     }
 
@@ -177,16 +177,16 @@ def get_local_annotations_info(local_root, project_name, remote_annotations_coun
 
 @projects.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--annotations-base-path', required=True, type=click.Path(exists=True, file_okay=False, dir_okay=True), help='Base path for annotations')
 @click.pass_context
-def create(ctx, directories, annotations_base_path):
+def create(ctx, directories):
     """Create a new project for each specified directory."""
+    generate_labelstudio_manifest(directories)
+    import pdb; pdb.set_trace()
     for directory in directories:
         project_name = Path(directory).name
         click.echo(f"Creating project for directory: {project_name}")
 
         # Generate manifest file
-        generate_labelstudio_manifest([directory], annotations_base_path)
         manifest_path = Path(directory) / "manifest.json"
 
         # Read UI XML
@@ -197,7 +197,7 @@ def create(ctx, directories, annotations_base_path):
         # Create project
         create_url = f"{ctx.obj['url']}/api/projects/"
         headers = {
-            "Authorization": f"Token {ctx.obj['api_key']}",
+            "Authorization": ctx.obj['api_auth'],
             "Content-Type": "application/json"
         }
         project_data = {
@@ -236,7 +236,7 @@ def fetch(ctx, local_root):
         raise """Error: Local root directory is not set. Please set the LOCAL_NEWSPAPER_ROOT environment variable or use the --local-root option."""
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
-        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Authorization": ctx.obj['api_auth'],
         "Content-Type": "application/json"
     }
 
@@ -298,7 +298,7 @@ def view(ctx, project_id):
     url = f"{ctx.obj['url']}/api/projects/{project_id}/"
     tasks_url = f"{ctx.obj['url']}/api/tasks?project={project_id}"
     headers = {
-        "Authorization": f"Token {ctx.obj['api_key']}",
+        "Authorization": ctx.obj['api_auth'],
         "Content-Type": "application/json"
     }
 
