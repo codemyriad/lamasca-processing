@@ -136,7 +136,8 @@ cli.add_command(labelstudio_api)
 @click.argument('json_files', nargs=-1, type=click.Path(exists=True, file_okay=True, dir_okay=False))
 def collect_coco(json_files):
     """Collect COCO data from multiple JSON files into a single output file."""
-    collect_coco(json_files)
+    from lp_labelstudio.collect_coco import collect_coco as cc
+    cc(json_files)
     click.echo(f"COCO data collected and saved to /tmp/coco-out.json")
 
 

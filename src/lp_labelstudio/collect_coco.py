@@ -1,6 +1,6 @@
 import json
 from typing import List, Dict, Any
-import click
+from datetime import datetime
 
 def collect_coco(json_files: List[str]) -> None:
     """
@@ -11,12 +11,12 @@ def collect_coco(json_files: List[str]) -> None:
         "categories": [],
         "annotations": [],
         "info": {
-            "year": 2024,
+            "year": datetime.now().year,
             "version": "1.0",
             "description": "Collected COCO data",
             "contributor": "Label Studio",
             "url": "",
-            "date_created": ""
+            "date_created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
     }
 
@@ -32,8 +32,8 @@ def collect_coco(json_files: List[str]) -> None:
             # Process images
             image = {
                 "id": image_id,
-                "width": item["data"]["ocr"].split("/")[-1].split("x")[0],
-                "height": item["data"]["ocr"].split("/")[-1].split("x")[1].split(".")[0],
+                "width": int(item["data"]["ocr"].split("/")[-1].split("x")[0]),
+                "height": int(item["data"]["ocr"].split("/")[-1].split("x")[1].split(".")[0]),
                 "file_name": item["data"]["ocr"]
             }
             coco_data["images"].append(image)
@@ -75,4 +75,4 @@ def collect_coco(json_files: List[str]) -> None:
     with open('/tmp/coco-out.json', 'w') as f:
         json.dump(coco_data, f, indent=2)
 
-    click.echo(f"COCO data collected from {len(json_files)} files and saved to /tmp/coco-out.json")
+    print(f"COCO data collected from {len(json_files)} files and saved to /tmp/coco-out.json")
