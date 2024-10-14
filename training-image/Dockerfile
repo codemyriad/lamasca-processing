@@ -1,10 +1,10 @@
-# Use NVIDIA's CUDA base image with Python 3.9
+# Use NVIDIA's CUDA base image with Python 3.8
 FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 
 # Install Python and system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.9 \
-    python3.9-dev \
+    python3.8 \
+    python3.8-dev \
     python3-pip \
     build-essential \
     cmake \
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a symlink for python3
-RUN ln -s /usr/bin/python3.9 /usr/bin/python3
+RUN ln -s /usr/bin/python3.8 /usr/bin/python3
 
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip
