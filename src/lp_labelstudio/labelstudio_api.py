@@ -1,5 +1,6 @@
 import click
 import os
+import re
 import requests
 from rich.console import Console
 from rich.table import Table
@@ -236,8 +237,8 @@ def view(ctx, project_id):
                         contributors = set()
                         for annotation in annotations_data:
                             if isinstance(annotation, dict) and 'completed_by' in annotation:
-                                contributors.add(annotation['completed_by'].get('email', 'Unknown'))
-                        
+                                contributors.add(extract_email(annotation["created_username"]))
+
                         contributors_str = ", ".join(contributors) if contributors else "N/A"
 
                         tasks_table.add_row(task_id, page_number, annotations_count, status, contributors_str)
@@ -259,7 +260,7 @@ def view(ctx, project_id):
         summary.add_row("Total Tasks:", str(project.get('task_number', 0)))
         summary.add_row("Completed Tasks:", str(project.get('num_tasks_with_annotations', 0)))
         summary.add_row("Completion Rate:", f"{project.get('num_tasks_with_annotations', 0) / project.get('task_number', 1) * 100:.2f}%")
-        
+
         console.print(Panel(summary, title="Project Summary", expand=False))
 
         # Display members if available
@@ -284,3 +285,14 @@ def view(ctx, project_id):
         console.print(f"[bold red]Error:[/bold red] Unable to fetch project details. {str(e)}")
     except ValueError as e:
         console.print(f"[bold red]Error:[/bold red] Unable to parse JSON response. {str(e)}")
+
+
+def extract_email(input_string):
+    # Define the email regex pattern
+    email_pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+    # Search for the first occurrence of an email
+    match = re.search(email_pattern, input_string)
+    if match:
+        return match.group(0)
+    else:
+        return ''
