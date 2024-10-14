@@ -99,7 +99,7 @@ def augment_manifest_with_annotations(manifest, directory, annotations_base_path
     """
     annotations_dir = Path(annotations_base_path) / os.path.basename(directory)
     if not annotations_dir.exists():
-        return
+        return 0
     manifest_by_page = {}
     for page in manifest:
         manifest_by_page[page["data"]["pageNumber"]] = page
