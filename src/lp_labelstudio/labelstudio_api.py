@@ -136,33 +136,37 @@ from pathlib import Path
 from .generate_manifest import generate_labelstudio_manifest
 
 def local_dir_name(project_name):
-    # Extract the date part from the project name
-    match = re.search(r'\d{4}-\d{2}-\d{2}', project_name)
-    return match.group(0) if match else None
+    """Extract the word that includes a date.
+    """
+    possible_words = project_name.split(' ')
+    for word in possible_words:
+        match = re.search(r'\d{4}-\d{2}-\d{2}', word)
+        if match:
+            return word
 
 def get_local_annotations_info(local_root, project_name):
     if not local_root:
         return "N/A"
-    
+
     dir_name = local_dir_name(project_name)
     if not dir_name:
         return "No matching local directory"
-    
+
     full_path = os.path.join(local_root, dir_name, "annotations")
     if not os.path.exists(full_path):
         return "No local annotations"
-    
+
     annotators = defaultdict(int)
-    
+
     for root, dirs, files in os.walk(full_path):
         for file in files:
             if file.endswith('.json'):
                 annotator = os.path.basename(os.path.dirname(os.path.join(root, file)))
                 annotators[annotator] += 1
-    
+
     if not annotators:
         return "No annotations found"
-    
+
     annotator_info = "\n".join(f"{annotator}: {count}" for annotator, count in annotators.items())
     return annotator_info
 
@@ -223,6 +227,8 @@ def view(ctx, project_id):
 @click.pass_context
 def fetch(ctx, local_root):
     """Fetch all remote annotations that are not saved locally yet."""
+    if local_root is None:
+        raise """Error: Local root directory is not set. Please set the LOCAL_NEWSPAPER_ROOT environment variable or use the --local-root option."""
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
         "Authorization": f"Token {ctx.obj['api_key']}",
@@ -247,7 +253,7 @@ def fetch(ctx, local_root):
         tasks_response.raise_for_status()
         tasks = tasks_response.json()
 
-        for task in tasks:
+        for task in tasks["tasks"]:
             task_id = task['id']
             annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
             annotations_response = requests.get(annotations_url, headers=headers)
@@ -262,8 +268,7 @@ def fetch(ctx, local_root):
                 date = date_match.group(0) if date_match else 'unknown_date'
                 newspaper_name = project_title.split()[0]
 
-                # Construct the local path
-                local_path = Path(local_root) / f"{newspaper_name}-pages" / date[:4] / f"{newspaper_name}-{date}" / "annotations" / annotator_email
+                local_path = Path(local_root) / local_dir_name(project_title) / "annotations" / annotator_email
                 local_path.mkdir(parents=True, exist_ok=True)
                 file_name = f"page{page_number:02d}.json"
                 full_path = local_path / file_name
@@ -278,6 +283,7 @@ def fetch(ctx, local_root):
                     console.print(f"Annotation already exists: {full_path}")
 
     console.print("[bold green]Finished fetching annotations.[/bold green]")
+
 
 @projects.command()
 @click.argument('project_id', type=int)
