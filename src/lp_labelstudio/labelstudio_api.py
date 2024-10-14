@@ -231,59 +231,53 @@ def fetch(ctx, local_root):
 
     console = Console()
 
-    try:
-        # Fetch all projects
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        projects = response.json()['results']
+    # Fetch all projects
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    projects = response.json()['results']
 
-        for project in projects:
-            project_id = project['id']
-            project_title = project['title']
-            console.print(f"[bold]Fetching annotations for project: {project_title}[/bold]")
+    for project in projects:
+        project_id = project['id']
+        project_title = project['title']
+        console.print(f"[bold]Fetching annotations for project: {project_title}[/bold]")
 
-            # Fetch tasks for the project
-            tasks_url = f"{ctx.obj['url']}/api/tasks?project={project_id}"
-            tasks_response = requests.get(tasks_url, headers=headers)
-            tasks_response.raise_for_status()
-            tasks = tasks_response.json()
+        # Fetch tasks for the project
+        tasks_url = f"{ctx.obj['url']}/api/tasks?project={project_id}"
+        tasks_response = requests.get(tasks_url, headers=headers)
+        tasks_response.raise_for_status()
+        tasks = tasks_response.json()
 
-            for task in tasks:
-                task_id = task['id']
-                annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
-                annotations_response = requests.get(annotations_url, headers=headers)
-                annotations_response.raise_for_status()
-                annotations = annotations_response.json()
+        for task in tasks:
+            task_id = task['id']
+            annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
+            annotations_response = requests.get(annotations_url, headers=headers)
+            annotations_response.raise_for_status()
+            annotations = annotations_response.json()
 
-                for annotation in annotations:
-                    # Extract necessary information
-                    annotator_email = extract_email(annotation["created_username"])
-                    page_number = task['data'].get('pageNumber', 'unknown')
-                    date_match = re.search(r'\d{4}-\d{2}-\d{2}', project_title)
-                    date = date_match.group(0) if date_match else 'unknown_date'
-                    newspaper_name = project_title.split()[0]
+            for annotation in annotations:
+                # Extract necessary information
+                annotator_email = extract_email(annotation["created_username"])
+                page_number = task['data'].get('pageNumber', 'unknown')
+                date_match = re.search(r'\d{4}-\d{2}-\d{2}', project_title)
+                date = date_match.group(0) if date_match else 'unknown_date'
+                newspaper_name = project_title.split()[0]
 
-                    # Construct the local path
-                    local_path = Path(local_root) / f"{newspaper_name}-pages" / date[:4] / f"{newspaper_name}-{date}" / "annotations" / annotator_email
-                    local_path.mkdir(parents=True, exist_ok=True)
-                    file_name = f"page{page_number:02d}.json"
-                    full_path = local_path / file_name
+                # Construct the local path
+                local_path = Path(local_root) / f"{newspaper_name}-pages" / date[:4] / f"{newspaper_name}-{date}" / "annotations" / annotator_email
+                local_path.mkdir(parents=True, exist_ok=True)
+                file_name = f"page{page_number:02d}.json"
+                full_path = local_path / file_name
 
-                    # Check if the annotation already exists locally
-                    if not full_path.exists():
-                        # Save the annotation locally
-                        with full_path.open('w') as f:
-                            json.dump(annotation, f, indent=2)
-                        console.print(f"Saved new annotation: {full_path}")
-                    else:
-                        console.print(f"Annotation already exists: {full_path}")
+                # Check if the annotation already exists locally
+                if not full_path.exists():
+                    # Save the annotation locally
+                    with full_path.open('w') as f:
+                        json.dump(annotation, f, indent=2)
+                    console.print(f"Saved new annotation: {full_path}")
+                else:
+                    console.print(f"Annotation already exists: {full_path}")
 
-        console.print("[bold green]Finished fetching annotations.[/bold green]")
-
-    except requests.exceptions.RequestException as e:
-        console.print(f"[bold red]Error:[/bold red] Unable to fetch annotations. {str(e)}")
-    except ValueError as e:
-        console.print(f"[bold red]Error:[/bold red] Unable to parse JSON response. {str(e)}")
+    console.print("[bold green]Finished fetching annotations.[/bold green]")
 
 @projects.command()
 @click.argument('project_id', type=int)
@@ -299,116 +293,110 @@ def view(ctx, project_id):
 
     console = Console()
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
 
-        project = response.json()
+    project = response.json()
 
-        # Extract labels from label_config
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(project.get('label_config', ''))
-        labels = [label.get('value') for label in root.findall(".//Label")]
+    # Extract labels from label_config
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(project.get('label_config', ''))
+    labels = [label.get('value') for label in root.findall(".//Label")]
 
-        title = Text(f"Project Details: {project['title']}", style="bold magenta")
-        panel = Panel(
-            Text.assemble(
-                ("ID: ", "bold cyan"), f"{project.get('id', 'N/A')}\n",
-                ("Description: ", "bold green"), f"{project.get('description', 'N/A')}\n",
-                ("Created: ", "bold yellow"), f"{project.get('created_at', 'N/A')}\n",
-                ("Updated: ", "bold yellow"), f"{project.get('updated_at', 'N/A')}\n",
-                ("Labels: ", "bold blue"), f"{', '.join(labels)}\n",
-                ("Task Number: ", "bold red"), f"{project.get('task_number', 0)}\n",
-                ("Completed Tasks: ", "bold red"), f"{project.get('num_tasks_with_annotations', 0)}\n",
-                ("Total Annotations: ", "bold green"), f"{project.get('total_annotations_number', 0)}\n",
-                ("Average Annotations: ", "bold magenta"), f"{project.get('avg_annotations_per_task', 0):.2f}"
-            ),
-            title=title,
-            expand=True
-        )
+    title = Text(f"Project Details: {project['title']}", style="bold magenta")
+    panel = Panel(
+        Text.assemble(
+            ("ID: ", "bold cyan"), f"{project.get('id', 'N/A')}\n",
+            ("Description: ", "bold green"), f"{project.get('description', 'N/A')}\n",
+            ("Created: ", "bold yellow"), f"{project.get('created_at', 'N/A')}\n",
+            ("Updated: ", "bold yellow"), f"{project.get('updated_at', 'N/A')}\n",
+            ("Labels: ", "bold blue"), f"{', '.join(labels)}\n",
+            ("Task Number: ", "bold red"), f"{project.get('task_number', 0)}\n",
+            ("Completed Tasks: ", "bold red"), f"{project.get('num_tasks_with_annotations', 0)}\n",
+            ("Total Annotations: ", "bold green"), f"{project.get('total_annotations_number', 0)}\n",
+            ("Average Annotations: ", "bold magenta"), f"{project.get('avg_annotations_per_task', 0):.2f}"
+        ),
+        title=title,
+        expand=True
+    )
 
-        # Fetch and display tasks
-        tasks_response = requests.get(tasks_url, headers=headers)
-        tasks_response.raise_for_status()
-        tasks_data = tasks_response.json()
+    # Fetch and display tasks
+    tasks_response = requests.get(tasks_url, headers=headers)
+    tasks_response.raise_for_status()
+    tasks_data = tasks_response.json()
 
-        tasks_table = Table(title="Tasks", show_header=True, header_style="bold magenta")
-        tasks_table.add_column("ID", style="cyan", no_wrap=True)
-        tasks_table.add_column("Page Number", style="magenta")
-        tasks_table.add_column("Annotations", style="green")
-        tasks_table.add_column("Status", style="blue")
-        tasks_table.add_column("Contributors", style="yellow")
+    tasks_table = Table(title="Tasks", show_header=True, header_style="bold magenta")
+    tasks_table.add_column("ID", style="cyan", no_wrap=True)
+    tasks_table.add_column("Page Number", style="magenta")
+    tasks_table.add_column("Annotations", style="green")
+    tasks_table.add_column("Status", style="blue")
+    tasks_table.add_column("Contributors", style="yellow")
 
-        if tasks_data:
-            tasks = tasks_data.get('tasks', []) if isinstance(tasks_data, dict) else tasks_data
+    if tasks_data:
+        tasks = tasks_data.get('tasks', []) if isinstance(tasks_data, dict) else tasks_data
 
-            if tasks:
-                for task in tasks:
-                    if isinstance(task, dict):
-                        task_id = str(task.get('id', 'N/A'))
-                        data = task.get('data', {})
-                        page_number = str(data.get('pageNumber', 'N/A'))
-                        annotations_count = str(task.get('total_annotations', 0))
-                        status = "Completed" if int(annotations_count) > 0 else "Pending"
+        if tasks:
+            for task in tasks:
+                if isinstance(task, dict):
+                    task_id = str(task.get('id', 'N/A'))
+                    data = task.get('data', {})
+                    page_number = str(data.get('pageNumber', 'N/A'))
+                    annotations_count = str(task.get('total_annotations', 0))
+                    status = "Completed" if int(annotations_count) > 0 else "Pending"
 
-                        # Fetch annotations for this task
-                        annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
-                        annotations_response = requests.get(annotations_url, headers=headers)
-                        annotations_response.raise_for_status()
-                        annotations_data = annotations_response.json()
+                    # Fetch annotations for this task
+                    annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
+                    annotations_response = requests.get(annotations_url, headers=headers)
+                    annotations_response.raise_for_status()
+                    annotations_data = annotations_response.json()
 
-                        # Extract unique contributor emails
-                        contributors = set()
-                        for annotation in annotations_data:
-                            if isinstance(annotation, dict) and 'completed_by' in annotation:
-                                contributors.add(extract_email(annotation["created_username"]))
+                    # Extract unique contributor emails
+                    contributors = set()
+                    for annotation in annotations_data:
+                        if isinstance(annotation, dict) and 'completed_by' in annotation:
+                            contributors.add(extract_email(annotation["created_username"]))
 
-                        contributors_str = ", ".join(contributors) if contributors else "N/A"
+                    contributors_str = ", ".join(contributors) if contributors else "N/A"
 
-                        tasks_table.add_row(task_id, page_number, annotations_count, status, contributors_str)
-                    else:
-                        console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
-            else:
-                tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
+                    tasks_table.add_row(task_id, page_number, annotations_count, status, contributors_str)
+                else:
+                    console.print(f"[bold yellow]Unexpected task format: {task}[/bold yellow]")
         else:
             tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
+    else:
+        tasks_table.add_row("N/A", "N/A", "N/A", "N/A", "N/A")
 
-        # Display project details and tasks side by side
-        columns = Columns([panel, tasks_table], equal=True, expand=True)
-        console.print(columns)
+    # Display project details and tasks side by side
+    columns = Columns([panel, tasks_table], equal=True, expand=True)
+    console.print(columns)
 
-        # Display summary
-        summary = Table.grid(expand=True)
-        summary.add_column(style="cyan", justify="right")
-        summary.add_column(style="magenta")
-        summary.add_row("Total Tasks:", str(project.get('task_number', 0)))
-        summary.add_row("Completed Tasks:", str(project.get('num_tasks_with_annotations', 0)))
-        summary.add_row("Completion Rate:", f"{project.get('num_tasks_with_annotations', 0) / project.get('task_number', 1) * 100:.2f}%")
+    # Display summary
+    summary = Table.grid(expand=True)
+    summary.add_column(style="cyan", justify="right")
+    summary.add_column(style="magenta")
+    summary.add_row("Total Tasks:", str(project.get('task_number', 0)))
+    summary.add_row("Completed Tasks:", str(project.get('num_tasks_with_annotations', 0)))
+    summary.add_row("Completion Rate:", f"{project.get('num_tasks_with_annotations', 0) / project.get('task_number', 1) * 100:.2f}%")
 
-        console.print(Panel(summary, title="Project Summary", expand=False))
+    console.print(Panel(summary, title="Project Summary", expand=False))
 
-        # Display members if available
-        if 'members' in project and project['members']:
-            members_table = Table(title="Project Members")
-            members_table.add_column("ID", style="cyan")
-            members_table.add_column("Email", style="magenta")
-            members_table.add_column("First Name", style="green")
-            members_table.add_column("Last Name", style="green")
+    # Display members if available
+    if 'members' in project and project['members']:
+        members_table = Table(title="Project Members")
+        members_table.add_column("ID", style="cyan")
+        members_table.add_column("Email", style="magenta")
+        members_table.add_column("First Name", style="green")
+        members_table.add_column("Last Name", style="green")
 
-            for member in project['members']:
-                members_table.add_row(
-                    str(member['id']),
-                    member['email'],
-                    member.get('first_name', 'N/A'),
-                    member.get('last_name', 'N/A')
-                )
+        for member in project['members']:
+            members_table.add_row(
+                str(member['id']),
+                member['email'],
+                member.get('first_name', 'N/A'),
+                member.get('last_name', 'N/A')
+            )
 
-            console.print(members_table)
-
-    except requests.exceptions.RequestException as e:
-        console.print(f"[bold red]Error:[/bold red] Unable to fetch project details. {str(e)}")
-    except ValueError as e:
-        console.print(f"[bold red]Error:[/bold red] Unable to parse JSON response. {str(e)}")
+        console.print(members_table)
 
 
 def extract_email(input_string):
