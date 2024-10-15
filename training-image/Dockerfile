@@ -79,5 +79,6 @@ COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 
 # Run fix scripts
+COPY fix-paddleocr.py fix-detectron2.py ./
 RUN python3 fix-paddleocr.py
 RUN python3 fix-detectron2.py
