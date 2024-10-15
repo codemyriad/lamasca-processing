@@ -4,6 +4,16 @@ on:
   push:
 
 jobs:
+  image:
+    name: build docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build docker image
+        run: cd training-image && docker build .
+
   smoketest:
     name: Smoke test
     runs-on: ubuntu-latest
