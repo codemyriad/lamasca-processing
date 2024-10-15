@@ -39,14 +39,9 @@ def collect_coco(json_files: List[str]) -> None:
         for item in data:
             if "annotations" not in item:
                 continue
-            image = {
-                "id": image_id,
-                "width": item["annotations"][0]["result"][0]["original_width"],
-                "height": item["annotations"][0]["result"][0]["original_height"],
-                "file_name": item["data"]["ocr"]
-            }
-            coco_data["images"].append(image)
-
+            
+            image_annotations = []
+            
             # Process annotations
             if "annotations" in item:
                 for annotation in item["annotations"]:
@@ -76,10 +71,20 @@ def collect_coco(json_files: List[str]) -> None:
                                 "iscrowd": 0,
                                 "area": result["value"]["width"] * result["value"]["height"]
                             }
-                            coco_data["annotations"].append(coco_annotation)
+                            image_annotations.append(coco_annotation)
                             annotation_id += 1
-
-            image_id += 1
+            
+            # Only add the image and its annotations if there are annotations
+            if image_annotations:
+                image = {
+                    "id": image_id,
+                    "width": item["annotations"][0]["result"][0]["original_width"],
+                    "height": item["annotations"][0]["result"][0]["original_height"],
+                    "file_name": item["data"]["ocr"]
+                }
+                coco_data["images"].append(image)
+                coco_data["annotations"].extend(image_annotations)
+                image_id += 1
 
     # Save the collected COCO data
     with open('/tmp/coco-out.json', 'w') as f:
