@@ -12,6 +12,10 @@ cp /tmp/coco-out.json /tmp/coco-local.json
 sed -i -e 's|https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:|/tmp/|' /tmp/coco-local.json
 
 cd /training
+mkdir base-model
+curl https://newspapers.codemyriad.io/lamasca-training/base-model/model_final.pth > base-model/model_final.pth
+curl https://newspapers.codemyriad.io/lamasca-training/base-model/config.yml > base-model/config.yml
+
 python3 utils/cocosplit.py --annotation-path  /tmp/coco-local.json  --train /tmp/train.json --test /tmp/test.json --split-ratio 0.8
 
 echo Preparations done.
