@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     byobu \
     micro \
     git \
+    htop \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python3
@@ -41,4 +42,4 @@ RUN python3 fix-detectron2.py
 RUN git clone https://github.com/Layout-Parser/layout-model-training /training
 RUN pip install -r /training/requirements.txt pdbpp
 
-RUN copy ./prepare-training.sh /usr/local/bin/prepare-training.sh
+COPY ./prepare-training.sh /usr/local/bin/prepare-training.sh
