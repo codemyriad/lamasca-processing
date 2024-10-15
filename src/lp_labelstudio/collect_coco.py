@@ -1,6 +1,7 @@
 import json
 from typing import List, Dict, Any
 from datetime import datetime
+from lp_labelstudio.constants import NEWSPAPER_CATEGORIES
 
 def collect_coco(json_files: List[str]) -> None:
     """
@@ -8,15 +9,7 @@ def collect_coco(json_files: List[str]) -> None:
     """
     coco_data: Dict[str, Any] = {
         "images": [],
-        "categories": [
-            {"id": 0, "name": "Photograph"},
-            {"id": 1, "name": "Illustration"},
-            {"id": 2, "name": "Map"},
-            {"id": 3, "name": "Comics/Cartoon"},
-            {"id": 4, "name": "Editorial Cartoon"},
-            {"id": 5, "name": "Headline"},
-            {"id": 6, "name": "Advertisement"}
-        ],
+        "categories": NEWSPAPER_CATEGORIES,
         "annotations": [],
         "info": {
             "year": datetime.now().year,
@@ -30,8 +23,8 @@ def collect_coco(json_files: List[str]) -> None:
 
     image_id = 0
     annotation_id = 0
-    category_map = {cat["name"]: cat["id"] for cat in coco_data["categories"]}
-    next_category_id = 7
+    category_map = {cat["name"]: cat["id"] for cat in NEWSPAPER_CATEGORIES}
+    next_category_id = max(cat["id"] for cat in NEWSPAPER_CATEGORIES) + 1
 
     for file_path in json_files:
         with open(file_path, 'r') as f:
