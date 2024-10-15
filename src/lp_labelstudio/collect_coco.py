@@ -8,7 +8,15 @@ def collect_coco(json_files: List[str]) -> None:
     """
     coco_data: Dict[str, Any] = {
         "images": [],
-        "categories": [],
+        "categories": [
+            {"id": 0, "name": "Photograph"},
+            {"id": 1, "name": "Illustration"},
+            {"id": 2, "name": "Map"},
+            {"id": 3, "name": "Comics/Cartoon"},
+            {"id": 4, "name": "Editorial Cartoon"},
+            {"id": 5, "name": "Headline"},
+            {"id": 6, "name": "Advertisement"}
+        ],
         "annotations": [],
         "info": {
             "year": datetime.now().year,
@@ -22,7 +30,8 @@ def collect_coco(json_files: List[str]) -> None:
 
     image_id = 0
     annotation_id = 0
-    category_map = {}
+    category_map = {cat["name"]: cat["id"] for cat in coco_data["categories"]}
+    next_category_id = 7
 
     for file_path in json_files:
         with open(file_path, 'r') as f:
@@ -45,11 +54,12 @@ def collect_coco(json_files: List[str]) -> None:
                         if "value" in result and "labels" in result["value"]:
                             label = result["value"]["labels"][0]
                             if label not in category_map:
-                                category_map[label] = len(category_map)
+                                category_map[label] = next_category_id
                                 coco_data["categories"].append({
-                                    "id": category_map[label],
+                                    "id": next_category_id,
                                     "name": label
                                 })
+                                next_category_id += 1
 
                             coco_annotation = {
                                 "id": annotation_id,
@@ -76,3 +86,9 @@ def collect_coco(json_files: List[str]) -> None:
         json.dump(coco_data, f, indent=2)
 
     print(f"COCO data collected from {len(json_files)} files and saved to /tmp/coco-out.json")
+    print(f"Total images: {len(coco_data['images'])}")
+    print(f"Total annotations: {len(coco_data['annotations'])}")
+    print(f"Total categories: {len(coco_data['categories'])}")
+    print("Categories:")
+    for category in coco_data['categories']:
+        print(f"  - {category['name']} (id: {category['id']})")
