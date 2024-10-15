@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bmon \
     byobu \
     micro \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python3
