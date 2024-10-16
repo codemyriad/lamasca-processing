@@ -7,6 +7,7 @@ from lp_labelstudio.generate_manifest import generate_labelstudio_manifest
 from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
 from lp_labelstudio.labelstudio_api import labelstudio_api
 from lp_labelstudio.collect_coco import collect_coco
+from lp_labelstudio.generate_thumbnails import generate_thumbnails
 from lp_labelstudio.constants import (
     JPEG_EXTENSION,
     NEWSPAPER_MODEL_PATH,
@@ -147,11 +148,10 @@ def collect_coco(json_files):
 @cli.command()
 @click.argument('source_folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('destination_folder', type=click.Path(file_okay=False, dir_okay=True))
-def generate_thumbnails(source_folder: str, destination_folder: str):
+def generate_thumbnails_command(source_folder: str, destination_folder: str):
     """Generate thumbnails from images in the source folder and save them in the destination folder."""
     click.echo(f"Generating thumbnails from {source_folder} to {destination_folder}")
-    # Placeholder for future implementation
-    pass
+    generate_thumbnails(source_folder, destination_folder)
 
 
 def generate_summary(
