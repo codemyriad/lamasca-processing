@@ -43,5 +43,6 @@ RUN python3 fix-detectron2.py
 RUN git clone https://github.com/Layout-Parser/layout-model-training /training
 RUN pip install -r /training/requirements.txt pdbpp
 
+COPY ./train_net_patched.py /training/tools/train_net.py
 COPY ./base-model/config.yml /training/base-model/config.yml
 COPY ./prepare-training.sh /usr/local/bin/prepare-training.sh

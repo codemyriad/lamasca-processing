@@ -11,9 +11,9 @@ DATASETS:
   PROPOSAL_FILES_TEST: []
   PROPOSAL_FILES_TRAIN: []
   TEST:
-    - coco_2017_val
+    - lamasca_2024_test
   TRAIN:
-    - coco_2017_train
+    - lamasca_2024_train
 GLOBAL:
   HACK: 1.0
 INPUT:
@@ -28,14 +28,8 @@ INPUT:
   MAX_SIZE_TEST: 1333
   MAX_SIZE_TRAIN: 1333
   MIN_SIZE_TEST: 800
-  MIN_SIZE_TRAIN:
-    - 640
-    - 672
-    - 704
-    - 736
-    - 768
-    - 800
-  MIN_SIZE_TRAIN_SAMPLING: choice
+  MIN_SIZE_TRAIN: 800
+  RANDOM_FLIP: none
 MODEL:
   ANCHOR_GENERATOR:
     ANGLES:
@@ -288,7 +282,7 @@ SOLVER:
 TEST:
   AUG:
     ENABLED: false
-    FLIP: true
+    FLIP: false
     MAX_SIZE: 4000
     MIN_SIZES:
       - 400
