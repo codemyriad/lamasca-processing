@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 
+# This script is meant to be invoked on vast.ai (or other provider) instance creation
+# Here's an example vast.ai invocation:
+# vastai create instance $INSTANCE_ID --image ghcr.io/codemyriad/lamasca-layoutparser --disk 100 --onstart-cmd "byobu new-session -d -s training 'touch ~/.no_auto_tmux; bash /usr/local/bin/prepare-training.sh'"
+# and here's a snippet to monitor the machine provisioning:
+# watch -n1 "vastai show instances --raw|jq .[0].status_msg"
+# and one to connect (in case it's the first/only active instance):
+# ssh (vastai ssh-url (vastai show instances --raw|jq .[0].id))
+
+
+# Exit early in case of errors
 set -euo pipefail
+error_handler() {
+    echo "An error occurred. Sleeping for 24 hours..."
+    sleep 86400
+}
+# But make sure the byobu terminal where we were invoked does not disappear
+trap error_handler ERR
 
 # Download COCO JSON file
 aria2c -d /tmp -c https://newspapers.codemyriad.io/lamasca-pages/1994/coco-all.json
