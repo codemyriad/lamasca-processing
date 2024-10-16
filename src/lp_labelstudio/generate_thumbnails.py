@@ -53,7 +53,7 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
                     width = result['value']['width'] * new_size[0] / 100
                     height = result['value']['height'] * new_size[1] / 100
 
-                    draw.rectangle([x, y, x + width, y + height], fill=color + (128,), outline=color)
+                    draw.rectangle([x, y, x + width, y + height], fill=color + (76,), outline=color)
 
         # Create the destination directory structure
         rel_path = os.path.relpath(os.path.dirname(image_path), source_root)
