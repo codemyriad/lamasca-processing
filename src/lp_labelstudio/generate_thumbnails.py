@@ -53,7 +53,11 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
                     width = result['value']['width'] * new_size[0] / 100
                     height = result['value']['height'] * new_size[1] / 100
 
-                    draw.rectangle([x, y, x + width, y + height], fill=color + (76,), outline=color)
+                    # Create a more transparent fill color (10% opacity)
+                    fill_color = color + (25,)  # 25 is 10% of 255
+                    # Create a semi-transparent outline color (50% opacity)
+                    outline_color = color + (128,)  # 128 is 50% of 255
+                    draw.rectangle([x, y, x + width, y + height], fill=fill_color, outline=outline_color)
 
         # Create the destination directory structure
         rel_path = os.path.relpath(os.path.dirname(image_path), source_root)
