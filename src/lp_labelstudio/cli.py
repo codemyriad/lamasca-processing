@@ -144,6 +144,16 @@ def collect_coco(json_files):
     click.echo(f"COCO data collected and saved to /tmp/coco-out.json")
 
 
+@cli.command()
+@click.argument('source_folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('destination_folder', type=click.Path(file_okay=False, dir_okay=True))
+def generate_thumbnails(source_folder: str, destination_folder: str):
+    """Generate thumbnails from images in the source folder and save them in the destination folder."""
+    click.echo(f"Generating thumbnails from {source_folder} to {destination_folder}")
+    # Placeholder for future implementation
+    pass
+
+
 def generate_summary(
     image_path: str, result: List[Dict[str, Any]], output_path: str
 ) -> str:
