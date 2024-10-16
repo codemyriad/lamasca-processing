@@ -55,13 +55,15 @@ cp /tmp/coco-out.json /tmp/coco-local.json
 
 sed -i -e 's|https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:|/tmp/|' /tmp/coco-local.json
 
-mkdir /training/base-model
-aria2c -d /training/base-model https://newspapers.codemyriad.io/lamasca-training/base-model/config.yml https://newspapers.codemyriad.io/lamasca-training/base-model/model_final.pth > base-model/model_final.pth
+aria2c -d /training/base-model https://newspapers.codemyriad.io/lamasca-training/base-model/model_final.pth
 
 cd /training
-python3 utils/cocosplit.py --annotation-path  /tmp/coco-local.json  --train /tmp/train.json --test /tmp/test.json --split-ratio 0.8
+python3 utils/cocosplit.py --annotation-path  /tmp/coco-local.json  --train /tmp/train.json --test /tmp/test.json --split-ratio 0.9
 
 echo Preparations done.
 echo Running training...
 set +x
-torchrun tools/train_net.py --image_path_train /tmp/train_images --image_path_val /tmp/validation_images  --dataset_name "my_dataset" --json_annotation_train /tmp/train.json --json_annotation_val /tmp/test.json --config-file base-model/config.yml MODEL.WEIGHTS base-model/model_final.pth OUTPUT_DIR /tmp/trained MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE 256 SOLVER.CHECKPOINT_PERIOD 20000 SOLVER.MAX_ITER 80000 SOLVER.IMS_PER_BATCH 2
+
+# Count GPUs
+NUMGPUS=$(nvidia-smi -L | wc -l)
+python3  tools/train_net.py   --num-gpus $NUMGPUS --image_path_train /tmp/train_images --image_path_val /tmp/validation_images  --dataset_name "lamasca" --json_annotation_train /tmp/train.json --json_annotation_val /tmp/test.json --config-file base-model/config.yml MODEL.WEIGHTS base-model/model_final.pth OUTPUT_DIR /tmp/trained MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE 256 SOLVER.CHECKPOINT_PERIOD 20000 SOLVER.MAX_ITER 80000 SOLVER.IMS_PER_BATCH $NUMGPUS
