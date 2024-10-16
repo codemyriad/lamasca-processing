@@ -37,7 +37,10 @@ def process_image(image_path: str, annotations: Dict[str, Any], source_root: str
         new_size = (1000, int(1000 * aspect_ratio))
         img_resized = img.resize(new_size, Image.LANCZOS)
 
-        draw = ImageDraw.Draw(img_resized, 'RGBA')
+        # Convert image to RGBA mode
+        img_resized = img_resized.convert('RGBA')
+
+        draw = ImageDraw.Draw(img_resized)
 
         for annotation in annotations['annotations']:
             for result in annotation['result']:
