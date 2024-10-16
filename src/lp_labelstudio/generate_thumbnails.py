@@ -60,9 +60,10 @@ def process_image(image_path: str, annotations: Dict[str, Any], source_root: str
         dest_dir = os.path.join(destination_folder, rel_path)
         os.makedirs(dest_dir, exist_ok=True)
 
-        # Save the thumbnail
+        # Convert back to RGB mode and save the thumbnail
+        img_rgb = img_resized.convert('RGB')
         thumbnail_path = os.path.join(dest_dir, os.path.basename(image_path))
-        img_resized.save(thumbnail_path)
+        img_rgb.save(thumbnail_path)
         click.echo(f"Saved thumbnail: {thumbnail_path}")
 
 def get_color_for_label(label: str) -> tuple:
