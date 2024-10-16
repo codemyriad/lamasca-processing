@@ -19,15 +19,8 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
         for item in manifest:
             image_filename = os.path.basename(item['data']['ocr'])
             annotation_filename = f"{os.path.splitext(image_filename)[0]}_annotations.json"
-            
-            if annotation_filename not in files:
-                continue
 
-            with open(os.path.join(root, annotation_filename), 'r') as f:
-                annotations = json.load(f)
-
-            if not annotations.get('annotations'):
-                continue
+            annotations = item["annotations"]
 
             image_path = os.path.join(root, image_filename)
             if not os.path.exists(image_path):
@@ -51,7 +44,7 @@ def process_image(image_path: str, annotations: Dict[str, Any], source_root: str
                 if 'labels' in result['value']:
                     label = result['value']['labels'][0]
                     color = get_color_for_label(label)
-                    
+
                     x = result['value']['x'] * new_size[0] / 100
                     y = result['value']['y'] * new_size[1] / 100
                     width = result['value']['width'] * new_size[0] / 100
