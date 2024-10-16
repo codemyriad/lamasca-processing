@@ -64,7 +64,7 @@ for dir in "${!dir_urls[@]}"; do
 done
 
 # Prepare local COCO JSON
-cp /tmp/coco-out.json /tmp/coco-local.json
+cp /tmp/coco-all.json /tmp/coco-local.json
 sed -i -e 's|https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:|/tmp/|' /tmp/coco-local.json
 
 # Download base model
@@ -98,4 +98,5 @@ python3 tools/train_net.py \
     MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE 256 \
     SOLVER.CHECKPOINT_PERIOD 20000 \
     SOLVER.MAX_ITER 80000 \
+    SOLVER.BASE_LR 0.02 \
     SOLVER.IMS_PER_BATCH "$NUMGPUS"
