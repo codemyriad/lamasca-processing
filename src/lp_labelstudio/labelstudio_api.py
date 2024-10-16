@@ -64,7 +64,10 @@ def list_projects(ctx, local_root):
 
             total_annotated_tasks = 0
 
-            for project in projects:
+            # Sort projects by id
+            sorted_projects = sorted(projects, key=lambda x: x.get('id', 0))
+
+            for project in sorted_projects:
                 if isinstance(project, dict) and 'id' in project and 'title' in project:
                     project_id = project['id']
                     project_title = project['title']
