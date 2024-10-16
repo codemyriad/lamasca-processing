@@ -27,7 +27,7 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
                 click.echo(f"Image not found: {image_path}", err=True)
                 continue
 
-            process_image(image_path, annotations, root, destination_folder)
+            process_image(image_path, annotations, source_folder, destination_folder)
 
 def process_image(image_path: str, annotations: Dict[str, Any], source_root: str, destination_folder: str):
     """Process a single image, create a thumbnail with overlays, and save it."""
@@ -42,7 +42,7 @@ def process_image(image_path: str, annotations: Dict[str, Any], source_root: str
 
         draw = ImageDraw.Draw(img_resized)
 
-        for annotation in annotations['annotations']:
+        for annotation in annotations:
             for result in annotation['result']:
                 if 'labels' in result['value']:
                     label = result['value']['labels'][0]
@@ -61,7 +61,7 @@ def process_image(image_path: str, annotations: Dict[str, Any], source_root: str
         os.makedirs(dest_dir, exist_ok=True)
 
         # Save the thumbnail
-        thumbnail_path = os.path.join(dest_dir, f"thumbnail_{os.path.basename(image_path)}")
+        thumbnail_path = os.path.join(dest_dir, os.path.basename(image_path))
         img_resized.save(thumbnail_path)
         click.echo(f"Saved thumbnail: {thumbnail_path}")
 
