@@ -4,6 +4,9 @@ from typing import Dict, Any, List
 from PIL import Image, ImageDraw, ImageColor
 import click
 
+TRANSPARENCY = 0.25  # Degree of transparency, 0-100%
+OPACITY = int(255 * TRANSPARENCY)
+
 def generate_thumbnails(source_folder: str, destination_folder: str):
     """
     Generate thumbnails from images in the source folder and save them in the destination folder.
@@ -40,7 +43,9 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
         # Convert image to RGBA mode
         img_resized = img_resized.convert('RGBA')
 
-        draw = ImageDraw.Draw(img_resized)
+        # Create a blank image for the overlay
+        overlay = Image.new('RGBA', img_resized.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
 
         for annotation in annotations:
             for result in annotation['result']:
@@ -53,8 +58,10 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
                     width = result['value']['width'] * new_size[0] / 100
                     height = result['value']['height'] * new_size[1] / 100
 
-                    # Use the color with 25% opacity for both fill and outline
-                    draw.rectangle([x, y, x + width, y + height], fill=color, outline=color)
+                    draw.rectangle([x, y, x + width, y + height], fill=color+(OPACITY,))
+
+        # Alpha composite the original image with the overlay
+        img_with_overlay = Image.alpha_composite(img_resized, overlay)
 
         # Create the destination directory structure
         rel_path = os.path.relpath(os.path.dirname(image_path), source_root)
@@ -62,13 +69,13 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
         os.makedirs(dest_dir, exist_ok=True)
 
         # Convert back to RGB mode and save the thumbnail
-        img_rgb = img_resized.convert('RGB')
+        img_rgb = img_with_overlay.convert('RGB')
         thumbnail_path = os.path.join(dest_dir, os.path.basename(image_path))
         img_rgb.save(thumbnail_path)
         click.echo(f"Saved thumbnail: {thumbnail_path}")
 
 def get_color_for_label(label: str) -> tuple:
-    """Return a color tuple (R, G, B, A) for a given label."""
+    """Return a color tuple (R, G, B) for a given label."""
     color_map = {
         "Text": "#c8ffbe",
         "Headline": "#d8f1a0",
@@ -86,5 +93,4 @@ def get_color_for_label(label: str) -> tuple:
     }
     
     hex_color = color_map.get(label, "#808080")  # Default to gray if label not found
-    rgb_color = ImageColor.getrgb(hex_color)
-    return rgb_color + (64,)  # Add 25% opacity (64 out of 255)
+    return ImageColor.getrgb(hex_color)
