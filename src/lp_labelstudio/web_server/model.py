@@ -28,6 +28,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+MODEL_PATH =  os.environ.get("MODEL_PATH")
+
 class LayoutParserModel(LabelStudioMLBase):
     """Custom ML Backend model"""
 
@@ -35,9 +37,14 @@ class LayoutParserModel(LabelStudioMLBase):
         """Configure any parameters of your model here"""
         self.set("model_version", "0.0.1")
         label_map = {cat["id"]: cat["name"] for cat in NEWSPAPER_CATEGORIES}
-        self.model = lp.models.Detectron2LayoutModel(
-            NEWSPAPER_MODEL_PATH, label_map=label_map
-        )
+        if MODEL_PATH:
+            self.model = lp.models.Detectron2LayoutModel(
+                MODEL_PATH + "/config.yml", MODEL_PATH + "/model_final.pth", label_map=label_map
+            )
+        else:
+            self.model = lp.models.Detectron2LayoutModel(
+                NEWSPAPER_MODEL_PATH, label_map=label_map
+            )
         logger.info("ML model initialized successfully")
 
     def download_image(self, url):
