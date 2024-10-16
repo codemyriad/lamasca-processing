@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Dict, Any
+from typing import Dict, Any, List
 from PIL import Image, ImageDraw
 import click
 
@@ -20,16 +20,16 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
             image_filename = os.path.basename(item['data']['ocr'])
             annotation_filename = f"{os.path.splitext(image_filename)[0]}_annotations.json"
 
-            annotations = item["annotations"]
+            if "annotations" not in item:
+                continue
 
             image_path = os.path.join(root, image_filename)
             if not os.path.exists(image_path):
                 click.echo(f"Image not found: {image_path}", err=True)
                 continue
+            process_image(image_path, item["annotations"], source_folder, destination_folder)
 
-            process_image(image_path, annotations, source_folder, destination_folder)
-
-def process_image(image_path: str, annotations: Dict[str, Any], source_root: str, destination_folder: str):
+def process_image(image_path: str, annotations: List[Dict], source_root: str, destination_folder: str):
     """Process a single image, create a thumbnail with overlays, and save it."""
     with Image.open(image_path) as img:
         # Resize image to 1000 pixels wide
