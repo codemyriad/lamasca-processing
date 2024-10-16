@@ -1,7 +1,7 @@
 import os
 import json
 from typing import Dict, Any, List
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageColor
 import click
 
 def generate_thumbnails(source_folder: str, destination_folder: str):
@@ -53,11 +53,8 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
                     width = result['value']['width'] * new_size[0] / 100
                     height = result['value']['height'] * new_size[1] / 100
 
-                    # Create a more transparent fill color (10% opacity)
-                    fill_color = color + (25,)  # 25 is 10% of 255
-                    # Create a semi-transparent outline color (50% opacity)
-                    outline_color = color + (128,)  # 128 is 50% of 255
-                    draw.rectangle([x, y, x + width, y + height], fill=fill_color, outline=outline_color)
+                    # Use the color with 25% opacity for both fill and outline
+                    draw.rectangle([x, y, x + width, y + height], fill=color, outline=color)
 
         # Create the destination directory structure
         rel_path = os.path.relpath(os.path.dirname(image_path), source_root)
@@ -71,12 +68,23 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
         click.echo(f"Saved thumbnail: {thumbnail_path}")
 
 def get_color_for_label(label: str) -> tuple:
-    """Return a color tuple (R, G, B) for a given label."""
-    # You can expand this dictionary with more labels and colors as needed
+    """Return a color tuple (R, G, B, A) for a given label."""
     color_map = {
-        "SubHeadline": (255, 0, 0),  # Red
-        "Headline": (0, 255, 0),     # Green
-        "BodyText": (0, 0, 255),     # Blue
-        # Add more labels and colors here
+        "Text": "#c8ffbe",
+        "Headline": "#d8f1a0",
+        "SubHeadline": "#dce593",
+        "Author": "#dce593",
+        "PageTitle": "#efcb68",
+        "PageNumber": "#dcc7be",
+        "Date": "#ab7968",
+        "Advertisement": "#f46036",
+        "Map": "#6d72c3",
+        "Photograph": "#a8dadc",
+        "Illustration": "#5941a9",
+        "Comics/Cartoon": "#e5d4ed",
+        "Editorial Cartoon": "#0b4f6c",
     }
-    return color_map.get(label, (128, 128, 128))  # Default to gray if label not found
+    
+    hex_color = color_map.get(label, "#808080")  # Default to gray if label not found
+    rgb_color = ImageColor.getrgb(hex_color)
+    return rgb_color + (64,)  # Add 25% opacity (64 out of 255)
