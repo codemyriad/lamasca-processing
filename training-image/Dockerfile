@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     micro \
     git \
     htop \
+    aria2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python3

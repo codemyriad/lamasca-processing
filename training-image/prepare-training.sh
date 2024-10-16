@@ -3,7 +3,18 @@
 curl https://newspapers.codemyriad.io/lamasca-pages/1994/coco-all.json > /tmp/coco-out.json
 
 cd /tmp
-grep "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers" /tmp/coco-out.json |sed -e 's/.*"file_name": "//;s/".*//;s|https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers|https://newspapers.codemyriad.io|' | xargs -n 5 -P 5 wget -m -c
+grep "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers" /tmp/coco-out.json |sed -e 's/.*"file_name": "//;s/".*//;s|https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers|https://newspapers.codemyriad.io|' > urls.txt
+
+while IFS= read -r url; do
+  # Extract the path after the domain
+  path=$(echo "$url" | cut -d'/' -f4-)
+  # Get the directory name from the path
+  dir=$(dirname "$path")
+  # Create the directory if it doesn't exist
+  mkdir -p "$dir"
+  # Download the file using aria2c
+  aria2c -d "$dir" -o "$(basename "$path")" "$url"
+done < urls.txt
 
 ln -s /tmp/newspapers.codemyriad.io/ /tmp/newspapers
 
