@@ -38,6 +38,8 @@ def list_projects(ctx, local_root):
     }
 
     console = Console()
+    annotator_tasks = defaultdict(int)
+    annotator_projects = defaultdict(int)
 
     try:
         response = requests.get(url, headers=headers)
@@ -99,6 +101,10 @@ def list_projects(ctx, local_root):
 
                     # Get local annotations info
                     local_annotations, to_fetch, annotators = get_local_annotations_info(local_root, project_title, completed_tasks)
+                    # Update global annotator data
+                    for annotator, count in annotators.items():
+                        annotator_tasks[annotator] += count
+                        annotator_projects[annotator] += 1
 
                     table.add_row(
                         str(project_id),
@@ -107,14 +113,17 @@ def list_projects(ctx, local_root):
                         local_annotations,
                         str(to_fetch)
                     )
-                    if annotators:
-                        annotator_breakdown = ", ".join(f"{annotator}: {count}" for annotator, count in annotators.items())
-                        console.print(f"Annotator Breakdown: {annotator_breakdown}")
                 else:
                     console.print(f"[bold red]Unexpected project format:[/bold red] {project}")
 
             console.print(table)
             console.print(Panel(f"[bold green]Total annotated tasks: {total_annotated_tasks}[/bold green]", expand=False))
+            if annotator_tasks:
+                console.print("\nAnnotator Breakdown:")
+                for annotator in annotator_tasks:
+                    total_tasks = annotator_tasks[annotator]
+                    total_projects = annotator_projects[annotator]
+                    console.print(f"{annotator}: {total_tasks} tasks over {total_projects} projects")
         else:
             console.print("[bold yellow]No projects found.[/bold yellow]")
     except requests.exceptions.RequestException as e:
