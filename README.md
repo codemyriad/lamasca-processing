@@ -1,6 +1,12 @@
 Newspaper annotation training for lamasca
 =========================================
 
+Quick links
+-----------
+
+* Open Oni: https://oni.cmzx.it/lccn/sn00000001/issues/
+* Annotated thumbnails: https://newspapers.codemyriad.io/lamasca-preview/index.html
+
 General structure
 -----------------
 
