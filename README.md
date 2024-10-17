@@ -23,9 +23,9 @@ The process for annotating is:
   ```
   /lamasca-pages/1994/lamasca-1994-01-12/
   /lamasca-pages/1994/lamasca-1994-01-12/annotations
-  /lamasca-pages/1994/lamasca-1994-01-12/annotations/annotator.example.com
-  /lamasca-pages/1994/lamasca-1994-01-12/annotations/annotator.example.com/page01.json
-  /lamasca-pages/1994/lamasca-1994-01-12/annotations/annotator.example.com/page02.json
+  /lamasca-pages/1994/lamasca-1994-01-12/annotations/annotator@example.com
+  /lamasca-pages/1994/lamasca-1994-01-12/annotations/annotator@example.com/page01.json
+  /lamasca-pages/1994/lamasca-1994-01-12/annotations/annotator@example.com/page02.json
   ...
   /lamasca-pages/1994/lamasca-1994-01-12/manifest.json
   /lamasca-pages/1994/lamasca-1994-01-12/page_01.jpeg
