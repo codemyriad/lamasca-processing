@@ -53,7 +53,7 @@ The process for annotating is:
 Notes
 -----
 
-When working on this I have the contents of https://newspapers.codemyriad.io/ mounted on /tmp/newspapers thanks to the excellent rclone tool. The code sometimes hardcodes this.
+When working on this I have the contents of https://newspapers.codemyriad.io/ mounted on `/tmp/newspapers` thanks to the excellent `rclone` tool. The code sometimes hardcodes this.
 
 Naming is sometimes very bad. The project package is currently called "lp-labelstudio". But it's actually very specific to the use case it was developed for.
 
