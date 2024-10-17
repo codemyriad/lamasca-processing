@@ -9,11 +9,11 @@ This repository contains code to help with annotating and training an ML model f
 The process for annotating is:
 
 * PDF files are uploaded to https://newspapers.codemyriad.io/lamasca/1994/index.html
-* The PDF files are (converted to grayscale images and deskewed)[src/lp_labelstudio/preprocess-pdf/cli.py].
+* The PDF files are [converted to grayscale images and deskewed](src/lp_labelstudio/preprocess-pdf/cli.py).
 * The results are available in URLs like https://newspapers.codemyriad.io/lamasca-pages/1994/lamasca-1994-01-12/page_01.jpeg
 * The pages are then uploaded to Label Studio using [the `lp-labelstudio labelstudio-api projects create` command](src/lp_labelstudio/labelstudio_api.py#create)
 * Label Studio is used to annotate the pages
-* (The `lp-labelstudio labelstudio-api projects fetch` command)[src/lp_labelstudio/labelstudio_api.py#fetch] is used to download the annotations into the "annotations" directory next to the images. For each annotator a directory is created, and each task (page) is saved as a single file in that page. All annotations are also incorporated in a `manifest.json` file. For example:
+* [The `lp-labelstudio labelstudio-api projects fetch` command](src/lp_labelstudio/labelstudio_api.py#fetch) is used to download the annotations into the "annotations" directory next to the images. For each annotator a directory is created, and each task (page) is saved as a single file in that page. All annotations are also incorporated in a `manifest.json` file. For example:
   ```
   /lamasca-pages/1994/lamasca-1994-01-12/
   /lamasca-pages/1994/lamasca-1994-01-12/annotations
