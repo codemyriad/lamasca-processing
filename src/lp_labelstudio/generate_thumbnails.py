@@ -37,7 +37,7 @@ def generate_thumbnails(source_folder: str, destination_folder: str, progress_ca
     # Use multiprocessing to process images in parallel
     total_tasks = len(tasks)
     with Pool(processes=cpu_count()) as pool:
-        for i, _ in enumerate(pool.istarmap(process_image, tasks), 1):
+        for i, _ in enumerate(pool.starmap(process_image, tasks), 1):
             if progress_callback:
                 progress_callback(i / total_tasks * 100)
 
