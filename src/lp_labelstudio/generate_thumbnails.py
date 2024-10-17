@@ -9,7 +9,7 @@ from functools import partial
 TRANSPARENCY = 0.25  # Degree of transparency, 0-100%
 OPACITY = int(255 * TRANSPARENCY)
 
-def generate_thumbnails(source_folder: str, destination_folder: str, progress_callback=None):
+def generate_thumbnails(source_folder: str, destination_folder: str):
     """
     Generate thumbnails from images in the source folder and save them in the destination folder.
     Only process directories with a manifest.json file and annotations in their JSON files.
@@ -37,9 +37,8 @@ def generate_thumbnails(source_folder: str, destination_folder: str, progress_ca
     # Use multiprocessing to process images in parallel
     total_tasks = len(tasks)
     with Pool(processes=cpu_count()) as pool:
-        for i, _ in enumerate(pool.starmap(process_image, tasks), 1):
-            if progress_callback:
-                progress_callback(i / total_tasks * 100)
+        for _ in click.progressbar(pool.starmap(process_image, tasks), length=total_tasks, label="Generating thumbnails"):
+            pass
 
 def process_image(image_path: str, annotations: List[Dict], source_root: str, destination_folder: str):
     """Process a single image, create a thumbnail with overlays, and save it."""
