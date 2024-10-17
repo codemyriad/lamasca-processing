@@ -31,5 +31,5 @@ pip show pdbpp || pip install pdbpp
 
 pip install -e .
 
-python fix-paddleocr.py
-python fix-detectron2.py
+python training-image/fix-paddleocr.py
+python training-image/fix-detectron2.py
