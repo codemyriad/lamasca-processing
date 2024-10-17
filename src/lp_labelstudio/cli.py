@@ -151,7 +151,11 @@ def collect_coco(json_files):
 def generate_thumbnails_command(source_folder: str, destination_folder: str):
     """Generate thumbnails from images in the source folder and save them in the destination folder."""
     click.echo(f"Generating thumbnails from {source_folder} to {destination_folder}")
-    generate_thumbnails(source_folder, destination_folder)
+    with click.progressbar(length=100, label="Generating thumbnails") as bar:
+        def update_progress(progress):
+            bar.update(progress)
+        generate_thumbnails(source_folder, destination_folder, progress_callback=update_progress)
+    click.echo("Thumbnail generation complete!")
 
 
 def generate_summary(

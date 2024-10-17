@@ -1,17 +1,24 @@
 import os
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from PIL import Image, ImageDraw, ImageColor
 import click
+from multiprocessing import Pool, cpu_count
+from functools import partial
 
 TRANSPARENCY = 0.25  # Degree of transparency, 0-100%
 OPACITY = int(255 * TRANSPARENCY)
 
-def generate_thumbnails(source_folder: str, destination_folder: str):
+def generate_thumbnails(source_folder: str, destination_folder: str, progress_callback=None):
     """
     Generate thumbnails from images in the source folder and save them in the destination folder.
     Only process directories with a manifest.json file and annotations in their JSON files.
+    
+    :param source_folder: Path to the source folder containing images and manifest files
+    :param destination_folder: Path to save the generated thumbnails
+    :param progress_callback: Optional callback function to report progress
     """
+    tasks = []
     for root, dirs, files in os.walk(source_folder):
         if 'manifest.json' not in files:
             continue
@@ -21,13 +28,15 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
 
         for item in manifest:
             image_filename = os.path.basename(item['data']['ocr'])
-            annotation_filename = f"{os.path.splitext(image_filename)[0]}_annotations.json"
-
             image_path = os.path.join(root, image_filename)
             if not os.path.exists(image_path):
                 click.echo(f"Image not found: {image_path}", err=True)
                 continue
-            process_image(image_path, item.get("annotations", []), source_folder, destination_folder)
+            tasks.append((image_path, item.get("annotations", []), source_folder, destination_folder))
+
+    # Use multiprocessing to process images in parallel
+    with Pool(processes=cpu_count()) as pool:
+        pool.starmap(process_image, tasks)
 
 def process_image(image_path: str, annotations: List[Dict], source_root: str, destination_folder: str):
     """Process a single image, create a thumbnail with overlays, and save it."""
