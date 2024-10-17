@@ -36,14 +36,21 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
 
     # Use multiprocessing to process images in parallel
     total_tasks = len(tasks)
+    processed_images = 0
+    images_with_annotations = 0
     with Pool(processes=cpu_count()) as pool:
         with click.progressbar(length=total_tasks, label="Generating thumbnails") as progress_bar:
-            for _ in pool.imap_unordered(process_image, tasks):
+            for has_annotations in pool.imap_unordered(process_image, tasks):
+                processed_images += 1
+                if has_annotations:
+                    images_with_annotations += 1
                 progress_bar.update(1)
+                progress_bar.label = f"Processed {processed_images}/{total_tasks} images, {images_with_annotations} with annotations"
 
 def process_image(args):
     """Process a single image, create a thumbnail with overlays, and save it."""
     image_path, annotations, source_root, destination_folder = args
+    has_annotations = len(annotations) > 0
     with Image.open(image_path) as img:
         # Resize image to 1000 pixels wide
         aspect_ratio = img.height / img.width
@@ -82,6 +89,7 @@ def process_image(args):
         img_rgb = img_with_overlay.convert('RGB')
         thumbnail_path = os.path.join(dest_dir, os.path.basename(image_path))
         img_rgb.save(thumbnail_path)
+        return has_annotations
 
 def get_color_for_label(label: str) -> tuple:
     """Return a color tuple (R, G, B) for a given label."""
