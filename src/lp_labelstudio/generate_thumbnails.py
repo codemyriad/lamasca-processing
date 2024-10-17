@@ -38,11 +38,12 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
     total_tasks = len(tasks)
     with Pool(processes=cpu_count()) as pool:
         with click.progressbar(length=total_tasks, label="Generating thumbnails") as progress_bar:
-            for _ in pool.starmap(process_image, tasks):
+            for _ in pool.imap_unordered(process_image, tasks):
                 progress_bar.update(1)
 
-def process_image(image_path: str, annotations: List[Dict], source_root: str, destination_folder: str):
+def process_image(args):
     """Process a single image, create a thumbnail with overlays, and save it."""
+    image_path, annotations, source_root, destination_folder = args
     with Image.open(image_path) as img:
         # Resize image to 1000 pixels wide
         aspect_ratio = img.height / img.width
