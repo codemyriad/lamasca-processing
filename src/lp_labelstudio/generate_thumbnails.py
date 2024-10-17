@@ -13,7 +13,7 @@ def generate_thumbnails(source_folder: str, destination_folder: str, progress_ca
     """
     Generate thumbnails from images in the source folder and save them in the destination folder.
     Only process directories with a manifest.json file and annotations in their JSON files.
-    
+
     :param source_folder: Path to the source folder containing images and manifest files
     :param destination_folder: Path to save the generated thumbnails
     :param progress_callback: Optional callback function to report progress
@@ -78,7 +78,6 @@ def process_image(image_path: str, annotations: List[Dict], source_root: str, de
         img_rgb = img_with_overlay.convert('RGB')
         thumbnail_path = os.path.join(dest_dir, os.path.basename(image_path))
         img_rgb.save(thumbnail_path)
-        click.echo(f"Saved thumbnail: {thumbnail_path}")
 
 def get_color_for_label(label: str) -> tuple:
     """Return a color tuple (R, G, B) for a given label."""
