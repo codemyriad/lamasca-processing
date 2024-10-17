@@ -98,7 +98,7 @@ def list_projects(ctx, local_root):
                     completed_str = f"[{color}]{completed_tasks}/{tasks_count} ({completion_percentage:.1f}%)[/{color}]"
 
                     # Get local annotations info
-                    local_annotations, to_fetch = get_local_annotations_info(local_root, project_title, completed_tasks)
+                    local_annotations, to_fetch, annotators = get_local_annotations_info(local_root, project_title, completed_tasks)
 
                     table.add_row(
                         str(project_id),
@@ -107,6 +107,9 @@ def list_projects(ctx, local_root):
                         local_annotations,
                         str(to_fetch)
                     )
+                    if annotators:
+                        annotator_breakdown = ", ".join(f"{annotator}: {count}" for annotator, count in annotators.items())
+                        console.print(f"Annotator Breakdown: {annotator_breakdown}")
                 else:
                     console.print(f"[bold red]Unexpected project format:[/bold red] {project}")
 
@@ -154,16 +157,17 @@ def local_dir_name(project_name):
             return word
 
 def get_local_annotations_info(local_root, project_name, remote_annotations_count):
+    annotators = {}
     if not local_root:
-        return "N/A", remote_annotations_count
+        return "N/A", remote_annotations_count, annotators
 
     dir_name = local_dir_name(project_name)
     if not dir_name:
-        return "No matching local directory", remote_annotations_count
+        return "No matching local directory", remote_annotations_count, annotators
 
     full_path = os.path.join(local_root, dir_name, "annotations")
     if not os.path.exists(full_path):
-        return "No local annotations", remote_annotations_count
+        return "No local annotations", remote_annotations_count, annotators
 
     annotators = defaultdict(int)
     local_annotations_count = 0
@@ -176,11 +180,11 @@ def get_local_annotations_info(local_root, project_name, remote_annotations_coun
                 local_annotations_count += 1
 
     if not annotators:
-        return "No annotations found", remote_annotations_count
+        return "No annotations found", remote_annotations_count, annotators
 
     annotator_info = "\n".join(f"{annotator}: {count}" for annotator, count in annotators.items())
     to_fetch = max(0, remote_annotations_count - local_annotations_count)
-    return annotator_info, to_fetch
+    return annotator_info, to_fetch, annotators
 
 @projects.command()
 @click.argument('directories', nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True))
