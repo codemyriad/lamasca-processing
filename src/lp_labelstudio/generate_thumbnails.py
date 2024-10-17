@@ -23,14 +23,11 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
             image_filename = os.path.basename(item['data']['ocr'])
             annotation_filename = f"{os.path.splitext(image_filename)[0]}_annotations.json"
 
-            if "annotations" not in item:
-                continue
-
             image_path = os.path.join(root, image_filename)
             if not os.path.exists(image_path):
                 click.echo(f"Image not found: {image_path}", err=True)
                 continue
-            process_image(image_path, item["annotations"], source_folder, destination_folder)
+            process_image(image_path, item.get("annotations", []), source_folder, destination_folder)
 
 def process_image(image_path: str, annotations: List[Dict], source_root: str, destination_folder: str):
     """Process a single image, create a thumbnail with overlays, and save it."""
@@ -91,6 +88,6 @@ def get_color_for_label(label: str) -> tuple:
         "Comics/Cartoon": "#e5d4ed",
         "Editorial Cartoon": "#0b4f6c",
     }
-    
+
     hex_color = color_map.get(label, "#808080")  # Default to gray if label not found
     return ImageColor.getrgb(hex_color)
