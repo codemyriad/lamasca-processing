@@ -39,7 +39,7 @@ The process for annotating is:
 * To preapre the annotations for training, a coco JSON file is generated with `lp-labelstudio collect-coco` from [src/lp_labelstudio/collect_coco.py](src/lp_labelstudio/collect_coco.py#collect_coco). This is the command I use: `lp-labelstudio collect-coco (find /tmp/newspapers/lamasca-pages -name manifest.json -size +100k); cp /tmp/coco-out.json /tmp/newspapers/lamasca-pages/1994/coco-all.json`.
 * Now the training can start: the `training-image` directory defines a docker image that can be used to train the model: `ghcr.io/codemyriad/lamasca-layoutparser`. It includes the `prepare-training.sh` script that will prepare and start the training.
 * To use vast.ai to run the training, these commands can be quite handy:
-  ```
+  ```bash
   vastai search offers 'dlperf>100 cpu_ram>60 inet_down>1000 inet_up>1000 gpu_name=RTX_4090 num_gpus>=2' -o dph
   # Choose an instance id
   INSTANCEID=000000000
