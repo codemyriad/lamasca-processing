@@ -145,7 +145,7 @@ def collect_coco(json_files):
     click.echo(f"COCO data collected and saved to /tmp/coco-out.json")
 
 
-@cli.command()
+@cli.command(name="generate-thumbnails")
 @click.argument('source_folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('destination_folder', type=click.Path(file_okay=False, dir_okay=True))
 def generate_thumbnails_command(source_folder: str, destination_folder: str):
@@ -153,7 +153,7 @@ def generate_thumbnails_command(source_folder: str, destination_folder: str):
     click.echo(f"Generating thumbnails from {source_folder} to {destination_folder}")
     with click.progressbar(length=100, label="Generating thumbnails") as bar:
         def update_progress(progress):
-            bar.update(progress)
+            bar.update(progress - bar.pos)
         generate_thumbnails(source_folder, destination_folder, progress_callback=update_progress)
     click.echo("Thumbnail generation complete!")
 
