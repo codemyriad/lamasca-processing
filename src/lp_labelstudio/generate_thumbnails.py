@@ -37,8 +37,9 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
     # Use multiprocessing to process images in parallel
     total_tasks = len(tasks)
     with Pool(processes=cpu_count()) as pool:
-        for _ in click.progressbar(pool.starmap(process_image, tasks), length=total_tasks, label="Generating thumbnails"):
-            pass
+        with click.progressbar(length=total_tasks, label="Generating thumbnails") as progress_bar:
+            for _ in pool.starmap(process_image, tasks):
+                progress_bar.update(1)
 
 def process_image(image_path: str, annotations: List[Dict], source_root: str, destination_folder: str):
     """Process a single image, create a thumbnail with overlays, and save it."""
