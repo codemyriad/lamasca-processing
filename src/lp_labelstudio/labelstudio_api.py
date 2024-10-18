@@ -255,7 +255,7 @@ def view(ctx, project_id):
 def fetch(ctx, local_root):
     """Fetch all remote annotations that are not saved locally yet."""
     if local_root is None:
-        raise """Error: Local root directory is not set. Please set the LOCAL_NEWSPAPER_ROOT environment variable or use the --local-root option."""
+        raise Exception("Error: Local root directory is not set. Please set the LOCAL_NEWSPAPER_ROOT environment variable or use the --local-root option.")
     url = f"{ctx.obj['url']}/api/projects/"
     headers = {
         "Authorization": ctx.obj['api_auth'],
@@ -272,6 +272,8 @@ def fetch(ctx, local_root):
     for project in projects:
         project_id = project['id']
         project_title = project['title']
+        if not project["num_tasks_with_annotations"]:
+            continue
         console.print(f"[bold]Fetching annotations for project: {project_title}[/bold]")
 
         # Fetch tasks for the project
