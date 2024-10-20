@@ -250,14 +250,14 @@ def view(ctx, project_id):
     # ... (existing code remains unchanged)
 
 import json
-from difflib import SequenceMatcher
+from difflib import SequenceMatcher, unified_diff
 
-def summarize_changes(old_annotation, new_annotation):
-    old_json = json.dumps(old_annotation, sort_keys=True)
-    new_json = json.dumps(new_annotation, sort_keys=True)
+def summarize_changes(old_annotation, new_annotation, verbose=False):
+    old_json = json.dumps(old_annotation, sort_keys=True, indent=2)
+    new_json = json.dumps(new_annotation, sort_keys=True, indent=2)
     
     if old_json == new_json:
-        return "no changes"
+        return "no changes", ""
 
     # Calculate the similarity ratio
     similarity = SequenceMatcher(None, old_json, new_json).ratio()
@@ -278,12 +278,25 @@ def summarize_changes(old_annotation, new_annotation):
         summary.append(f"{changed_keys} top-level keys changed")
     summary.append(f"overall similarity: {similarity:.2%}")
     
-    return ", ".join(summary)
+    summary_text = ", ".join(summary)
+    
+    if verbose:
+        diff = '\n'.join(unified_diff(
+            old_json.splitlines(),
+            new_json.splitlines(),
+            fromfile='Local',
+            tofile='Remote',
+            lineterm=''
+        ))
+        return summary_text, diff
+    else:
+        return summary_text, ""
 
 @projects.command()
 @click.option('--local-root', type=click.Path(exists=True, file_okay=False, dir_okay=True), required=True, envvar='LOCAL_NEWSPAPER_ROOT', help='Local root directory for newspaper files')
+@click.option('--verbose', is_flag=True, help='Print detailed differences between local and remote annotations')
 @click.pass_context
-def fetch(ctx, local_root):
+def fetch(ctx, local_root, verbose):
     """Fetch all remote annotations and update local copies if there are changes."""
     if local_root is None:
         raise Exception("Error: Local root directory is not set. Please set the LOCAL_NEWSPAPER_ROOT environment variable or use the --local-root option.")
@@ -343,11 +356,14 @@ def fetch(ctx, local_root):
                         local_annotation = json.load(f)
                     
                     if local_annotation != annotation:
-                        changes_summary = summarize_changes(local_annotation, annotation)
+                        changes_summary, diff = summarize_changes(local_annotation, annotation, verbose)
                         # Update the local copy if there are changes
                         with full_path.open('w') as f:
                             json.dump(annotation, f, indent=2)
                         console.print(f"Updated existing annotation: {full_path} ({changes_summary})")
+                        if verbose and diff:
+                            console.print("Detailed differences:")
+                            console.print(diff)
                     else:
                         console.print(f"No changes in annotation: {full_path}")
                 else:
@@ -355,6 +371,9 @@ def fetch(ctx, local_root):
                     with full_path.open('w') as f:
                         json.dump(annotation, f, indent=2)
                     console.print(f"Saved new annotation: {full_path}")
+                    if verbose:
+                        console.print("New annotation content:")
+                        console.print(json.dumps(annotation, indent=2))
 
     console.print("[bold green]Finished fetching and updating annotations.[/bold green]")
 
