@@ -355,6 +355,9 @@ def fetch(ctx, local_root, verbose):
                     with full_path.open('r') as f:
                         local_annotation = json.load(f)
                     
+                    # Remove 'created_ago' field from the annotation
+                    annotation.pop('created_ago', None)
+                
                     if local_annotation != annotation:
                         changes_summary, diff = summarize_changes(local_annotation, annotation, verbose)
                         # Update the local copy if there are changes
@@ -367,6 +370,9 @@ def fetch(ctx, local_root, verbose):
                     else:
                         console.print(f"No changes in annotation: {full_path}")
                 else:
+                    # Remove 'created_ago' field from the annotation
+                    annotation.pop('created_ago', None)
+                
                     # Save the new annotation locally
                     with full_path.open('w') as f:
                         json.dump(annotation, f, indent=2)
