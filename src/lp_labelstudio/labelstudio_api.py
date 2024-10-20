@@ -249,6 +249,37 @@ def view(ctx, project_id):
     """View details of a specific project."""
     # ... (existing code remains unchanged)
 
+import json
+from difflib import SequenceMatcher
+
+def summarize_changes(old_annotation, new_annotation):
+    old_json = json.dumps(old_annotation, sort_keys=True)
+    new_json = json.dumps(new_annotation, sort_keys=True)
+    
+    if old_json == new_json:
+        return "no changes"
+
+    # Calculate the similarity ratio
+    similarity = SequenceMatcher(None, old_json, new_json).ratio()
+    
+    # Calculate the change in overall length
+    old_length = len(old_json)
+    new_length = len(new_json)
+    length_diff = new_length - old_length
+    
+    # Count the number of changed keys at the top level
+    changed_keys = sum(1 for k in set(old_annotation.keys()) | set(new_annotation.keys())
+                       if old_annotation.get(k) != new_annotation.get(k))
+    
+    summary = []
+    if length_diff != 0:
+        summary.append(f"size {'increased' if length_diff > 0 else 'decreased'} by {abs(length_diff)} chars")
+    if changed_keys > 0:
+        summary.append(f"{changed_keys} top-level keys changed")
+    summary.append(f"overall similarity: {similarity:.2%}")
+    
+    return ", ".join(summary)
+
 @projects.command()
 @click.option('--local-root', type=click.Path(exists=True, file_okay=False, dir_okay=True), required=True, envvar='LOCAL_NEWSPAPER_ROOT', help='Local root directory for newspaper files')
 @click.pass_context
@@ -312,10 +343,11 @@ def fetch(ctx, local_root):
                         local_annotation = json.load(f)
                     
                     if local_annotation != annotation:
+                        changes_summary = summarize_changes(local_annotation, annotation)
                         # Update the local copy if there are changes
                         with full_path.open('w') as f:
                             json.dump(annotation, f, indent=2)
-                        console.print(f"Updated existing annotation: {full_path}")
+                        console.print(f"Updated existing annotation: {full_path} ({changes_summary})")
                     else:
                         console.print(f"No changes in annotation: {full_path}")
                 else:
