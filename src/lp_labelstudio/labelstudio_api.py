@@ -253,7 +253,7 @@ def view(ctx, project_id):
 @click.option('--local-root', type=click.Path(exists=True, file_okay=False, dir_okay=True), required=True, envvar='LOCAL_NEWSPAPER_ROOT', help='Local root directory for newspaper files')
 @click.pass_context
 def fetch(ctx, local_root):
-    """Fetch all remote annotations that are not saved locally yet."""
+    """Fetch all remote annotations and update local copies if there are changes."""
     if local_root is None:
         raise Exception("Error: Local root directory is not set. Please set the LOCAL_NEWSPAPER_ROOT environment variable or use the --local-root option.")
     url = f"{ctx.obj['url']}/api/projects/"
@@ -306,16 +306,25 @@ def fetch(ctx, local_root):
                 file_name = f"page{page_number:02d}.json"
                 full_path = local_path / file_name
 
-                # Check if the annotation already exists locally
-                if not full_path.exists():
-                    # Save the annotation locally
+                # Check if the annotation exists locally and compare
+                if full_path.exists():
+                    with full_path.open('r') as f:
+                        local_annotation = json.load(f)
+                    
+                    if local_annotation != annotation:
+                        # Update the local copy if there are changes
+                        with full_path.open('w') as f:
+                            json.dump(annotation, f, indent=2)
+                        console.print(f"Updated existing annotation: {full_path}")
+                    else:
+                        console.print(f"No changes in annotation: {full_path}")
+                else:
+                    # Save the new annotation locally
                     with full_path.open('w') as f:
                         json.dump(annotation, f, indent=2)
                     console.print(f"Saved new annotation: {full_path}")
-                else:
-                    console.print(f"Annotation already exists: {full_path}")
 
-    console.print("[bold green]Finished fetching annotations.[/bold green]")
+    console.print("[bold green]Finished fetching and updating annotations.[/bold green]")
 
 
 @projects.command()
