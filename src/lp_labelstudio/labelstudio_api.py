@@ -283,6 +283,8 @@ def fetch(ctx, local_root):
         tasks = tasks_response.json()
 
         for task in tasks["tasks"]:
+            if not task["total_annotations"]:
+                continue
             task_id = task['id']
             annotations_url = f"{ctx.obj['url']}/api/tasks/{task_id}/annotations/"
             annotations_response = requests.get(annotations_url, headers=headers)
