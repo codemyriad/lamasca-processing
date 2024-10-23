@@ -4,16 +4,22 @@ import numpy as np
 
 
 def projection_by_bboxes(boxes: np.array, axis: int) -> np.ndarray:
-    """
-     通过一组 bbox 获得投影直方图，最后以 per-pixel 形式输出
+    """Generate a projection histogram from a set of bounding boxes.
+    
+    Creates a per-pixel projection histogram by counting overlapping boxes
+    along the specified axis.
 
     Args:
-        boxes: [N, 4]
-        axis: 0-x坐标向水平方向投影， 1-y坐标向垂直方向投影
+        boxes: Array of shape [N, 4] containing bounding box coordinates 
+              in format [x1, y1, x2, y2]
+        axis: Projection direction
+              0 - Project onto x-axis (horizontal projection)
+              1 - Project onto y-axis (vertical projection)
 
     Returns:
-        1D 投影直方图，长度为投影方向坐标的最大值(我们不需要图片的实际边长，因为只是要找文本框的间隔)
-
+        1D projection histogram array. Length equals maximum coordinate 
+        along projection axis. Each value counts number of overlapping
+        boxes at that position.
     """
     assert axis in [0, 1]
     length = np.max(boxes[:, axis::2])
@@ -69,13 +75,23 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
 
 
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
-    """
+    """Recursively apply XY-cut algorithm to sort text boxes in reading order.
+    
+    Implements the XY-cut algorithm which recursively splits boxes along
+    horizontal and vertical gaps to determine reading order.
 
     Args:
-        boxes: (N, 4)
-        indices: 递归过程中始终表示 box 在原始数据中的索引
-        res: 保存输出结果
+        boxes: Array of shape (N, 4) containing bounding box coordinates
+              in format [x1, y1, x2, y2]
+        indices: List tracking original indices of boxes during recursion
+        res: Output list to store sorted box indices in reading order
 
+    The algorithm:
+    1. Projects boxes onto y-axis to find horizontal gaps
+    2. For each horizontal segment:
+        - Projects boxes onto x-axis to find vertical gaps
+        - If vertical gaps exist, recursively processes each segment
+        - If no vertical gaps, adds boxes to result in current order
     """
     # 向 y 轴投影
     assert len(boxes) == len(indices)
@@ -126,9 +142,16 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
 
 
 def points_to_bbox(points):
+    """Convert polygon points to bounding box coordinates.
+    
+    Args:
+        points: List of 8 coordinates [x1,y1,x2,y2,x3,y3,x4,y4] 
+               representing 4 corners of a polygon
+    
+    Returns:
+        List [left, top, right, bottom] defining the bounding box
+    """
     assert len(points) == 8
-
-    # [x1,y1,x2,y2,x3,y3,x4,y4]
     left = min(points[::2])
     right = max(points[::2])
     top = min(points[1::2])
@@ -188,16 +211,17 @@ def vis_polygon(img, points, thickness=2, color=None):
 def vis_points(
     img: np.ndarray, points, texts: List[str] = None, color=(0, 200, 0)
 ) -> np.ndarray:
-    """
-
+    """Visualize polygons and their labels on an image.
+    
     Args:
-        img:
-        points: [N, 8]  8: x1,y1,x2,y2,x3,y3,x3,y4
-        texts:
-        color:
-
+        img: Input image as numpy array
+        points: Array of shape [N, 8] containing polygon coordinates
+               Format: [x1,y1,x2,y2,x3,y3,x4,y4] for each polygon
+        texts: Optional list of N strings to display as labels
+        color: RGB color tuple for drawing polygons and labels
+    
     Returns:
-
+        Image with visualized polygons and labels
     """
     points = np.array(points)
     if texts is not None:

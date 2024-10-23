@@ -5,6 +5,14 @@ from xycut import bbox2points, recursive_xy_cut, vis_polygons_with_index
 
 
 def load_data(p):
+    """Load bounding box data from XFUN dataset JSON file.
+    
+    Args:
+        p: Path to JSON file containing document annotations
+        
+    Returns:
+        Numpy array of bounding box coordinates
+    """
     with open(p, "r", encoding="utf-8") as f:
         data = json.load(f)
     boxes = []
