@@ -82,7 +82,7 @@ def process_image(args):
                     if width <= 0 or height <= 0:
                         continue
                         
-                    boxes.append([x, y, x + width, y + height])
+                    boxes.append([int(x), int(y), int(x + width), int(y + height)])
                     box_metadata.append({
                         'label': result['value']['labels'][0],
                         'x': x,
