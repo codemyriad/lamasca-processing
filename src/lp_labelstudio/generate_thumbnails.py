@@ -80,10 +80,14 @@ def process_image(args):
                     draw.rectangle([x, y, x + width, y + height], fill=color+(OPACITY,))
                     
                     # Add index number in the top-left corner of the rectangle
-                    font_size = int(min(width, height) * 0.2)  # Scale font size with rectangle
+                    # Ensure minimum font size and skip if rectangle is too small
+                    if width <= 0 or height <= 0:
+                        continue
+                        
+                    font_size = max(12, int(min(width, height) * 0.2))  # Minimum size of 12px
                     from PIL import ImageFont
                     try:
-                        font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
                     except IOError:
                         font = ImageFont.load_default()
                     
