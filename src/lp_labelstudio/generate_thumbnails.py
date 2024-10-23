@@ -110,24 +110,26 @@ def process_image(args):
 
                 # Add index number in the top-left corner of the rectangle
                 font_size = max(12, int(min(meta['width'], meta['height']) * 0.2))  # Minimum size of 12px
-                    from PIL import ImageFont
-                    try:
-                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-                    except IOError:
-                        font = ImageFont.load_default()
+                from PIL import ImageFont
+                try:
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+                except IOError:
+                    font = ImageFont.load_default()
 
-                    index_text = str(idx)  # Use sorted index
-                    text_bbox = draw.textbbox((x, y), index_text, font=font)
-                    text_width = text_bbox[2] - text_bbox[0]
-                    text_height = text_bbox[3] - text_bbox[1]
+                index_text = str(idx)  # Use sorted index
+                text_bbox = draw.textbbox((meta['x'], meta['y']), index_text, font=font)
+                text_width = text_bbox[2] - text_bbox[0]
+                text_height = text_bbox[3] - text_bbox[1]
 
-                    # Draw white background for text
-                    draw.rectangle([x, y, x + text_width + 4, y + text_height + 4],
-                                 fill=(255, 255, 255, 255))
+                # Draw white background for text
+                draw.rectangle([meta['x'], meta['y'], 
+                              meta['x'] + text_width + 4, 
+                              meta['y'] + text_height + 4],
+                             fill=(255, 255, 255, 255))
 
-                    # Draw text
-                    draw.text((x + 2, y + 2), index_text,
-                            fill=(0, 0, 0, 255), font=font)
+                # Draw text
+                draw.text((meta['x'] + 2, meta['y'] + 2), index_text,
+                         fill=(0, 0, 0, 255), font=font)
 
         # Alpha composite the original image with the overlay
         img_with_overlay = Image.alpha_composite(img_resized, overlay)
