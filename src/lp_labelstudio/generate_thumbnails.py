@@ -38,7 +38,8 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
     total_tasks = len(tasks)
     processed_images = 0
     images_with_annotations = 0
-    with Pool(processes=cpu_count()) as pool:
+    concurrency = int(cpu_count() * 0.8) # Using all CPUs would freeze my laptop
+    with Pool(processes=concurrency) as pool:
         with click.progressbar(length=total_tasks, label="Generating thumbnails") as progress_bar:
             for has_annotations in pool.imap_unordered(process_image, tasks):
                 processed_images += 1
@@ -63,7 +64,7 @@ def process_image(args):
         # Create a blank image for the overlay
         overlay = Image.new('RGBA', img_resized.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
-        
+
         rect_count = 0
         for annotation in annotations:
             for result in annotation['result']:
@@ -78,31 +79,31 @@ def process_image(args):
 
                     # Draw rectangle
                     draw.rectangle([x, y, x + width, y + height], fill=color+(OPACITY,))
-                    
+
                     # Add index number in the top-left corner of the rectangle
                     # Ensure minimum font size and skip if rectangle is too small
                     if width <= 0 or height <= 0:
                         continue
-                        
+
                     font_size = max(12, int(min(width, height) * 0.2))  # Minimum size of 12px
                     from PIL import ImageFont
                     try:
                         font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
                     except IOError:
                         font = ImageFont.load_default()
-                    
+
                     index_text = str(rect_count)
                     rect_count += 1
                     text_bbox = draw.textbbox((x, y), index_text, font=font)
                     text_width = text_bbox[2] - text_bbox[0]
                     text_height = text_bbox[3] - text_bbox[1]
-                    
+
                     # Draw white background for text
-                    draw.rectangle([x, y, x + text_width + 4, y + text_height + 4], 
+                    draw.rectangle([x, y, x + text_width + 4, y + text_height + 4],
                                  fill=(255, 255, 255, 255))
-                    
+
                     # Draw text
-                    draw.text((x + 2, y + 2), index_text, 
+                    draw.text((x + 2, y + 2), index_text,
                             fill=(0, 0, 0, 255), font=font)
 
         # Alpha composite the original image with the overlay
