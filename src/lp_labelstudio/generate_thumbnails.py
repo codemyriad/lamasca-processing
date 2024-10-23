@@ -75,7 +75,29 @@ def process_image(args):
                     width = result['value']['width'] * new_size[0] / 100
                     height = result['value']['height'] * new_size[1] / 100
 
+                    # Draw rectangle
                     draw.rectangle([x, y, x + width, y + height], fill=color+(OPACITY,))
+                    
+                    # Add index number in the top-left corner of the rectangle
+                    font_size = int(min(width, height) * 0.2)  # Scale font size with rectangle
+                    from PIL import ImageFont
+                    try:
+                        font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+                    except IOError:
+                        font = ImageFont.load_default()
+                    
+                    index_text = str(len(draw._shapes) // 2)  # Divide by 2 since each rectangle is 2 shapes
+                    text_bbox = draw.textbbox((x, y), index_text, font=font)
+                    text_width = text_bbox[2] - text_bbox[0]
+                    text_height = text_bbox[3] - text_bbox[1]
+                    
+                    # Draw white background for text
+                    draw.rectangle([x, y, x + text_width + 4, y + text_height + 4], 
+                                 fill=(255, 255, 255, 255))
+                    
+                    # Draw text
+                    draw.text((x + 2, y + 2), index_text, 
+                            fill=(0, 0, 0, 255), font=font)
 
         # Alpha composite the original image with the overlay
         img_with_overlay = Image.alpha_composite(img_resized, overlay)
