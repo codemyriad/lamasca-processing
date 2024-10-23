@@ -1,7 +1,9 @@
 import os
 import json
+import numpy as np
 from typing import Dict, Any, List, Tuple
 from PIL import Image, ImageDraw, ImageColor
+from .xy_cut.xycut import recursive_xy_cut
 import click
 from multiprocessing import Pool, cpu_count
 from functools import partial
@@ -65,35 +67,56 @@ def process_image(args):
         overlay = Image.new('RGBA', img_resized.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
 
-        rect_count = 0
+        # Collect all boxes and their metadata
+        boxes = []
+        box_metadata = []
         for annotation in annotations:
             for result in annotation['result']:
                 if 'labels' in result['value']:
-                    label = result['value']['labels'][0]
-                    color = get_color_for_label(label)
-
                     x = result['value']['x'] * new_size[0] / 100
                     y = result['value']['y'] * new_size[1] / 100
                     width = result['value']['width'] * new_size[0] / 100
                     height = result['value']['height'] * new_size[1] / 100
-
-                    # Draw rectangle
-                    draw.rectangle([x, y, x + width, y + height], fill=color+(OPACITY,))
-
-                    # Add index number in the top-left corner of the rectangle
-                    # Ensure minimum font size and skip if rectangle is too small
+                    
+                    # Skip invalid boxes
                     if width <= 0 or height <= 0:
                         continue
+                        
+                    boxes.append([x, y, x + width, y + height])
+                    box_metadata.append({
+                        'label': result['value']['labels'][0],
+                        'x': x,
+                        'y': y,
+                        'width': width,
+                        'height': height
+                    })
 
-                    font_size = max(12, int(min(width, height) * 0.2))  # Minimum size of 12px
+        # Sort boxes using recursive XY-cut if we have any valid boxes
+        if boxes:
+            boxes_array = np.array(boxes)
+            sorted_indices = []
+            recursive_xy_cut(boxes_array, np.arange(len(boxes)), sorted_indices)
+            
+            # Draw boxes in sorted order
+            for idx, sort_idx in enumerate(sorted_indices):
+                meta = box_metadata[sort_idx]
+                color = get_color_for_label(meta['label'])
+                
+                # Draw rectangle
+                draw.rectangle([meta['x'], meta['y'], 
+                              meta['x'] + meta['width'], 
+                              meta['y'] + meta['height']], 
+                             fill=color+(OPACITY,))
+
+                # Add index number in the top-left corner of the rectangle
+                font_size = max(12, int(min(meta['width'], meta['height']) * 0.2))  # Minimum size of 12px
                     from PIL import ImageFont
                     try:
                         font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
                     except IOError:
                         font = ImageFont.load_default()
 
-                    index_text = str(rect_count)
-                    rect_count += 1
+                    index_text = str(idx)  # Use sorted index
                     text_bbox = draw.textbbox((x, y), index_text, font=font)
                     text_width = text_bbox[2] - text_bbox[0]
                     text_height = text_bbox[3] - text_bbox[1]
