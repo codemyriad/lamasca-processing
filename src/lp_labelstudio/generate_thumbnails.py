@@ -63,7 +63,8 @@ def process_image(args):
         # Create a blank image for the overlay
         overlay = Image.new('RGBA', img_resized.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
-
+        
+        rect_count = 0
         for annotation in annotations:
             for result in annotation['result']:
                 if 'labels' in result['value']:
@@ -86,7 +87,8 @@ def process_image(args):
                     except IOError:
                         font = ImageFont.load_default()
                     
-                    index_text = str(len(draw._shapes) // 2)  # Divide by 2 since each rectangle is 2 shapes
+                    index_text = str(rect_count)
+                    rect_count += 1
                     text_bbox = draw.textbbox((x, y), index_text, font=font)
                     text_width = text_bbox[2] - text_bbox[0]
                     text_height = text_bbox[3] - text_bbox[1]
