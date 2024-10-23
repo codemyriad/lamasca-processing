@@ -3,7 +3,7 @@ import json
 import numpy as np
 from typing import Dict, Any, List, Tuple
 from PIL import Image, ImageDraw, ImageColor
-from .xy_cut.xycut import recursive_xy_cut
+from .xycut.xycut import recursive_xy_cut
 import click
 from multiprocessing import Pool, cpu_count
 from functools import partial
