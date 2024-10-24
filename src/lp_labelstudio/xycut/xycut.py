@@ -74,7 +74,7 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
     return arr_start, arr_end
 
 
-def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
+def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int], depth: int = 0):
     """Recursively apply XY-cut algorithm to sort text boxes in reading order.
     
     Implements an improved XY-cut algorithm that:
@@ -89,9 +89,24 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
         indices: List tracking original indices of boxes during recursion
         res: Output list to store sorted box indices in reading order
     """
+    # Base cases to prevent excessive recursion
+    if depth > 100:  # Maximum recursion depth
+        # Fall back to simple y-x sort
+        yx_sort = np.lexsort((boxes[:, 0], boxes[:, 1]))
+        res.extend(indices[yx_sort])
+        return
+        
     if len(boxes) <= 1:
         if len(boxes) == 1:
             res.extend(indices)
+        return
+        
+    # Stop recursion if boxes are too small
+    box_widths = boxes[:, 2] - boxes[:, 0]
+    box_heights = boxes[:, 3] - boxes[:, 1]
+    if np.max(box_widths) < 1 or np.max(box_heights) < 1:
+        yx_sort = np.lexsort((boxes[:, 0], boxes[:, 1]))
+        res.extend(indices[yx_sort])
         return
 
     # First try to split into columns (vertical splits)
@@ -132,7 +147,8 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
                         recursive_xy_cut(
                             col_boxes[segment_mask],
                             col_indices[segment_mask],
-                            res
+                            res,
+                            depth + 1
                         )
             else:
                 # No horizontal splits found, add boxes in current order
