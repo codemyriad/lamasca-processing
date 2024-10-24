@@ -74,59 +74,49 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
     return arr_start, arr_end
 
 
-def group_boxes_into_columns(boxes: np.ndarray, indices: List[int], column_gap_threshold: float):
-    # Sort boxes by their left coordinate (x1)
-    sorted_indices = boxes[:, 0].argsort()
-    boxes = boxes[sorted_indices]
-    indices = indices[sorted_indices]
+def group_into_bands(boxes: np.ndarray, indices: np.ndarray):
+    """Group boxes into horizontal bands based on vertical overlap."""
+    if len(boxes) == 0:
+        return []
 
-    columns = []
-    current_column = [boxes[0]]
-    current_indices = [indices[0]]
+    # Sort boxes by top coordinate
+    sorted_idx = boxes[:, 1].argsort()
+    boxes = boxes[sorted_idx]
+    indices = indices[sorted_idx]
+
+    bands = []
+    current_band_boxes = [boxes[0]]
+    current_band_indices = [indices[0]]
+    current_band_bottom = boxes[0][3]  # y2 of first box
 
     for i in range(1, len(boxes)):
-        prev_box = boxes[i - 1]
-        curr_box = boxes[i]
-        gap = curr_box[0] - prev_box[2]  # curr.left - prev.right
-        if gap > column_gap_threshold:
-            # Start a new column
-            columns.append((np.array(current_column), np.array(current_indices)))
-            current_column = [curr_box]
-            current_indices = [indices[i]]
+        box = boxes[i]
+        # If this box overlaps vertically with the current band
+        if box[1] <= current_band_bottom:  # box's top edge is above current band's bottom
+            current_band_boxes.append(box)
+            current_band_indices.append(indices[i])
+            current_band_bottom = max(current_band_bottom, box[3])
         else:
-            current_column.append(curr_box)
-            current_indices.append(indices[i])
+            # Start a new band
+            bands.append((np.array(current_band_boxes), np.array(current_band_indices)))
+            current_band_boxes = [box]
+            current_band_indices = [indices[i]]
+            current_band_bottom = box[3]
 
-    # Add the last column
-    columns.append((np.array(current_column), np.array(current_indices)))
+    # Add the last band
+    if current_band_boxes:
+        bands.append((np.array(current_band_boxes), np.array(current_band_indices)))
 
-    # Sort columns left to right based on the minimum x1 value in each column
-    columns.sort(key=lambda col: np.min(col[0][:, 0]))
-    return columns
+    return bands
 
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
-    # Compute the column gap threshold
-    column_gap_threshold = compute_column_gap_threshold(boxes)
-
-    # Group boxes into columns
-    columns = group_boxes_into_columns(boxes, indices, column_gap_threshold)
-
-    for col_boxes, col_indices in columns:
-        if len(col_boxes) > 1:
-            # Sort boxes within the column by their top coordinate (y1)
-            sorted_indices = col_boxes[:, 1].argsort()
-            col_boxes = col_boxes[sorted_indices]
-            col_indices = col_indices[sorted_indices]
-        # Add the sorted indices to the result
-        res.extend(col_indices)
-    """Recursively apply XY-cut algorithm to sort text boxes in reading order.
+    """Sort boxes in reading order using a simplified top-to-bottom, left-to-right approach.
     
-    Implements an improved XY-cut algorithm that:
-    1. First groups boxes into columns based on horizontal positions
-    2. Within each column, sorts boxes from top to bottom
-    3. Orders columns from left to right
-    4. Handles overlapping boxes and gaps adaptively
-
+    For newspaper layouts, we'll:
+    1. First divide the page into horizontal bands/rows based on vertical overlap
+    2. Within each band, sort elements left-to-right
+    3. Process bands from top to bottom
+    
     Args:
         boxes: Array of shape (N, 4) containing bounding box coordinates
               in format [x1, y1, x2, y2]
@@ -137,43 +127,22 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
         if len(boxes) == 1:
             res.extend(indices)
         return
-        
-    # Stop recursion if boxes are too small
-    box_widths = boxes[:, 2] - boxes[:, 0]
-    box_heights = boxes[:, 3] - boxes[:, 1]
-    if np.max(box_widths) < 1 or np.max(box_heights) < 1:
-        yx_sort = np.lexsort((boxes[:, 0], boxes[:, 1]))
-        res.extend(indices[yx_sort])
-        return
 
-    if len(boxes) <= 1:
-        if len(boxes) == 1:
-            res.extend(indices)
-        return
+    # Convert inputs to numpy arrays if they aren't already
+    boxes = np.array(boxes)
+    indices = np.array(indices)
 
-    # Compute the column gap threshold
-    column_gap_threshold = compute_column_gap_threshold(boxes)
-
-    # Group boxes into columns
-    columns = group_boxes_into_columns(boxes, indices, column_gap_threshold)
-
-    for col_boxes, col_indices in columns:
-        if len(col_boxes) > 1:
-            # Sort boxes within the column by their top coordinate (y1)
-            sorted_indices = col_boxes[:, 1].argsort()
-            col_boxes = col_boxes[sorted_indices]
-            col_indices = col_indices[sorted_indices]
-        # Add the sorted indices to the result
-        res.extend(col_indices)
+    # Group boxes into horizontal bands based on vertical overlap
+    bands = group_into_bands(boxes, indices)
+    
+    # Process each band from top to bottom
+    for band_boxes, band_indices in bands:
+        # Sort boxes within band from left to right
+        if len(band_boxes) > 0:
+            left_to_right = band_boxes[:, 0].argsort()  # Sort by left edge (x1)
+            res.extend(band_indices[left_to_right])
 
 
-def compute_column_gap_threshold(boxes: np.ndarray) -> float:
-    # Calculate the median width of the boxes
-    widths = boxes[:, 2] - boxes[:, 0]
-    median_width = np.median(widths)
-
-    # Set the threshold as a fraction of the median width (adjust the multiplier as needed)
-    return median_width * 0.5
 
 
 def points_to_bbox(points):
