@@ -79,8 +79,8 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
     """Sort boxes using a column-first approach optimized for newspaper layouts.
     
     Strategy:
-    1. Group boxes into columns based on x-coordinates
-    2. Sort columns left-to-right
+    1. Find natural column boundaries using x-coordinate clustering
+    2. Sort columns left-to-right 
     3. Within each column, sort boxes top-to-bottom
     """
     if len(boxes) <= 1:
@@ -92,44 +92,44 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
     boxes = np.array(boxes)
     indices = np.array(indices)
     
-    # Calculate horizontal gap threshold based on box widths
-    widths = boxes[:, 2] - boxes[:, 0]  # x2 - x1
-    median_width = np.median(widths)
-    gap_threshold = median_width * 0.5  # Adjust this factor if needed
+    # Get x-coordinates of box centers
+    centers_x = (boxes[:, 0] + boxes[:, 2]) / 2
     
-    # Sort all boxes by left edge position
-    sorted_by_left = boxes[:, 0].argsort()
-    boxes = boxes[sorted_by_left]
-    indices = indices[sorted_by_left]
+    # Find natural column boundaries using x-coordinate distribution
+    x_coords = np.sort(centers_x)
+    x_gaps = x_coords[1:] - x_coords[:-1]
     
-    # Group into columns based on horizontal gaps
+    # Use larger gaps to identify column boundaries
+    # A gap is significant if it's larger than the median gap
+    median_gap = np.median(x_gaps)
+    significant_gaps = np.where(x_gaps > median_gap * 1.5)[0]
+    
+    # Split into columns
+    column_splits = np.append(significant_gaps + 1, len(boxes))
+    start_idx = 0
     columns = []
-    current_column = [0]  # Start with first box
-    current_column_right = boxes[0][2]
     
-    for i in range(1, len(boxes)):
-        box = boxes[i]
-        # If this box starts after a significant gap from the previous column
-        if box[0] > current_column_right + gap_threshold:
-            # Sort current column by y position and add to result
-            col_boxes = boxes[current_column]
-            col_indices = indices[current_column]
-            top_to_bottom = col_boxes[:, 1].argsort()  # Sort by top edge
-            res.extend(col_indices[top_to_bottom])
+    for end_idx in column_splits:
+        # Get indices for current column
+        col_mask = (centers_x >= x_coords[start_idx]) & (centers_x <= x_coords[end_idx-1])
+        col_indices = np.where(col_mask)[0]
+        
+        if len(col_indices) > 0:
+            # Sort boxes in this column by y-coordinate (top to bottom)
+            col_boxes = boxes[col_indices]
+            col_idx = indices[col_indices]
+            y_sort = np.argsort(col_boxes[:, 1])  # Sort by top edge
             
-            # Start new column
-            current_column = [i]
-            current_column_right = box[2]
-        else:
-            current_column.append(i)
-            current_column_right = max(current_column_right, box[2])
+            columns.append(col_idx[y_sort])
+        
+        start_idx = end_idx
     
-    # Handle last column
-    if current_column:
-        col_boxes = boxes[current_column]
-        col_indices = indices[current_column]
-        top_to_bottom = col_boxes[:, 1].argsort()
-        res.extend(col_indices[top_to_bottom])
+    # Sort columns themselves left-to-right based on minimum x-coordinate
+    columns.sort(key=lambda col_indices: np.min(boxes[col_indices][:, 0]))
+    
+    # Add all sorted indices to result
+    for column in columns:
+        res.extend(column)
 
 
 
