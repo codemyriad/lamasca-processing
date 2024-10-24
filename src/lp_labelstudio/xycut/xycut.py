@@ -76,60 +76,80 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
 
 
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
-    """Sort boxes using a column-first approach optimized for newspaper layouts.
+    """Sort boxes using strict column detection optimized for newspaper layouts.
     
     Strategy:
-    1. Find natural column boundaries using x-coordinate clustering
-    2. Sort columns left-to-right 
-    3. Within each column, sort boxes top-to-bottom
+    1. Detect columns by analyzing horizontal overlap groups
+    2. Sort columns strictly left-to-right
+    3. Within each column, sort boxes strictly top-to-bottom
     """
     if len(boxes) <= 1:
         if len(boxes) == 1:
             res.extend(indices)
         return
 
-    # Convert inputs to numpy arrays if they aren't already
     boxes = np.array(boxes)
     indices = np.array(indices)
-    
-    # Get x-coordinates of box centers
-    centers_x = (boxes[:, 0] + boxes[:, 2]) / 2
-    
-    # Find natural column boundaries using x-coordinate distribution
-    x_coords = np.sort(centers_x)
-    x_gaps = x_coords[1:] - x_coords[:-1]
-    
-    # Use larger gaps to identify column boundaries
-    # A gap is significant if it's larger than the median gap
-    median_gap = np.median(x_gaps)
-    significant_gaps = np.where(x_gaps > median_gap * 1.5)[0]
-    
-    # Split into columns
-    column_splits = np.append(significant_gaps + 1, len(boxes))
-    start_idx = 0
+
+    # Function to check if two boxes overlap horizontally
+    def horizontally_overlap(box1, box2, overlap_threshold=0.1):
+        # Calculate overlap
+        left = max(box1[0], box2[0])
+        right = min(box1[2], box2[2])
+        if right <= left:
+            return False
+        
+        # Calculate overlap ratio relative to the narrower box
+        overlap = right - left
+        width1 = box1[2] - box1[0]
+        width2 = box2[2] - box2[0]
+        min_width = min(width1, width2)
+        return overlap / min_width > overlap_threshold
+
+    # Group boxes into columns based on horizontal overlap
     columns = []
+    used_indices = set()
     
-    for end_idx in column_splits:
-        # Get indices for current column
-        col_mask = (centers_x >= x_coords[start_idx]) & (centers_x <= x_coords[end_idx-1])
-        col_indices = np.where(col_mask)[0]
-        
-        if len(col_indices) > 0:
-            # Sort boxes in this column by y-coordinate (top to bottom)
-            col_boxes = boxes[col_indices]
-            col_idx = indices[col_indices]
-            y_sort = np.argsort(col_boxes[:, 1])  # Sort by top edge
+    # Sort boxes by left edge for initial column detection
+    sorted_by_left = sorted(range(len(boxes)), key=lambda i: boxes[i][0])
+    
+    for idx in sorted_by_left:
+        if idx in used_indices:
+            continue
             
-            columns.append(col_idx[y_sort])
+        # Start new column
+        current_column = [idx]
+        used_indices.add(idx)
         
-        start_idx = end_idx
+        # Find all boxes that overlap horizontally with any box in current column
+        while True:
+            added_box = False
+            for other_idx in sorted_by_left:
+                if other_idx in used_indices:
+                    continue
+                    
+                # Check if box overlaps with any box in current column
+                for col_idx in current_column:
+                    if horizontally_overlap(boxes[col_idx], boxes[other_idx]):
+                        current_column.append(other_idx)
+                        used_indices.add(other_idx)
+                        added_box = True
+                        break
+                        
+            if not added_box:
+                break
+        
+        columns.append(current_column)
+
+    # Sort columns by leftmost x-coordinate
+    columns.sort(key=lambda col: min(boxes[i][0] for i in col))
     
-    # Sort columns themselves left-to-right based on minimum x-coordinate
-    columns.sort(key=lambda col_indices: np.min(boxes[col_indices][:, 0]))
-    
-    # Add all sorted indices to result
+    # Process each column
     for column in columns:
-        res.extend(column)
+        # Sort boxes in column by top coordinate
+        column_boxes = [(i, boxes[i][1]) for i in column]
+        sorted_column = sorted(column_boxes, key=lambda x: x[1])
+        res.extend([indices[i] for i, _ in sorted_column])
 
 
 
