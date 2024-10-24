@@ -75,34 +75,20 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
 
 
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
-    # Sort boxes by their left coordinate (x1)
-    sorted_indices = boxes[:, 0].argsort()
-    boxes = boxes[sorted_indices]
-    indices = indices[sorted_indices]
+    # Compute the column gap threshold
+    column_gap_threshold = compute_column_gap_threshold(boxes)
 
-    columns = []
-    current_column = [boxes[0]]
-    current_indices = [indices[0]]
+    # Group boxes into columns
+    columns = group_boxes_into_columns(boxes, indices, column_gap_threshold)
 
-    for i in range(1, len(boxes)):
-        prev_box = boxes[i - 1]
-        curr_box = boxes[i]
-        gap = curr_box[0] - prev_box[2]  # curr.left - prev.right
-        if gap > column_gap_threshold:
-            # Start a new column
-            columns.append((np.array(current_column), np.array(current_indices)))
-            current_column = [curr_box]
-            current_indices = [indices[i]]
-        else:
-            current_column.append(curr_box)
-            current_indices.append(indices[i])
-
-    # Add the last column
-    columns.append((np.array(current_column), np.array(current_indices)))
-
-    # Sort columns left to right based on the minimum x1 value in each column
-    columns.sort(key=lambda col: np.min(col[0][:, 0]))
-    return columns
+    for col_boxes, col_indices in columns:
+        if len(col_boxes) > 1:
+            # Sort boxes within the column by their top coordinate (y1)
+            sorted_indices = col_boxes[:, 1].argsort()
+            col_boxes = col_boxes[sorted_indices]
+            col_indices = col_indices[sorted_indices]
+        # Add the sorted indices to the result
+        res.extend(col_indices)
     """Recursively apply XY-cut algorithm to sort text boxes in reading order.
     
     Implements an improved XY-cut algorithm that:
@@ -166,8 +152,6 @@ def points_to_bbox(points):
     top = min(points[1::2])
     bottom = max(points[1::2])
     return [left, top, right, bottom]
-    left, top, right, bottom = bbox
-    return [left, top, right, top, right, bottom, left, bottom]
 
 
 def vis_polygon(img, points, thickness=2, color=None):
