@@ -74,6 +74,36 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
     return arr_start, arr_end
 
 
+def group_boxes_into_columns(boxes: np.ndarray, indices: List[int], column_gap_threshold: float):
+    # Sort boxes by their left coordinate (x1)
+    sorted_indices = boxes[:, 0].argsort()
+    boxes = boxes[sorted_indices]
+    indices = indices[sorted_indices]
+
+    columns = []
+    current_column = [boxes[0]]
+    current_indices = [indices[0]]
+
+    for i in range(1, len(boxes)):
+        prev_box = boxes[i - 1]
+        curr_box = boxes[i]
+        gap = curr_box[0] - prev_box[2]  # curr.left - prev.right
+        if gap > column_gap_threshold:
+            # Start a new column
+            columns.append((np.array(current_column), np.array(current_indices)))
+            current_column = [curr_box]
+            current_indices = [indices[i]]
+        else:
+            current_column.append(curr_box)
+            current_indices.append(indices[i])
+
+    # Add the last column
+    columns.append((np.array(current_column), np.array(current_indices)))
+
+    # Sort columns left to right based on the minimum x1 value in each column
+    columns.sort(key=lambda col: np.min(col[0][:, 0]))
+    return columns
+
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
     # Compute the column gap threshold
     column_gap_threshold = compute_column_gap_threshold(boxes)
