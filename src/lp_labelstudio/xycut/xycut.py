@@ -77,68 +77,86 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
     """Recursively apply XY-cut algorithm to sort text boxes in reading order.
     
-    Implements the XY-cut algorithm which recursively splits boxes along
-    horizontal and vertical gaps to determine reading order.
+    Implements an improved XY-cut algorithm that:
+    1. First groups boxes into columns based on horizontal positions
+    2. Within each column, sorts boxes from top to bottom
+    3. Orders columns from left to right
+    4. Handles overlapping boxes and gaps adaptively
 
     Args:
         boxes: Array of shape (N, 4) containing bounding box coordinates
               in format [x1, y1, x2, y2]
         indices: List tracking original indices of boxes during recursion
         res: Output list to store sorted box indices in reading order
-
-    The algorithm:
-    1. Projects boxes onto y-axis to find horizontal gaps
-    2. For each horizontal segment:
-        - Projects boxes onto x-axis to find vertical gaps
-        - If vertical gaps exist, recursively processes each segment
-        - If no vertical gaps, adds boxes to result in current order
     """
-    # 向 y 轴投影
-    assert len(boxes) == len(indices)
-
-    _indices = boxes[:, 1].argsort()
-    y_sorted_boxes = boxes[_indices]
-    y_sorted_indices = indices[_indices]
-
-    # debug_vis(y_sorted_boxes, y_sorted_indices)
-
-    y_projection = projection_by_bboxes(boxes=y_sorted_boxes, axis=1)
-    pos_y = split_projection_profile(y_projection, 0, 1)
-    if not pos_y:
+    if len(boxes) <= 1:
+        if len(boxes) == 1:
+            res.extend(indices)
         return
 
-    arr_y0, arr_y1 = pos_y
-    for r0, r1 in zip(arr_y0, arr_y1):
-        # [r0, r1] 表示按照水平切分，有 bbox 的区域，对这些区域会再进行垂直切分
-        _indices = (r0 <= y_sorted_boxes[:, 1]) & (y_sorted_boxes[:, 1] < r1)
-
-        y_sorted_boxes_chunk = y_sorted_boxes[_indices]
-        y_sorted_indices_chunk = y_sorted_indices[_indices]
-
-        _indices = y_sorted_boxes_chunk[:, 0].argsort()
-        x_sorted_boxes_chunk = y_sorted_boxes_chunk[_indices]
-        x_sorted_indices_chunk = y_sorted_indices_chunk[_indices]
-
-        # 往 x 方向投影
-        x_projection = projection_by_bboxes(boxes=x_sorted_boxes_chunk, axis=0)
-        pos_x = split_projection_profile(x_projection, 0, 1)
-        if not pos_x:
-            continue
-
-        arr_x0, arr_x1 = pos_x
-        if len(arr_x0) == 1:
-            # x 方向无法切分
-            res.extend(x_sorted_indices_chunk)
-            continue
-
-        # x 方向上能分开，继续递归调用
+    # First try to split into columns (vertical splits)
+    x_projection = projection_by_bboxes(boxes=boxes, axis=0)
+    x_gaps = split_projection_profile(x_projection, 0, compute_gap_threshold(boxes, axis=0))
+    
+    if x_gaps:
+        # We found column divisions
+        arr_x0, arr_x1 = x_gaps
+        columns = []
+        
+        # Group boxes into columns
         for c0, c1 in zip(arr_x0, arr_x1):
-            _indices = (c0 <= x_sorted_boxes_chunk[:, 0]) & (
-                x_sorted_boxes_chunk[:, 0] < c1
-            )
-            recursive_xy_cut(
-                x_sorted_boxes_chunk[_indices], x_sorted_indices_chunk[_indices], res
-            )
+            col_mask = (c0 <= boxes[:, 0]) & (boxes[:, 0] < c1)
+            if np.any(col_mask):
+                col_boxes = boxes[col_mask]
+                col_indices = indices[col_mask]
+                
+                # Sort boxes within column by y-coordinate
+                y_sort = col_boxes[:, 1].argsort()
+                columns.append((col_boxes[y_sort], col_indices[y_sort]))
+        
+        # Sort columns by x-coordinate
+        columns.sort(key=lambda col: np.min(col[0][:, 0]))
+        
+        # Process each column
+        for col_boxes, col_indices in columns:
+            # Look for horizontal splits within the column
+            y_projection = projection_by_bboxes(boxes=col_boxes, axis=1)
+            y_gaps = split_projection_profile(y_projection, 0, compute_gap_threshold(col_boxes, axis=1))
+            
+            if y_gaps:
+                # Process each horizontal segment
+                arr_y0, arr_y1 = y_gaps
+                for r0, r1 in zip(arr_y0, arr_y1):
+                    segment_mask = (r0 <= col_boxes[:, 1]) & (col_boxes[:, 1] < r1)
+                    if np.any(segment_mask):
+                        recursive_xy_cut(
+                            col_boxes[segment_mask],
+                            col_indices[segment_mask],
+                            res
+                        )
+            else:
+                # No horizontal splits found, add boxes in current order
+                res.extend(col_indices)
+    else:
+        # No clear columns found, try horizontal splits
+        y_projection = projection_by_bboxes(boxes=boxes, axis=1)
+        y_gaps = split_projection_profile(y_projection, 0, compute_gap_threshold(boxes, axis=1))
+        
+        if y_gaps:
+            arr_y0, arr_y1 = y_gaps
+            for r0, r1 in zip(arr_y0, arr_y1):
+                row_mask = (r0 <= boxes[:, 1]) & (boxes[:, 1] < r1)
+                if np.any(row_mask):
+                    row_boxes = boxes[row_mask]
+                    row_indices = indices[row_mask]
+                    
+                    # Sort boxes in row by x-coordinate
+                    x_sort = row_boxes[:, 0].argsort()
+                    res.extend(row_indices[x_sort])
+        else:
+            # No clear splits found, sort by y then x
+            yx_sort = np.lexsort((boxes[:, 0], boxes[:, 1]))
+            res.extend(indices[yx_sort])
 
 
 def points_to_bbox(points):
@@ -207,6 +225,36 @@ def vis_polygon(img, points, thickness=2, color=None):
     )
     return img
 
+
+def compute_gap_threshold(boxes: np.ndarray, axis: int) -> float:
+    """Compute an adaptive threshold for identifying significant gaps between boxes.
+    
+    Args:
+        boxes: Array of shape (N, 4) containing box coordinates [x1,y1,x2,y2]
+        axis: 0 for horizontal gaps, 1 for vertical gaps
+    
+    Returns:
+        Threshold value for minimum significant gap
+    """
+    # Get relevant coordinates for the axis
+    coords = boxes[:, axis::2]
+    
+    # Compute gaps between adjacent boxes
+    sorted_starts = np.sort(coords[:, 0])
+    gaps = sorted_starts[1:] - sorted_starts[:-1]
+    
+    if len(gaps) == 0:
+        return 1.0
+        
+    # Use median gap as base threshold
+    median_gap = np.median(gaps)
+    
+    # Scale threshold based on box dimensions
+    box_sizes = coords[:, 1] - coords[:, 0]
+    median_size = np.median(box_sizes)
+    
+    # Threshold is minimum of median gap and fraction of median box size
+    return min(median_gap, median_size * 0.3)
 
 def vis_points(
     img: np.ndarray, points, texts: List[str] = None, color=(0, 200, 0)
