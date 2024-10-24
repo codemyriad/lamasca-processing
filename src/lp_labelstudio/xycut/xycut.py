@@ -74,54 +74,17 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
     return arr_start, arr_end
 
 
-def group_into_bands(boxes: np.ndarray, indices: np.ndarray):
-    """Group boxes into horizontal bands based on vertical overlap."""
-    if len(boxes) == 0:
-        return []
-
-    # Sort boxes by top coordinate
-    sorted_idx = boxes[:, 1].argsort()
-    boxes = boxes[sorted_idx]
-    indices = indices[sorted_idx]
-
-    bands = []
-    current_band_boxes = [boxes[0]]
-    current_band_indices = [indices[0]]
-    current_band_bottom = boxes[0][3]  # y2 of first box
-
-    for i in range(1, len(boxes)):
-        box = boxes[i]
-        # If this box overlaps vertically with the current band
-        if box[1] <= current_band_bottom:  # box's top edge is above current band's bottom
-            current_band_boxes.append(box)
-            current_band_indices.append(indices[i])
-            current_band_bottom = max(current_band_bottom, box[3])
-        else:
-            # Start a new band
-            bands.append((np.array(current_band_boxes), np.array(current_band_indices)))
-            current_band_boxes = [box]
-            current_band_indices = [indices[i]]
-            current_band_bottom = box[3]
-
-    # Add the last band
-    if current_band_boxes:
-        bands.append((np.array(current_band_boxes), np.array(current_band_indices)))
-
-    return bands
 
 def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
-    """Sort boxes in reading order using a simplified top-to-bottom, left-to-right approach.
+    """Sort boxes using a reading gravity approach.
     
-    For newspaper layouts, we'll:
-    1. First divide the page into horizontal bands/rows based on vertical overlap
-    2. Within each band, sort elements left-to-right
-    3. Process bands from top to bottom
+    Strategy:
+    1. Group boxes that are vertically close together into rows
+    2. Sort boxes left-to-right within each row
+    3. Process rows from top to bottom
     
-    Args:
-        boxes: Array of shape (N, 4) containing bounding box coordinates
-              in format [x1, y1, x2, y2]
-        indices: List tracking original indices of boxes during recursion
-        res: Output list to store sorted box indices in reading order
+    This better handles newspaper layouts where content may not align perfectly
+    into columns and some elements span multiple columns.
     """
     if len(boxes) <= 1:
         if len(boxes) == 1:
@@ -131,16 +94,44 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
     # Convert inputs to numpy arrays if they aren't already
     boxes = np.array(boxes)
     indices = np.array(indices)
-
-    # Group boxes into horizontal bands based on vertical overlap
-    bands = group_into_bands(boxes, indices)
     
-    # Process each band from top to bottom
-    for band_boxes, band_indices in bands:
-        # Sort boxes within band from left to right
-        if len(band_boxes) > 0:
-            left_to_right = band_boxes[:, 0].argsort()  # Sort by left edge (x1)
-            res.extend(band_indices[left_to_right])
+    # Calculate vertical overlap threshold based on median box height
+    heights = boxes[:, 3] - boxes[:, 1]  # y2 - y1
+    overlap_threshold = np.median(heights) * 0.5
+    
+    # Sort all boxes by top edge position
+    sorted_by_top = boxes[:, 1].argsort()
+    boxes = boxes[sorted_by_top]
+    indices = indices[sorted_by_top]
+    
+    # Group into rows based on vertical position
+    rows = []
+    current_row = [0]  # Start with first box
+    current_row_bottom = boxes[0][3]
+    
+    for i in range(1, len(boxes)):
+        box = boxes[i]
+        # If this box starts before the current row ends (with threshold)
+        if box[1] <= current_row_bottom + overlap_threshold:
+            current_row.append(i)
+            current_row_bottom = max(current_row_bottom, box[3])
+        else:
+            # Sort current row by x position and add to result
+            row_boxes = boxes[current_row]
+            row_indices = indices[current_row]
+            left_to_right = row_boxes[:, 0].argsort()
+            res.extend(row_indices[left_to_right])
+            
+            # Start new row
+            current_row = [i]
+            current_row_bottom = box[3]
+    
+    # Handle last row
+    if current_row:
+        row_boxes = boxes[current_row]
+        row_indices = indices[current_row]
+        left_to_right = row_boxes[:, 0].argsort()
+        res.extend(row_indices[left_to_right])
 
 
 
