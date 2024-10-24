@@ -86,5 +86,5 @@ The [Sigal](https://sigal.saimon.org/) gallery generator has been used to genera
 - **Copy the Gallery**:
 
   ```bash
-  cp -rv /tmp/sigal-thumbnails/* /tmp/newspapers/lamasca-preview/
+  cp -r /tmp/sigal-thumbnails/* /tmp/newspapers/lamasca-preview/
   ```
