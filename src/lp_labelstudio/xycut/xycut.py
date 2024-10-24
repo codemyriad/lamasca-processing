@@ -74,7 +74,7 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
     return arr_start, arr_end
 
 
-def group_boxes_into_columns(boxes: np.ndarray, indices: np.ndarray, column_gap_threshold: float):
+def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int]):
     # Sort boxes by their left coordinate (x1)
     sorted_indices = boxes[:, 0].argsort()
     boxes = boxes[sorted_indices]
@@ -158,29 +158,14 @@ def compute_column_gap_threshold(boxes: np.ndarray) -> float:
 
     # Set the threshold as a fraction of the median width (adjust the multiplier as needed)
     return median_width * 0.5
-    """Convert polygon points to bounding box coordinates.
-    
-    Args:
-        points: List of 8 coordinates [x1,y1,x2,y2,x3,y3,x4,y4] 
-               representing 4 corners of a polygon
-    
-    Returns:
-        List [left, top, right, bottom] defining the bounding box
-    """
-    assert len(points) == 8
+
+
+def points_to_bbox(points):
     left = min(points[::2])
     right = max(points[::2])
     top = min(points[1::2])
     bottom = max(points[1::2])
-
-    left = max(left, 0)
-    top = max(top, 0)
-    right = max(right, 0)
-    bottom = max(bottom, 0)
     return [left, top, right, bottom]
-
-
-def bbox2points(bbox):
     left, top, right, bottom = bbox
     return [left, top, right, top, right, bottom, left, bottom]
 
