@@ -74,7 +74,35 @@ def split_projection_profile(arr_values: np.array, min_value: float, min_gap: fl
     return arr_start, arr_end
 
 
-def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int], depth: int = 0):
+def group_boxes_into_columns(boxes: np.ndarray, indices: np.ndarray, column_gap_threshold: float):
+    # Sort boxes by their left coordinate (x1)
+    sorted_indices = boxes[:, 0].argsort()
+    boxes = boxes[sorted_indices]
+    indices = indices[sorted_indices]
+
+    columns = []
+    current_column = [boxes[0]]
+    current_indices = [indices[0]]
+
+    for i in range(1, len(boxes)):
+        prev_box = boxes[i - 1]
+        curr_box = boxes[i]
+        gap = curr_box[0] - prev_box[2]  # curr.left - prev.right
+        if gap > column_gap_threshold:
+            # Start a new column
+            columns.append((np.array(current_column), np.array(current_indices)))
+            current_column = [curr_box]
+            current_indices = [indices[i]]
+        else:
+            current_column.append(curr_box)
+            current_indices.append(indices[i])
+
+    # Add the last column
+    columns.append((np.array(current_column), np.array(current_indices)))
+
+    # Sort columns left to right based on the minimum x1 value in each column
+    columns.sort(key=lambda col: np.min(col[0][:, 0]))
+    return columns
     """Recursively apply XY-cut algorithm to sort text boxes in reading order.
     
     Implements an improved XY-cut algorithm that:
@@ -89,13 +117,6 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int], dept
         indices: List tracking original indices of boxes during recursion
         res: Output list to store sorted box indices in reading order
     """
-    # Base cases to prevent excessive recursion
-    if depth > 100:  # Maximum recursion depth
-        # Fall back to simple y-x sort
-        yx_sort = np.lexsort((boxes[:, 0], boxes[:, 1]))
-        res.extend(indices[yx_sort])
-        return
-        
     if len(boxes) <= 1:
         if len(boxes) == 1:
             res.extend(indices)
@@ -109,73 +130,34 @@ def recursive_xy_cut(boxes: np.ndarray, indices: List[int], res: List[int], dept
         res.extend(indices[yx_sort])
         return
 
-    # First try to split into columns (vertical splits)
-    x_projection = projection_by_bboxes(boxes=boxes, axis=0)
-    x_gaps = split_projection_profile(x_projection, 0, compute_gap_threshold(boxes, axis=0))
-    
-    if x_gaps:
-        # We found column divisions
-        arr_x0, arr_x1 = x_gaps
-        columns = []
-        
-        # Group boxes into columns
-        for c0, c1 in zip(arr_x0, arr_x1):
-            col_mask = (c0 <= boxes[:, 0]) & (boxes[:, 0] < c1)
-            if np.any(col_mask):
-                col_boxes = boxes[col_mask]
-                col_indices = indices[col_mask]
-                
-                # Sort boxes within column by y-coordinate
-                y_sort = col_boxes[:, 1].argsort()
-                columns.append((col_boxes[y_sort], col_indices[y_sort]))
-        
-        # Sort columns by x-coordinate
-        columns.sort(key=lambda col: np.min(col[0][:, 0]))
-        
-        # Process each column
-        for col_boxes, col_indices in columns:
-            # Look for horizontal splits within the column
-            y_projection = projection_by_bboxes(boxes=col_boxes, axis=1)
-            y_gaps = split_projection_profile(y_projection, 0, compute_gap_threshold(col_boxes, axis=1))
-            
-            if y_gaps:
-                # Process each horizontal segment
-                arr_y0, arr_y1 = y_gaps
-                for r0, r1 in zip(arr_y0, arr_y1):
-                    segment_mask = (r0 <= col_boxes[:, 1]) & (col_boxes[:, 1] < r1)
-                    if np.any(segment_mask):
-                        recursive_xy_cut(
-                            col_boxes[segment_mask],
-                            col_indices[segment_mask],
-                            res,
-                            depth + 1
-                        )
-            else:
-                # No horizontal splits found, add boxes in current order
-                res.extend(col_indices)
-    else:
-        # No clear columns found, try horizontal splits
-        y_projection = projection_by_bboxes(boxes=boxes, axis=1)
-        y_gaps = split_projection_profile(y_projection, 0, compute_gap_threshold(boxes, axis=1))
-        
-        if y_gaps:
-            arr_y0, arr_y1 = y_gaps
-            for r0, r1 in zip(arr_y0, arr_y1):
-                row_mask = (r0 <= boxes[:, 1]) & (boxes[:, 1] < r1)
-                if np.any(row_mask):
-                    row_boxes = boxes[row_mask]
-                    row_indices = indices[row_mask]
-                    
-                    # Sort boxes in row by x-coordinate
-                    x_sort = row_boxes[:, 0].argsort()
-                    res.extend(row_indices[x_sort])
-        else:
-            # No clear splits found, sort by y then x
-            yx_sort = np.lexsort((boxes[:, 0], boxes[:, 1]))
-            res.extend(indices[yx_sort])
+    if len(boxes) <= 1:
+        if len(boxes) == 1:
+            res.extend(indices)
+        return
+
+    # Compute the column gap threshold
+    column_gap_threshold = compute_column_gap_threshold(boxes)
+
+    # Group boxes into columns
+    columns = group_boxes_into_columns(boxes, indices, column_gap_threshold)
+
+    for col_boxes, col_indices in columns:
+        if len(col_boxes) > 1:
+            # Sort boxes within the column by their top coordinate (y1)
+            sorted_indices = col_boxes[:, 1].argsort()
+            col_boxes = col_boxes[sorted_indices]
+            col_indices = col_indices[sorted_indices]
+        # Add the sorted indices to the result
+        res.extend(col_indices)
 
 
-def points_to_bbox(points):
+def compute_column_gap_threshold(boxes: np.ndarray) -> float:
+    # Calculate the median width of the boxes
+    widths = boxes[:, 2] - boxes[:, 0]
+    median_width = np.median(widths)
+
+    # Set the threshold as a fraction of the median width (adjust the multiplier as needed)
+    return median_width * 0.5
     """Convert polygon points to bounding box coordinates.
     
     Args:
