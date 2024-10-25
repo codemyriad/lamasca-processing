@@ -3,7 +3,7 @@ import json
 import numpy as np
 from typing import Dict, Any, List, Tuple
 from PIL import Image, ImageDraw, ImageColor
-from .xycut.xycut import recursive_xy_cut
+from .xycut.text_sorting import sort_text_areas
 import click
 from multiprocessing import Pool, cpu_count
 from functools import partial
@@ -91,45 +91,65 @@ def process_image(args):
                         'height': height
                     })
 
-        # Sort boxes using recursive XY-cut if we have any valid boxes
+        # Sort and draw boxes if we have any valid boxes
         if boxes:
-            boxes_array = np.array(boxes)
-            sorted_indices = []
-            recursive_xy_cut(boxes_array, np.arange(len(boxes)), sorted_indices)
+            # Convert box_metadata to format expected by sort_text_areas
+            areas = [{
+                'value': {
+                    'x': meta['x'],
+                    'y': meta['y'],
+                    'width': meta['width'],
+                    'height': meta['height'],
+                    'labels': [meta['label']]
+                }
+            } for meta in box_metadata]
             
-            # Draw boxes in sorted order
-            for idx, sort_idx in enumerate(sorted_indices):
-                meta = box_metadata[sort_idx]
+            # Sort the areas
+            sorted_areas = sort_text_areas(areas)
+            
+            # Create mapping from original area to sorted index
+            area_to_index = {
+                (area['value']['x'], area['value']['y']): idx 
+                for idx, area in enumerate(sorted_areas)
+            }
+            
+            # Draw boxes using the sorted order
+            for idx, meta in enumerate(box_metadata):
                 color = get_color_for_label(meta['label'])
                 
                 # Draw rectangle
-                draw.rectangle([meta['x'], meta['y'], 
-                              meta['x'] + meta['width'], 
-                              meta['y'] + meta['height']], 
+                draw.rectangle([meta['x'], meta['y'],
+                              meta['x'] + meta['width'],
+                              meta['y'] + meta['height']],
                              fill=color+(OPACITY,))
 
-                # Add index number in the top-left corner of the rectangle
-                font_size = max(12, int(min(meta['width'], meta['height']) * 0.2))  # Minimum size of 12px
-                from PIL import ImageFont
-                try:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-                except IOError:
-                    font = ImageFont.load_default()
+                # Only add index numbers to text areas
+                key = (meta['x'], meta['y'])
+                if key in area_to_index:
+                    sort_idx = area_to_index[key]
+                    
+                    # Add index number
+                    font_size = max(12, int(min(meta['width'], meta['height']) * 0.2))
+                    from PIL import ImageFont
+                    try:
+                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+                    except IOError:
+                        font = ImageFont.load_default()
 
-                index_text = str(idx)  # Use sorted index
-                text_bbox = draw.textbbox((meta['x'], meta['y']), index_text, font=font)
-                text_width = text_bbox[2] - text_bbox[0]
-                text_height = text_bbox[3] - text_bbox[1]
+                    index_text = str(sort_idx)
+                    text_bbox = draw.textbbox((meta['x'], meta['y']), index_text, font=font)
+                    text_width = text_bbox[2] - text_bbox[0]
+                    text_height = text_bbox[3] - text_bbox[1]
 
-                # Draw white background for text
-                draw.rectangle([meta['x'], meta['y'], 
-                              meta['x'] + text_width + 4, 
-                              meta['y'] + text_height + 4],
-                             fill=(255, 255, 255, 255))
+                    # Draw white background for text
+                    draw.rectangle([meta['x'], meta['y'],
+                                  meta['x'] + text_width + 4,
+                                  meta['y'] + text_height + 4],
+                                 fill=(255, 255, 255, 255))
 
-                # Draw text
-                draw.text((meta['x'] + 2, meta['y'] + 2), index_text,
-                         fill=(0, 0, 0, 255), font=font)
+                    # Draw text
+                    draw.text((meta['x'] + 2, meta['y'] + 2), index_text,
+                             fill=(0, 0, 0, 255), font=font)
 
         # Alpha composite the original image with the overlay
         img_with_overlay = Image.alpha_composite(img_resized, overlay)
