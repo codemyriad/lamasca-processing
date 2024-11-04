@@ -2,6 +2,7 @@ import os
 import json
 import numpy as np
 from typing import Dict, Any, List, Tuple
+from .article_reconstruction import ArticleReconstructor
 from PIL import Image, ImageDraw, ImageColor
 from .xycut.text_sorting import sort_text_areas
 import click
@@ -91,18 +92,35 @@ def process_image(args):
                         'height': height
                     })
 
-        # Draw boxes without sorting
+        # Use article reconstruction to group and color boxes
         if boxes:
+            # Initialize article reconstructor
+            reconstructor = ArticleReconstructor()
             
-            # Draw boxes without indices
-            for idx, meta in enumerate(box_metadata):
-                color = get_color_for_label(meta['label'])
+            # Add zones from annotations
+            for result in annotation['result']:
+                if 'labels' in result['value']:
+                    reconstructor.add_zone(result)
+            
+            # Build connectivity graph and reconstruct articles
+            reconstructor.build_graph()
+            articles = reconstructor.reconstruct_articles()
+            
+            # Draw boxes colored by article grouping
+            for article_idx, article in enumerate(articles):
+                # Use different hue for each article
+                hue = (article_idx * 137.5) % 360  # Golden angle to spread colors
+                for zone in article:
+                    # Convert coordinates to thumbnail scale
+                    x = zone.x * new_size[0] / 100
+                    y = zone.y * new_size[1] / 100
+                    width = zone.width * new_size[0] / 100
+                    height = zone.height * new_size[1] / 100
                     
-                # Draw rectangle
-                draw.rectangle([meta['x'], meta['y'],
-                              meta['x'] + meta['width'],
-                              meta['y'] + meta['height']],
-                             fill=color+(OPACITY,))
+                    # Draw rectangle with article-specific color
+                    color = get_color_for_label(zone.label)
+                    draw.rectangle([x, y, x + width, y + height],
+                                 fill=color+(OPACITY,))
 
         # Alpha composite the original image with the overlay
         img_with_overlay = Image.alpha_composite(img_resized, overlay)
