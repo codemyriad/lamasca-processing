@@ -3,7 +3,7 @@ import json
 import numpy as np
 from typing import Dict, Any, List, Tuple
 from .article_reconstruction import ArticleReconstructor
-from PIL import Image, ImageDraw, ImageColor
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 from .xycut.text_sorting import sort_text_areas
 import click
 from multiprocessing import Pool, cpu_count
@@ -121,6 +121,29 @@ def process_image(args):
                     color = get_color_for_label(zone.label)
                     draw.rectangle([x, y, x + width, y + height],
                                  fill=color+(OPACITY,))
+                    
+                    # Draw article number in the first zone of each article
+                    if zone == article[0]:
+                        # Draw white background for number
+                        number_size = max(int(height/2), 20)  # Minimum size of 20px
+                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", number_size)
+                        number_text = str(article_idx + 1)
+                        text_bbox = draw.textbbox((0, 0), number_text, font=font)
+                        text_width = text_bbox[2] - text_bbox[0]
+                        text_height = text_bbox[3] - text_bbox[1]
+                        
+                        # Draw white background rectangle
+                        padding = 4
+                        draw.rectangle([x, y, 
+                                      x + text_width + 2*padding,
+                                      y + text_height + 2*padding],
+                                     fill=(255, 255, 255, 255))
+                        
+                        # Draw black text
+                        draw.text((x + padding, y + padding),
+                                number_text,
+                                fill=(0, 0, 0, 255),
+                                font=font)
 
         # Alpha composite the original image with the overlay
         img_with_overlay = Image.alpha_composite(img_resized, overlay)
