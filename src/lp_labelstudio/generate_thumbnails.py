@@ -54,6 +54,27 @@ def generate_thumbnails(source_folder: str, destination_folder: str):
 def process_image(args):
     """Process a single image, create a thumbnail with overlays, and save it."""
     image_path, annotations, source_root, destination_folder = args
+    
+    def draw_debug_info(draw, zone, x, y, debug_info):
+        """Helper to draw debug information for a zone"""
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+        debug_text = [
+            f"ID: {zone.id}",
+            f"Label: {zone.label}"
+        ]
+        if zone.debug_weights:
+            for key, value in zone.debug_weights.items():
+                debug_text.append(f"{key}: {value}")
+        
+        # White background for better readability
+        text_height = len(debug_text) * 15
+        draw.rectangle([x, y-text_height-5, x+200, y-5], 
+                      fill=(255, 255, 255, 200))
+        
+        # Draw each line of debug text
+        for i, line in enumerate(debug_text):
+            draw.text((x, y-text_height+(i*15)), line,
+                     fill=(0, 0, 0, 255), font=font)
     has_annotations = len(annotations) > 0
     with Image.open(image_path) as img:
         # Resize image to 1000 pixels wide
@@ -106,6 +127,22 @@ def process_image(args):
             reconstructor.build_graph()
             articles = reconstructor.reconstruct_articles()
             
+            # Draw connectivity graph first
+            for zone1_id, connections in reconstructor.graph.items():
+                zone1 = next(z for z in reconstructor.zones if z.id == zone1_id)
+                start_x = zone1.x * new_size[0] / 100
+                start_y = zone1.y * new_size[1] / 100
+            
+                for connected_id, weight in connections:
+                    zone2 = next(z for z in reconstructor.zones if z.id == connected_id)
+                    end_x = zone2.x * new_size[0] / 100
+                    end_y = zone2.y * new_size[1] / 100
+                
+                    # Draw connection line with opacity based on weight
+                    line_opacity = int(255 * min(weight, 1.0))
+                    draw.line([(start_x, start_y), (end_x, end_y)],
+                             fill=(255, 0, 0, line_opacity), width=2)
+
             # Draw boxes colored by article grouping
             for article_idx, article in enumerate(articles):
                 # Use different hue for each article
@@ -116,12 +153,15 @@ def process_image(args):
                     y = zone.y * new_size[1] / 100
                     width = zone.width * new_size[0] / 100
                     height = zone.height * new_size[1] / 100
-                    
+                
                     # Draw rectangle with article-specific color
                     color = get_color_for_label(zone.label)
                     draw.rectangle([x, y, x + width, y + height],
                                  fill=color+(OPACITY,))
-                    
+                
+                    # Draw debug info above each zone
+                    draw_debug_info(draw, zone, x, y, zone.debug_weights)
+                
                     # Draw article number in the first zone of each article
                     if zone == article[0]:
                         # Draw white background for number
@@ -131,14 +171,14 @@ def process_image(args):
                         text_bbox = draw.textbbox((0, 0), number_text, font=font)
                         text_width = text_bbox[2] - text_bbox[0]
                         text_height = text_bbox[3] - text_bbox[1]
-                        
+                    
                         # Draw white background rectangle
                         padding = 4
                         draw.rectangle([x, y, 
                                       x + text_width + 2*padding,
                                       y + text_height + 2*padding],
                                      fill=(255, 255, 255, 255))
-                        
+                    
                         # Draw black text
                         draw.text((x + padding, y + padding),
                                 number_text,

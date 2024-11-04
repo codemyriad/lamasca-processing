@@ -11,6 +11,7 @@ class Zone:
     width: float 
     height: float
     label: str
+    debug_weights: dict = None  # Store weight calculation details
 
 class ArticleReconstructor:
     def __init__(self):
@@ -46,7 +47,7 @@ class ArticleReconstructor:
 
     def _calculate_edge_weight(self, zone1: Zone, zone2: Zone) -> float:
         """Calculate edge weight between two zones based on spatial relationship"""
-        # Base weight starts at 1.0
+        debug_info = {}
         weight = 1.0
         
         # Calculate vertical and horizontal overlap
@@ -55,16 +56,21 @@ class ArticleReconstructor:
         
         # Penalize distance between zones
         distance = np.sqrt((zone1.x - zone2.x)**2 + (zone1.y - zone2.y)**2)
-        weight *= max(0, 1 - distance/100)
+        distance_factor = max(0, 1 - distance/100)
+        weight *= distance_factor
+        debug_info['distance'] = f"{distance:.1f}px → {distance_factor:.2f}"
         
         # Bonus for vertical alignment
         if x_overlap > 0:
             weight *= 1.5
+            debug_info['alignment'] = "1.5x"
             
         # Bonus for compatible types (e.g. headline -> text)
         if zone1.label == "Headline" and zone2.label == "Text":
             weight *= 2.0
+            debug_info['type_match'] = "2.0x"
             
+        zone1.debug_weights = debug_info
         return weight
 
     def reconstruct_articles(self) -> List[List[Zone]]:
