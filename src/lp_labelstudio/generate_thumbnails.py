@@ -58,17 +58,18 @@ def process_image(args):
     def draw_debug_info(draw, zone, x, y, debug_info):
         """Helper to draw debug information for a zone"""
         font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
-        debug_text = [
-            f"ID: {zone.id}",
-            f"Label: {zone.label}"
-        ]
+        
+        # Just show the label
+        debug_text = [zone.label]
+        
         if zone.debug_weights:
             for key, value in zone.debug_weights.items():
                 debug_text.append(f"{key}: {value}")
         
         # White background for better readability
         text_height = len(debug_text) * 15
-        draw.rectangle([x, y-text_height-5, x+200, y-5], 
+        text_width = max(len(text) * 7 for text in debug_text)  # Approximate width
+        draw.rectangle([x, y-text_height-5, x+text_width, y-5], 
                       fill=(255, 255, 255, 200))
         
         # Draw each line of debug text

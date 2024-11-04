@@ -14,6 +14,15 @@ class Zone:
     debug_weights: dict = None  # Store weight calculation details
 
 class ArticleReconstructor:
+    ARTICLE_CONTENT_TYPES = {
+        "Headline",
+        "SubHeadline",
+        "Text",
+        "Photograph",
+        "Illustration",
+        "Author"
+    }
+    
     def __init__(self):
         self.zones: List[Zone] = []
         self.graph = defaultdict(list)
@@ -21,6 +30,10 @@ class ArticleReconstructor:
     def add_zone(self, zone_data: Dict[str, Any]) -> None:
         """Add a zone from Label Studio annotation data"""
         if 'value' not in zone_data or 'labels' not in zone_data['value']:
+            return
+            
+        label = zone_data['value']['labels'][0]
+        if label not in self.ARTICLE_CONTENT_TYPES:
             return
             
         zone = Zone(
