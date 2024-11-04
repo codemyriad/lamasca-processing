@@ -11,3 +11,4 @@ build/
 dist/
 
 src/lp_labelstudio/web_server/test_images/*.json
+.env
