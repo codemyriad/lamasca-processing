@@ -42,19 +42,24 @@ def list_projects(ctx, local_root):
     annotator_projects = defaultdict(int)
 
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        projects = []
+        next_url = url
+        
+        while next_url:
+            response = requests.get(next_url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
 
-        data = response.json()
-
-        if isinstance(data, dict) and 'results' in data:
-            projects = data['results']
-        elif isinstance(data, list):
-            projects = data
-        else:
-            console.print("[bold red]Unexpected response format.[/bold red]")
-            console.print(f"Response content: {data}")
-            return
+            if isinstance(data, dict) and 'results' in data:
+                projects.extend(data['results'])
+                next_url = data.get('next')
+            elif isinstance(data, list):
+                projects.extend(data)
+                next_url = None
+            else:
+                console.print("[bold red]Unexpected response format.[/bold red]")
+                console.print(f"Response content: {data}")
+                return
 
         if projects:
             table = Table(title="Existing Projects")
