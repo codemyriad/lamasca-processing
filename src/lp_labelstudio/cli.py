@@ -57,15 +57,15 @@ def process_image(image_path_string: str, redo: bool) -> None:
     manifest_file = image_path.parent / "manifest.json"
     assert manifest_file.exists()
     all_pages_annotations = json.load(manifest_file.open())
-    
+
     # Extract page number from filename (assuming format like page_01.jpeg)
     current_page = int(image_path.stem.split('_')[1])
-    
+
     # Find annotations for current page
     page_annotations = [
-        annotation for annotation in all_pages_annotations 
+        annotation["annotations"][0] for annotation in all_pages_annotations
         if annotation["data"]["pageNumber"] == current_page
-    ]
+    ][0]
     print(f"File loaded. Total annotations_found: {len(page_annotations)}")
 
 
