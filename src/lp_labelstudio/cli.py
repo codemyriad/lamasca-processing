@@ -3,6 +3,8 @@ import os
 import logging
 import json
 from typing import Any, Dict, List, Union
+from rich import print as rprint
+from rich.table import Table
 from pathlib import Path
 from lp_labelstudio.generate_manifest import generate_labelstudio_manifest
 from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
@@ -66,7 +68,26 @@ def process_image(image_path_string: str, redo: bool) -> None:
         annotation["annotations"][0] for annotation in all_pages_annotations
         if annotation["data"]["pageNumber"] == current_page
     ][0]
-    print(f"File loaded. Total annotations_found: {len(page_annotations)}")
+    table = Table(title="Annotations")
+    table.add_column("Label", style="cyan")
+    table.add_column("Width", justify="right", style="green")
+    table.add_column("Height", justify="right", style="green")
+    table.add_column("Position", style="yellow")
+
+    for annotation in page_annotations:
+        width = annotation["value"]["width"]
+        height = annotation["value"]["height"]
+        x = annotation["value"]["x"]
+        y = annotation["value"]["y"]
+        label = annotation["value"]["rectanglelabels"][0]
+        table.add_row(
+            label,
+            f"{width:.1f}",
+            f"{height:.1f}", 
+            f"({x:.1f}, {y:.1f})"
+        )
+
+    rprint(table)
 
 
 @cli.command()
