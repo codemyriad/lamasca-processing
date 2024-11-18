@@ -75,6 +75,7 @@ def process_image(image_path_string: str, redo: bool) -> None:
     table.add_column("Position", style="yellow")
 
     for result in page_annotations["result"]:
+        import pdb; pdb.set_trace()
         width = result["value"]["width"]
         height = result["value"]["height"]
         x = result["value"]["x"]
