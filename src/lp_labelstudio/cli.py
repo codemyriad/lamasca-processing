@@ -51,33 +51,9 @@ def cli_generate_index_txt(
 )
 @click.option("--redo", is_flag=True, help="Reprocess and replace existing annotations")
 def process_image(image_path: str, redo: bool) -> None:
-    """Process a single JPEG image using layoutparser."""
-    # We import here for performance reasons. Don't move up!
-    import json
-    import layoutparser as lp  # type: ignore
-    from lp_labelstudio.constants import NEWSPAPER_MODEL_PATH, NEWSPAPER_LABEL_MAP
-    from lp_labelstudio.image_processing import process_single_image, get_image_size
-
-    output_path = os.path.splitext(image_path)[0] + "_annotations.json"
-    if os.path.exists(output_path) and not redo:
-        click.echo(
-            click.style(f"Skipped {image_path} (annotation file exists)", fg="yellow")
-        )
-        return
-
-    click.echo(click.style(f"Processing {image_path}...", fg="blue"))
-
-    model: lp.models.Detectron2LayoutModel = lp.models.Detectron2LayoutModel(
-        NEWSPAPER_MODEL_PATH, label_map=NEWSPAPER_LABEL_MAP
-    )
-    result: List[Dict[str, Any]] = process_single_image(image_path, model)
-
-    with open(output_path, "w") as f:
-        json.dump({"predictions": result}, f, indent=2)
-    logger.info(f"Predictions saved to {output_path}")
-
-    summary: str = generate_summary(image_path, result, output_path)
-    click.echo(summary)
+    """Process a single JPEG image. Perform OCR for the areas found in annotations"""
+    # Get the image file. Also load annotations for that file from the file `manifest.json` (sibling of the image file)
+    print("File loaded: ")
 
 
 @cli.command()
