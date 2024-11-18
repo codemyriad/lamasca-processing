@@ -4,7 +4,6 @@ import numpy as np
 from typing import Dict, Any, List, Tuple
 from .article_reconstruction import ArticleReconstructor
 from PIL import Image, ImageDraw, ImageFont, ImageColor
-from .xycut.text_sorting import sort_text_areas
 import click
 from multiprocessing import Pool, cpu_count
 from functools import partial
