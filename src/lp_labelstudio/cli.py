@@ -2,6 +2,7 @@ import click
 import os
 import logging
 import json
+import numpy as np
 from typing import Any, Dict, List, Union, Tuple
 from rich import print as rprint
 from rich.table import Table
@@ -122,7 +123,7 @@ def process_image(image_path_string: str, redo: bool) -> None:
                 headline_img = img.crop((x, y, x + width, y + height))
                 
                 # Run OCR on the cropped area
-                ocr_result = ocr.ocr(numpy.array(headline_img), cls=True)
+                ocr_result = ocr.ocr(np.array(headline_img), cls=True)
                 
                 if ocr_result and ocr_result[0]:
                     text = " ".join([line[1][0] for line in ocr_result[0]])
