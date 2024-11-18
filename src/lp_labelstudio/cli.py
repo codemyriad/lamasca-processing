@@ -3,6 +3,7 @@ import os
 import logging
 import json
 from typing import Any, Dict, List, Union
+from pathlib import Path
 from lp_labelstudio.generate_manifest import generate_labelstudio_manifest
 from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
 from lp_labelstudio.labelstudio_api import labelstudio_api
@@ -47,13 +48,24 @@ def cli_generate_index_txt(
 
 @cli.command()
 @click.argument(
-    "image_path", type=click.Path(exists=True, file_okay=True, dir_okay=False)
+    "image_path_string", type=click.Path(exists=True, file_okay=True, dir_okay=False)
 )
 @click.option("--redo", is_flag=True, help="Reprocess and replace existing annotations")
-def process_image(image_path: str, redo: bool) -> None:
+def process_image(image_path_string: str, redo: bool) -> None:
     """Process a single JPEG image. Perform OCR for the areas found in annotations"""
-    # Get the image file. Also load annotations for that file from the file `manifest.json` (sibling of the image file)
-    print("File loaded: ")
+    image_path = Path(image_path_string)
+    manifest_file = image_path.parent / "manifest.json"
+    assert manifest_file.exists()
+    all_pages_annotations = json.load(manifest_file.open())
+    # TODO: extract from all_pages_annotations
+    # Note: use ["data"]["pageNumber"] to find the page we need
+    # (Pdb++) pp all_pages_annotations[0]["data"]
+    # {'date': '1994-01-26',
+    #  'ocr': 'https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers/lamasca-pages/1994/lamasca-1994-01-26/page_01.jpeg',
+    #  'pageNumber': 1}
+
+    page_annotations = []
+    print(f"File loaded. Total annotations_found: {len(page_annotations)}")
 
 
 @cli.command()
