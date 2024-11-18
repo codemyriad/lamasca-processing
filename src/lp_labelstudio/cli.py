@@ -74,8 +74,7 @@ def process_image(image_path_string: str, redo: bool) -> None:
     table.add_column("Height", justify="right", style="green")
     table.add_column("Position", style="yellow")
 
-    for annotation in page_annotations:
-        result = annotation["result"][0]
+    for result in page_annotations["result"]:
         width = result["width"]
         height = result["height"]
         x = result["x"]
@@ -84,7 +83,7 @@ def process_image(image_path_string: str, redo: bool) -> None:
         table.add_row(
             label,
             f"{width:.1f}",
-            f"{height:.1f}", 
+            f"{height:.1f}",
             f"({x:.1f}, {y:.1f})"
         )
 
