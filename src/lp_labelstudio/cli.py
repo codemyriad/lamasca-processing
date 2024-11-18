@@ -74,13 +74,17 @@ def process_image(image_path_string: str, redo: bool) -> None:
     table.add_column("Height", justify="right", style="green")
     table.add_column("Position", style="yellow")
 
-    for result in page_annotations["result"]:
-        import pdb; pdb.set_trace()
-        width = result["value"]["width"]
-        height = result["value"]["height"]
-        x = result["value"]["x"]
-        y = result["value"]["y"]
-        label = result["value"].get("rectanglelabels", ["Unknown"])[0]
+    # Process results in pairs (bbox and label)
+    results = page_annotations["result"]
+    for i in range(0, len(results), 2):
+        bbox = results[i]
+        label_info = results[i + 1]
+        
+        width = bbox["value"]["width"]
+        height = bbox["value"]["height"]
+        x = bbox["value"]["x"]
+        y = bbox["value"]["y"]
+        label = label_info["value"]["labels"][0]
         table.add_row(
             label,
             f"{width:.1f}",
