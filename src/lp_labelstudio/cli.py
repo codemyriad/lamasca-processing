@@ -75,11 +75,12 @@ def process_image(image_path_string: str, redo: bool) -> None:
     table.add_column("Position", style="yellow")
 
     for annotation in page_annotations:
-        width = annotation["value"]["width"]
-        height = annotation["value"]["height"]
-        x = annotation["value"]["x"]
-        y = annotation["value"]["y"]
-        label = annotation["value"]["rectanglelabels"][0]
+        result = annotation["result"][0]
+        width = result["width"]
+        height = result["height"]
+        x = result["x"]
+        y = result["y"]
+        label = result["rectanglelabels"][0]
         table.add_row(
             label,
             f"{width:.1f}",
