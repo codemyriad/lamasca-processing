@@ -57,14 +57,15 @@ def process_image(image_path_string: str, redo: bool) -> None:
     manifest_file = image_path.parent / "manifest.json"
     assert manifest_file.exists()
     all_pages_annotations = json.load(manifest_file.open())
-    # TODO: extract from all_pages_annotations
-    # Note: use ["data"]["pageNumber"] to find the page we need
-    # (Pdb++) pp all_pages_annotations[0]["data"]
-    # {'date': '1994-01-26',
-    #  'ocr': 'https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers/lamasca-pages/1994/lamasca-1994-01-26/page_01.jpeg',
-    #  'pageNumber': 1}
-
-    page_annotations = []
+    
+    # Extract page number from filename (assuming format like page_01.jpeg)
+    current_page = int(image_path.stem.split('_')[1])
+    
+    # Find annotations for current page
+    page_annotations = [
+        annotation for annotation in all_pages_annotations 
+        if annotation["data"]["pageNumber"] == current_page
+    ]
     print(f"File loaded. Total annotations_found: {len(page_annotations)}")
 
 
