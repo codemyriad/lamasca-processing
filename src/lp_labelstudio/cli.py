@@ -129,15 +129,21 @@ def process_image(image_path_string: str, redo: bool) -> None:
 
                 if ocr_result and ocr_result[0]:
                     for line in ocr_result[0]:
-                        bbox_points = line[0]  # [x1,y1,x2,y2]
+                        bbox_points = line[0]  # [[x1,y1], [x2,y1], [x3,y2], [x4,y2]]
                         text, confidence = line[1]
                         
                         # Convert relative coordinates to absolute
+                        # Take min/max coordinates to get bounding box
+                        x1 = min(point[0] for point in bbox_points)
+                        y1 = min(point[1] for point in bbox_points)
+                        x2 = max(point[0] for point in bbox_points)
+                        y2 = max(point[1] for point in bbox_points)
+                        
                         abs_bbox = [
-                            x + bbox_points[0],  # x1
-                            y + bbox_points[1],  # y1
-                            x + bbox_points[2],  # x2
-                            y + bbox_points[3]   # y2
+                            x + x1,  # x1
+                            y + y1,  # y1
+                            x + x2,  # x2
+                            y + y2   # y2
                         ]
                         
                         all_ocr_results.append((abs_bbox, (text, confidence)))
