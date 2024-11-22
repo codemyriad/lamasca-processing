@@ -57,7 +57,7 @@ def cli_generate_index_txt(
 )
 @click.option("--redo", is_flag=True, help="Reprocess and replace existing annotations")
 def process_image(image_path_string: str, redo: bool) -> None:
-    """Process a single JPEG image. Perform OCR for the areas found in annotations"""
+    """Process a single JPEG image. Perform OCR for the areas found in annotations and generate ALTO XML"""
     image_path = Path(image_path_string)
     manifest_file = image_path.parent / "manifest.json"
     assert manifest_file.exists()
@@ -99,12 +99,14 @@ def process_image(image_path_string: str, redo: bool) -> None:
 
     # Initialize PaddleOCR
     from paddleocr import PaddleOCR
+    from lp_labelstudio.alto_generator import create_alto_xml
     ocr = PaddleOCR(use_angle_cls=True, lang='fr')
 
     # Open the image
     with Image.open(image_path) as img:
         img_width, img_height = img.size
         console = Console()
+        all_ocr_results = []
 
         # Process headlines
         console.print("\n[bold blue]Processing Headlines:[/]")
@@ -126,11 +128,32 @@ def process_image(image_path_string: str, redo: bool) -> None:
                 ocr_result = ocr.ocr(np.array(headline_img), cls=True)
 
                 if ocr_result and ocr_result[0]:
-                    text = " ".join([line[1][0] for line in ocr_result[0]])
-                    console.print(f"[yellow]Position:[/] ({x}, {y})")
-                    console.print(f"[green]Text:[/] {text}\n")
+                    for line in ocr_result[0]:
+                        bbox_points = line[0]  # [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]
+                        text, confidence = line[1]
+                        
+                        # Convert relative coordinates to absolute
+                        abs_bbox = [
+                            x + bbox_points[0][0],  # x1
+                            y + bbox_points[0][1],  # y1
+                            x + bbox_points[2][0],  # x2
+                            y + bbox_points[2][1]   # y2
+                        ]
+                        
+                        all_ocr_results.append((abs_bbox, (text, confidence)))
+                        console.print(f"[yellow]Position:[/] ({x}, {y})")
+                        console.print(f"[green]Text:[/] {text}\n")
                 else:
                     console.print(f"[red]No text detected[/] at position ({x}, {y})\n")
+        
+        # Generate ALTO XML
+        alto_xml = create_alto_xml(img_width, img_height, all_ocr_results)
+        
+        # Save ALTO XML
+        alto_path = os.path.splitext(image_path)[0] + ".alto.xml"
+        with open(alto_path, "w", encoding="utf-8") as f:
+            f.write(alto_xml)
+        console.print(f"[blue]ALTO XML saved to:[/] {alto_path}")
 
 
 @cli.command()
