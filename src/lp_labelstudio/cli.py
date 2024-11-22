@@ -8,7 +8,6 @@ from rich import print as rprint
 from rich.table import Table
 from rich.console import Console
 from pathlib import Path
-from paddleocr import PaddleOCR
 from PIL import Image
 from lp_labelstudio.generate_manifest import generate_labelstudio_manifest
 from lp_labelstudio.escriptorium_cli import escriptorium as escriptorium_group
@@ -83,7 +82,7 @@ def process_image(image_path_string: str, redo: bool) -> None:
     for i in range(0, len(results), 2):
         bbox = results[i]
         label_info = results[i + 1]
-        
+
         width = bbox["value"]["width"]
         height = bbox["value"]["height"]
         x = bbox["value"]["x"]
@@ -99,32 +98,33 @@ def process_image(image_path_string: str, redo: bool) -> None:
     rprint(table)
 
     # Initialize PaddleOCR
+    from paddleocr import PaddleOCR
     ocr = PaddleOCR(use_angle_cls=True, lang='fr')
-    
+
     # Open the image
     with Image.open(image_path) as img:
         img_width, img_height = img.size
         console = Console()
-        
+
         # Process headlines
         console.print("\n[bold blue]Processing Headlines:[/]")
         for i in range(0, len(results), 2):
             bbox = results[i]
             label_info = results[i + 1]
-            
+
             if label_info["value"]["labels"][0] == "Headline":
                 # Calculate pixel coordinates
                 x = int(bbox["value"]["x"] * img_width / 100)
                 y = int(bbox["value"]["y"] * img_height / 100)
                 width = int(bbox["value"]["width"] * img_width / 100)
                 height = int(bbox["value"]["height"] * img_height / 100)
-                
+
                 # Crop the image to the headline area
                 headline_img = img.crop((x, y, x + width, y + height))
-                
+
                 # Run OCR on the cropped area
                 ocr_result = ocr.ocr(np.array(headline_img), cls=True)
-                
+
                 if ocr_result and ocr_result[0]:
                     text = " ".join([line[1][0] for line in ocr_result[0]])
                     console.print(f"[yellow]Position:[/] ({x}, {y})")
