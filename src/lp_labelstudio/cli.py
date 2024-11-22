@@ -97,10 +97,10 @@ def process_image(image_path_string: str, redo: bool) -> None:
 
     rprint(table)
 
-    # Initialize PaddleOCR
+    # Initialize PaddleOCR with word-level detection
     from paddleocr import PaddleOCR
     from lp_labelstudio.alto_generator import create_alto_xml
-    ocr = PaddleOCR(use_angle_cls=True, lang='fr')
+    ocr = PaddleOCR(use_angle_cls=True, lang='fr', rec_algorithm='SVTR_LCNet', det_db_box_thresh=0.3)
 
     # Open the image
     with Image.open(image_path) as img:
@@ -124,25 +124,26 @@ def process_image(image_path_string: str, redo: bool) -> None:
                 # Crop the image to the headline area
                 headline_img = img.crop((x, y, x + width, y + height))
 
-                # Run OCR on the cropped area
-                ocr_result = ocr.ocr(np.array(headline_img), cls=True)
+                # Run OCR on the cropped area with word-level detection
+                ocr_result = ocr.ocr(np.array(headline_img), cls=True, det=True, rec=True)
 
                 if ocr_result and ocr_result[0]:
                     for line in ocr_result[0]:
-                        bbox_points = line[0]  # [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]
-                        text, confidence = line[1]
-                        
-                        # Convert relative coordinates to absolute
-                        abs_bbox = [
-                            x + bbox_points[0][0],  # x1
-                            y + bbox_points[0][1],  # y1
-                            x + bbox_points[2][0],  # x2
-                            y + bbox_points[2][1]   # y2
-                        ]
-                        
-                        all_ocr_results.append((abs_bbox, (text, confidence)))
-                        console.print(f"[yellow]Position:[/] ({x}, {y})")
-                        console.print(f"[green]Text:[/] {text}\n")
+                        for word_info in line:
+                            bbox_points = word_info[0]  # [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]
+                            text, confidence = word_info[1]
+                            
+                            # Convert relative coordinates to absolute
+                            abs_bbox = [
+                                x + bbox_points[0][0],  # x1
+                                y + bbox_points[0][1],  # y1
+                                x + bbox_points[2][0],  # x2
+                                y + bbox_points[2][1]   # y2
+                            ]
+                            
+                            all_ocr_results.append((abs_bbox, (text, confidence)))
+                            console.print(f"[yellow]Position:[/] ({abs_bbox[0]:.1f}, {abs_bbox[1]:.1f})")
+                            console.print(f"[green]Word:[/] {text} [yellow]Confidence:[/] {confidence:.2f}\n")
                 else:
                     console.print(f"[red]No text detected[/] at position ({x}, {y})\n")
         
