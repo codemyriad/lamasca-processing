@@ -139,10 +139,10 @@ def process_image(image_path_string: str, redo: bool) -> None:
                             x + bbox_points[2],  # x2
                             y + bbox_points[3]   # y2
                         ]
-                            
-                            all_ocr_results.append((abs_bbox, (text, confidence)))
-                            console.print(f"[yellow]Position:[/] ({abs_bbox[0]:.1f}, {abs_bbox[1]:.1f})")
-                            console.print(f"[green]Word:[/] {text} [yellow]Confidence:[/] {confidence:.2f}\n")
+                        
+                        all_ocr_results.append((abs_bbox, (text, confidence)))
+                        console.print(f"[yellow]Position:[/] ({abs_bbox[0]:.1f}, {abs_bbox[1]:.1f})")
+                        console.print(f"[green]Word:[/] {text} [yellow]Confidence:[/] {confidence:.2f}\n")
                 else:
                     console.print(f"[red]No text detected[/] at position ({x}, {y})\n")
         
