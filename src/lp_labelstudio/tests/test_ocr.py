@@ -90,7 +90,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         n_tests = len(results)
         if n_tests == 0:
             continue
-            
+
         n_perfect = sum(1 for r in results if r["distance"] == 0)
         n_passed = sum(1 for r in results if r["passed"] and r["distance"] > 0)
         n_failed = n_tests - n_perfect - n_passed
