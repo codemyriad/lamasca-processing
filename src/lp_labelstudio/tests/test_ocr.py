@@ -70,10 +70,11 @@ def test_results():
 def truncate_text(text: str, max_length: int = 80) -> str:
     """Truncate text and make it single line."""
     # Replace newlines with spaces
-    text = ' '.join(text.split())
+    text = " ".join(text.split())
     if len(text) > max_length:
-        return text[:max_length-3] + '...'
+        return text[: max_length - 3] + "..."
     return text
+
 
 def print_final_summary(test_results: Dict[str, List[dict]]):
     """Print final summary table with statistics for all images."""
@@ -137,7 +138,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         )
 
     console.print(summary_table)
-    
+
     # Print detailed samples table
     console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
     samples_table = Table(show_header=True)
@@ -146,40 +147,42 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     samples_table.add_column("Status")
     samples_table.add_column("OCR Text")
     samples_table.add_column("Ground Truth")
-    
+
     # Collect all samples
     all_samples = []
     for page, results in test_results.items():
         for result in results:
-            all_samples.append({
-                'image': Path(page).name,
-                'distance': result['distance'],
-                'passed': result['passed'],
-                'text': result['text'],
-                'gt': result['gt']
-            })
-    
+            all_samples.append(
+                {
+                    "image": Path(page).name,
+                    "distance": result["distance"],
+                    "passed": result["passed"],
+                    "text": result["text"],
+                    "gt": result["gt"],
+                }
+            )
+
     # Sort by distance
-    all_samples.sort(key=lambda x: x['distance'])
-    
+    all_samples.sort(key=lambda x: x["distance"])
+
     # Add rows
     for sample in all_samples:
         status = Text()
-        if sample['distance'] == 0:
+        if sample["distance"] == 0:
             status.append("PERFECT", style="green")
-        elif sample['passed']:
+        elif sample["passed"]:
             status.append("PASSED", style="yellow")
         else:
             status.append("FAILED", style="red")
-            
+
         samples_table.add_row(
-            sample['image'],
-            str(sample['distance']),
+            sample["image"],
+            str(sample["distance"]),
             status,
-            truncate_text(sample['text']),
-            truncate_text(sample['gt'])
+            truncate_text(sample["text"]),
+            truncate_text(sample["gt"]),
         )
-    
+
     console.print(samples_table)
 
 
