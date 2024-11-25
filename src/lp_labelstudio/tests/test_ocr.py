@@ -112,11 +112,13 @@ def test_ocr_box(page):
                             
                     line_height = get_text_size('A')[1] + padding
                     max_width = max(get_text_size(line)[0] for line in lines)
+                    # Position text above the box with more padding
+                    text_top = coords[1] - (line_height * len(lines)) - padding * 2
                     bg_bbox = [
                         coords[0], 
-                        coords[1] - (line_height * len(lines)) - padding,
+                        text_top,
                         coords[0] + max_width + padding*2,
-                        coords[1] - padding
+                        text_top + (line_height * len(lines)) + padding
                     ]
                     
                     # Draw semi-transparent background
@@ -128,7 +130,7 @@ def test_ocr_box(page):
                     
                     # Draw each line of text
                     for i, line in enumerate(lines):
-                        y_pos = coords[1] - (line_height * (len(lines) - i))
+                        y_pos = text_top + (i * line_height)
                         draw.text(
                             (coords[0] + padding, y_pos),
                             line,
