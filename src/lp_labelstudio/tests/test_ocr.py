@@ -27,8 +27,16 @@ def test_ocr_box(page):
 
     image_path = TEST_FILES_ROOT / page
     results, img_width, img_height = get_page_annotations(image_path)
+    
+    # Prepare output directory
+    test_results_dir = TEST_FILES_ROOT / 'test-results'
+    test_results_dir.mkdir(exist_ok=True)
 
     with Image.open(image_path) as img:
+        # Create a single copy of the image for drawing all boxes
+        img_draw = img.copy()
+        draw = ImageDraw.Draw(img_draw)
+        
         # Test OCR on headlines
         for i in range(0, len(results), 2):
             bbox = results[i]
@@ -52,18 +60,16 @@ def test_ocr_box(page):
                     box_results is not None
                 ), f"OCR should return results for headline at ({x}, {y})"
 
-                # Generate an image overlaying predictions over the original image
-                # and save it in TEST_FILES_ROOT / 'test-results'
-                test_results_dir = TEST_FILES_ROOT / 'test-results'
-                test_results_dir.mkdir(exist_ok=True)
+                # Draw original bounding box
+                draw.rectangle(
+                    [x, y, x + width, y + height],
+                    outline='blue',
+                    width=2
+                )
                 
-                # Create a copy of the image for drawing
-                img_draw = img.copy()
-                draw = ImageDraw.Draw(img_draw)
-                
-                # Draw boxes and text for each OCR result
+                # Draw OCR results
                 for coords, (text, confidence) in box_results:
-                    # Draw rectangle
+                    # Draw OCR detected rectangle
                     draw.rectangle(
                         [coords[0], coords[1], coords[2], coords[3]], 
                         outline='red', 
@@ -75,7 +81,7 @@ def test_ocr_box(page):
                         f"{text} ({confidence:.2f})",
                         fill='red'
                     )
-                
-                # Save the annotated image
-                output_path = test_results_dir / f"ocr_overlay_{Path(page).stem}_{x}_{y}.png"
-                img_draw.save(output_path)
+        
+        # Save the annotated image with all boxes
+        output_path = test_results_dir / f"ocr_overlay_{Path(page).stem}.png"
+        img_draw.save(output_path)
