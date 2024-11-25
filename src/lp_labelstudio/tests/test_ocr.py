@@ -1,7 +1,7 @@
 import pytest
 from lp_labelstudio.cli import process_image
 from lp_labelstudio.tests.setup_test import prepare, PAGES, TEST_FILES_ROOT
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 from lp_labelstudio.ocr import ocr_box
 
@@ -52,5 +52,30 @@ def test_ocr_box(page):
                     box_results is not None
                 ), f"OCR should return results for headline at ({x}, {y})"
 
-                # Generate an image overlaying predicitons over the original image
+                # Generate an image overlaying predictions over the original image
                 # and save it in TEST_FILES_ROOT / 'test-results'
+                test_results_dir = TEST_FILES_ROOT / 'test-results'
+                test_results_dir.mkdir(exist_ok=True)
+                
+                # Create a copy of the image for drawing
+                img_draw = img.copy()
+                draw = ImageDraw.Draw(img_draw)
+                
+                # Draw boxes and text for each OCR result
+                for coords, (text, confidence) in box_results:
+                    # Draw rectangle
+                    draw.rectangle(
+                        [coords[0], coords[1], coords[2], coords[3]], 
+                        outline='red', 
+                        width=2
+                    )
+                    # Draw text with confidence
+                    draw.text(
+                        (coords[0], coords[1] - 20),
+                        f"{text} ({confidence:.2f})",
+                        fill='red'
+                    )
+                
+                # Save the annotated image
+                output_path = test_results_dir / f"ocr_overlay_{Path(page).stem}_{x}_{y}.png"
+                img_draw.save(output_path)
