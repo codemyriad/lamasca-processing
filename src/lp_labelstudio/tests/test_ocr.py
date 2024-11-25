@@ -68,7 +68,10 @@ def test_ocr_box(page):
                 box_results = ocr_box(img, (x, y, width, height))
                 assert box_results is not None, f"OCR should return results for headline at ({x}, {y})"
 
-                # Concatenate all recognized text
+                cropped_img = img.crop((x, y, x + width, y + height))
+                new_height = height * 2
+                new_img = Image.new('RGB', (width, new_height), color='white')
+                new_img.paste(cropped_img, (0, 0))
                 recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
 
                 # Define the ground truth text file path
