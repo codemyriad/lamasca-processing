@@ -2,6 +2,7 @@ import pytest
 from rich.console import Console
 from rich.table import Table
 from collections import defaultdict
+from typing import Dict, List
 from statistics import mean
 import pytest
 from lp_labelstudio.cli import process_image
@@ -58,11 +59,35 @@ from pathlib import Path
 from PIL import Image
 
 
-# Store test results for summary
-test_results = defaultdict(list)
+@pytest.fixture(scope="session")
+def test_results():
+    results = defaultdict(list)
+    yield results
+    
+    # Print results at the end of the session
+    console = Console()
+    for page, page_results in results.items():
+        if page_results:
+            console.print(f"\n[bold]Summary for {page}:[/bold]")
+            summary_table = Table(show_header=True)
+            summary_table.add_column("Status", style="bold")
+            summary_table.add_column("Count")
+            summary_table.add_column("Avg Distance")
+
+            passed = sum(1 for r in page_results if r["passed"])
+            failed = len(page_results) - passed
+            avg_dist = sum(r["distance"] for r in page_results) / len(page_results)
+
+            summary_table.add_row("✓ Passed", str(passed), "", style="green")
+            if failed:
+                summary_table.add_row("✗ Failed", str(failed), "", style="red")
+            summary_table.add_row("Average Distance", "", f"{avg_dist:.1f}")
+            console.print(summary_table)
+
+    print_final_summary(results)
 
 
-def print_final_summary():
+def print_final_summary(test_results: Dict[str, List[dict]]):
     """Print final summary table with statistics for all images."""
     if not test_results:
         return
@@ -117,7 +142,7 @@ def print_final_summary():
 
 
 @pytest.mark.parametrize("page", PAGES)
-def test_ocr_box(page):
+def test_ocr_box(page, test_results):
     page_results = []
     from lp_labelstudio.cli import get_page_annotations
 
@@ -198,23 +223,6 @@ def test_ocr_box(page):
                         output_path = test_results_dir / output_filename
                         file_url = f"file://{output_path.absolute()}"
 
-                        table = Table(
-                            show_header=True,
-                            show_lines=False,
-                            padding=(0, 1),
-                            box=None,
-                            border_style="gray50",
-                        )
-                        table.add_column("OCR", style="cyan")
-                        table.add_column("GT", style="green")
-                        table.add_column("Dist", justify="right")
-                        table.add_column("Image")
-
-                        table.add_row(
-                            recognized_text, gt_entry, str(distance), file_url
-                        )
-                        console.print(table)
-
                         # Store result for summary
                         test_results[page].append(
                             {
@@ -231,25 +239,6 @@ def test_ocr_box(page):
                             f"which is more than the allowed threshold of {max_distance_threshold}."
                         )
 
-    # Print summary table after all tests for this page
-    if test_results[page]:
-        console.print(f"\n[bold]Summary for {page}:[/bold]")
-        summary_table = Table(show_header=True)
-        summary_table.add_column("Status", style="bold")
-        summary_table.add_column("Count")
-        summary_table.add_column("Avg Distance")
-
-        results = test_results[page]
-        passed = sum(1 for r in results if r["passed"])
-        failed = len(results) - passed
-        avg_dist = sum(r["distance"] for r in results) / len(results)
-
-        summary_table.add_row("✓ Passed", str(passed), "", style="green")
-        if failed:
-            summary_table.add_row("✗ Failed", str(failed), "", style="red")
-        summary_table.add_row("Average Distance", "", f"{avg_dist:.1f}")
-        console.print(summary_table)
-
         # Create visualization
         cropped_img = img.crop((x, y, x + width, y + height))
         new_height = height * 2
@@ -265,6 +254,3 @@ def test_ocr_box(page):
         output_path = test_results_dir / output_filename
         new_img.save(output_path)
 
-
-# Print final summary after all tests complete
-print_final_summary()
