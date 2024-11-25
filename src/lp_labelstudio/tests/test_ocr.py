@@ -81,6 +81,41 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     if not test_results:
         return
 
+    # Collect all samples
+    all_samples = []
+    for page, results in test_results.items():
+        for result in results:
+            all_samples.append(
+                {
+                    "image": Path(page).name,
+                    "distance": result["distance"],
+                    "passed": result["passed"],
+                    "text": result["text"],
+                    "gt": result["gt"],
+                    "url": result["url"]
+                }
+            )
+
+    # Sort by distance
+    all_samples.sort(key=lambda x: x["distance"])
+
+    # Add rows to the samples table
+    for sample in all_samples:
+        # Add URL row (appears as a section header)
+        samples_table.add_row(
+            f"[blue]{sample['url']}[/blue]",
+            "",  # Empty cells for other columns
+            "",
+            style="bold",
+            end_section=True  # Adds a separation after this row
+        )
+        # Add data row with OCR comparison details
+        samples_table.add_row(
+            str(sample["distance"]),
+            truncate_text(sample["text"]),
+            truncate_text(sample["gt"]),
+        )
+
     console.print("\n[bold]Final Summary Across All Images:[/bold]")
     summary_table = Table(show_header=True)
     summary_table.add_column("URL", style="blue")
@@ -146,40 +181,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     samples_table.add_column("OCR Text")
     samples_table.add_column("Ground Truth")
 
-    # Collect all samples
-    all_samples = []
-    for page, results in test_results.items():
-        for result in results:
-            all_samples.append(
-                {
-                    "image": Path(page).name,
-                    "distance": result["distance"],
-                    "passed": result["passed"],
-                    "text": result["text"],
-                    "gt": result["gt"],
-                    "url": result["url"]
-                }
-            )
-
-    # Sort by distance
-    all_samples.sort(key=lambda x: x["distance"])
-
-    # Add rows
-    for sample in all_samples:
-        # Add URL row with full colspan
-        samples_table.add_row(
-            f"[blue]{sample['url']}[/blue]",
-            "",
-            "",
-            end_section=True
-        )
-        # Add data row
-        samples_table.add_row(
-            str(sample["distance"]),
-            truncate_text(sample["text"]),
-            truncate_text(sample["gt"]),
-        )
-
+    console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
     console.print(samples_table)
 
 
