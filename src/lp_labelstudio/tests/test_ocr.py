@@ -34,7 +34,7 @@ def test_ocr_box(page):
             bbox = results[i]
             label_info = results[i + 1]
 
-            if label_info["value"]["labels"][0] == "Headline":
+            if label_info["value"]["labels"][0] in ["Headline", "SubHeadline"]:
                 # Calculate pixel coordinates
                 x = int(bbox["value"]["x"] * img_width / 100)
                 y = int(bbox["value"]["y"] * img_height / 100)
@@ -43,8 +43,14 @@ def test_ocr_box(page):
 
                 # Process the box
                 box_results = ocr_box(img, (x, y, width, height))
+                # box_results looks like this:
+                # [([1471, 933, 3195, 988], ('l medico Jgo Sturleseil portabandiera dei pro', 0.9333662986755371)),
+                #  ([1471, 933, 3195, 988], ('essisti alla Camero', 0.8172330260276794))]
 
                 # Basic assertions
                 assert (
                     box_results is not None
                 ), f"OCR should return results for headline at ({x}, {y})"
+
+                # Generate an image overlaying predicitons over the original image
+                # and save it in TEST_FILES_ROOT / 'test-results'
