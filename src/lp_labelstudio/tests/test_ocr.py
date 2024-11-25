@@ -105,8 +105,13 @@ def test_ocr_box(page):
                     
                     # Calculate text background
                     padding = 4
-                    line_height = font.getsize('A')[1] + padding
-                    max_width = max(font.getsize(line)[0] for line in lines)
+                    # Get text dimensions using getbbox() instead of deprecated getsize()
+                    def get_text_size(text):
+                        bbox = font.getbbox(text)
+                        return bbox[2] - bbox[0], bbox[3] - bbox[1]
+                            
+                    line_height = get_text_size('A')[1] + padding
+                    max_width = max(get_text_size(line)[0] for line in lines)
                     bg_bbox = [
                         coords[0], 
                         coords[1] - (line_height * len(lines)) - padding,
