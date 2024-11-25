@@ -1,4 +1,9 @@
 import pytest
+from rich.console import Console
+from rich.progress import track
+from rich.panel import Panel
+from rich.table import Table
+import pytest
 from lp_labelstudio.cli import process_image
 from lp_labelstudio.tests.setup_test import prepare, PAGES, TEST_FILES_ROOT
 from PIL import Image, ImageDraw, ImageFont
@@ -13,6 +18,8 @@ import logging
 
 logger = get_logger()
 logger.setLevel(logging.ERROR)
+
+console = Console()
 
 
 def get_font(size=36):
@@ -63,7 +70,8 @@ def test_ocr_box(page):
     test_results_dir.mkdir(exist_ok=True)
 
     with Image.open(image_path) as img:
-        for i in range(0, len(results), 2):
+        total_boxes = len(results) // 2
+        for i in track(range(0, len(results), 2), description=f"Processing {page}", total=total_boxes):
             bbox = results[i]
             label_info = results[i + 1]
 
@@ -125,10 +133,15 @@ def test_ocr_box(page):
                         distance = Levenshtein.distance(recognized_text, gt_entry)
                         max_distance_threshold = 10
 
-                        print(f"\nTesting OCR for {image_name} box {box_id}:")
-                        print(f"OCR text: {recognized_text}")
-                        print(f"Ground truth: {gt_entry}")
-                        print(f"Levenshtein distance: {distance}")
+                        table = Table(title=f"OCR Test Results for {image_name} box {box_id}")
+                        table.add_column("Type", style="cyan")
+                        table.add_column("Text", style="white")
+                        table.add_row("OCR text", recognized_text)
+                        table.add_row("Ground truth", gt_entry)
+                        table.add_row("Levenshtein distance", str(distance))
+                        
+                        style = "green" if distance <= max_distance_threshold else "red"
+                        console.print(Panel(table, style=style))
 
                         assert distance <= max_distance_threshold, (
                             f"OCR result differs from ground truth by {distance} characters, "
