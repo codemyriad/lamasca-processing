@@ -8,9 +8,6 @@ jobs:
     name: Smoke test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
       - name: Setup environment
         uses: ./.github/actions/setup
 
@@ -27,9 +24,6 @@ jobs:
     name: Run pytest tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
       - name: Setup environment
         uses: ./.github/actions/setup
 
