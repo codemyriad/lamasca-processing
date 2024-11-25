@@ -99,7 +99,11 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     # Sort by distance
     all_samples.sort(key=lambda x: x["distance"])
 
-    # Add rows to the samples table
+    # Create samples table
+    samples_table = Table(show_header=True)
+    samples_table.add_column("Distance")
+    samples_table.add_column("OCR Text")
+    samples_table.add_column("Ground Truth")
     for sample in all_samples:
         # Add URL row (appears as a section header)
         samples_table.add_row(
