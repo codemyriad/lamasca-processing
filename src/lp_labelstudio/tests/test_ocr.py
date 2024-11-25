@@ -60,6 +60,7 @@ from PIL import Image
 # Store test results for summary
 test_results = defaultdict(list)
 
+
 @pytest.mark.parametrize("page", PAGES)
 def test_ocr_box(page):
     page_results = []
@@ -158,13 +159,15 @@ def test_ocr_box(page):
                         console.print(table)
 
                         # Store result for summary
-                        test_results[page].append({
-                            'text': recognized_text,
-                            'gt': gt_entry,
-                            'distance': distance,
-                            'passed': distance <= max_distance_threshold,
-                            'url': file_url
-                        })
+                        test_results[page].append(
+                            {
+                                "text": recognized_text,
+                                "gt": gt_entry,
+                                "distance": distance,
+                                "passed": distance <= max_distance_threshold,
+                                "url": file_url,
+                            }
+                        )
 
                         assert distance <= max_distance_threshold, (
                             f"OCR result differs from ground truth by {distance} characters, "
@@ -178,30 +181,16 @@ def test_ocr_box(page):
         summary_table.add_column("Status", style="bold")
         summary_table.add_column("Count")
         summary_table.add_column("Avg Distance")
-        
+
         results = test_results[page]
-        passed = sum(1 for r in results if r['passed'])
+        passed = sum(1 for r in results if r["passed"])
         failed = len(results) - passed
-        avg_dist = sum(r['distance'] for r in results) / len(results)
-        
-        summary_table.add_row(
-            "✓ Passed", 
-            str(passed), 
-            "", 
-            style="green"
-        )
+        avg_dist = sum(r["distance"] for r in results) / len(results)
+
+        summary_table.add_row("✓ Passed", str(passed), "", style="green")
         if failed:
-            summary_table.add_row(
-                "✗ Failed", 
-                str(failed), 
-                "", 
-                style="red"
-            )
-        summary_table.add_row(
-            "Average Distance",
-            "",
-            f"{avg_dist:.1f}"
-        )
+            summary_table.add_row("✗ Failed", str(failed), "", style="red")
+        summary_table.add_row("Average Distance", "", f"{avg_dist:.1f}")
         console.print(summary_table)
 
         # Create visualization
