@@ -50,8 +50,8 @@ def get_ocr():
     ocr = OCR_CACHE.get("ocr")
     if not ocr:
         ocr = OCR_CACHE["ocr"] = PaddleOCR(
-            use_angle_cls=True,
-            lang="fr",
+            use_angle_cls=False,
+            lang="it",
             rec_algorithm="SVTR_LCNet",
             det_db_box_thresh=0.3,
         )
