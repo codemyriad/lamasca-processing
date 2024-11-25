@@ -7,6 +7,13 @@ from lp_labelstudio.ocr import ocr_box
 import Levenshtein
 from lp_labelstudio.tests.ocr_ground_truth import ground_truth_data
 
+from ppocr.utils.logging import get_logger
+import logging
+
+
+logger = get_logger()
+logger.setLevel(logging.ERROR)
+
 
 def get_font(size=36):
     """Get a font with fallback options."""
@@ -16,7 +23,7 @@ def get_font(size=36):
             "DejaVuSans.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "arial.ttf",
-            "/System/Library/Fonts/Helvetica.ttf"
+            "/System/Library/Fonts/Helvetica.ttf",
         ]
         for font_path in font_paths:
             try:
@@ -52,7 +59,7 @@ def test_ocr_box(page):
     results, img_width, img_height = get_page_annotations(image_path)
 
     # Prepare output directory
-    test_results_dir = TEST_FILES_ROOT / 'test-results'
+    test_results_dir = TEST_FILES_ROOT / "test-results"
     test_results_dir.mkdir(exist_ok=True)
 
     with Image.open(image_path) as img:
@@ -67,10 +74,14 @@ def test_ocr_box(page):
                 height = int(bbox["value"]["height"] * img_height / 100)
 
                 box_results = ocr_box(img, (x, y, width, height))
-                assert box_results is not None, f"OCR should return results for headline at ({x}, {y})"
+                assert (
+                    box_results is not None
+                ), f"OCR should return results for headline at ({x}, {y})"
 
-                recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
-                
+                recognized_text = "\n".join(
+                    [text for coords, (text, confidence) in box_results]
+                )
+
                 # Create identifier for this box
                 image_name = Path(page).name
                 box_id = f"{x}_{y}_{width}_{height}"
@@ -78,28 +89,39 @@ def test_ocr_box(page):
                 # Initialize or update ground truth data structure
                 if image_name not in ground_truth_data:
                     ground_truth_data[image_name] = {}
-                
+
                 if box_id not in ground_truth_data[image_name]:
                     ground_truth_data[image_name][box_id] = {
                         "ocr": recognized_text,
-                        "ground_truth": f"# {recognized_text}"  # Commented out by default
+                        "ground_truth": f"# {recognized_text}",  # Commented out by default
                     }
-                
+
                 # Save the updated ground truth data
-                with open(Path(__file__).parent / "ocr_ground_truth.py", "w", encoding="utf-8") as f:
+                with open(
+                    Path(__file__).parent / "ocr_ground_truth.py", "w", encoding="utf-8"
+                ) as f:
                     f.write('"""\nGround truth data for OCR testing.\n\n')
-                    f.write('Format:\n')
+                    f.write("Format:\n")
                     f.write('{\n    "image_name": {\n        "x_y_width_height": {\n')
                     f.write('            "ocr": "text from OCR",\n')
-                    f.write('            "ground_truth": "# correct text after manual verification"\n')
-                    f.write('        }\n    }\n}\n\n')
-                    f.write('Uncomment the ground_truth lines as you verify them.\n"""\n\n')
+                    f.write(
+                        '            "ground_truth": "# correct text after manual verification"\n'
+                    )
+                    f.write("        }\n    }\n}\n\n")
+                    f.write(
+                        'Uncomment the ground_truth lines as you verify them.\n"""\n\n'
+                    )
                     f.write(f"ground_truth_data = {repr(ground_truth_data)}\n")
 
                 # Check if this box has verified ground truth (uncommented)
-                if image_name in ground_truth_data and box_id in ground_truth_data[image_name]:
+                if (
+                    image_name in ground_truth_data
+                    and box_id in ground_truth_data[image_name]
+                ):
                     gt_entry = ground_truth_data[image_name][box_id]["ground_truth"]
-                    if not gt_entry.startswith("#"):  # Only test if ground truth is uncommented
+                    if not gt_entry.startswith(
+                        "#"
+                    ):  # Only test if ground truth is uncommented
                         distance = Levenshtein.distance(recognized_text, gt_entry)
                         max_distance_threshold = 10
 
@@ -116,18 +138,13 @@ def test_ocr_box(page):
                 # Create visualization
                 cropped_img = img.crop((x, y, x + width, y + height))
                 new_height = height * 2
-                new_img = Image.new('RGB', (width, new_height), color='white')
+                new_img = Image.new("RGB", (width, new_height), color="white")
                 new_img.paste(cropped_img, (0, 0))
                 draw = ImageDraw.Draw(new_img)
                 font = get_font(size=24)
                 text_start_y = height + 10
 
-                draw.text(
-                    (10, text_start_y),
-                    recognized_text,
-                    fill='black',
-                    font=font
-                )
+                draw.text((10, text_start_y), recognized_text, fill="black", font=font)
 
                 output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
                 output_path = test_results_dir / output_filename
