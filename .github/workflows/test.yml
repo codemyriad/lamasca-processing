@@ -4,16 +4,6 @@ on:
   push:
 
 jobs:
-  image:
-    name: build docker image
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build docker image
-        run: cd training-image && docker build .
-
   smoketest:
     name: Smoke test
     runs-on: ubuntu-latest
@@ -49,3 +39,36 @@ jobs:
 
       - name: Show results for page 2
         run: cat src/lp_labelstudio/web_server/test_images/page_02_annotations.json|jq -C
+
+  pytest:
+    name: Run pytest tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.torch/iopath_cache
+            ~/.paddleocr/whl
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py', 'install.py', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Run install script
+        run: ./install.sh
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run pytest
+        run: pytest

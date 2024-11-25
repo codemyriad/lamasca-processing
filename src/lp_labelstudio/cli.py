@@ -92,12 +92,16 @@ def process_image(image_path_string: str, redo: bool) -> None:
 
     rprint(table)
 
-    # Initialize PaddleOCR with word-level detection
+    # Initialize OCR and process image
     from paddleocr import PaddleOCR
     from lp_labelstudio.alto_generator import create_alto_xml
+    from lp_labelstudio.ocr import ocr_box
 
     ocr = PaddleOCR(
-        use_angle_cls=True, lang="fr", rec_algorithm="SVTR_LCNet", det_db_box_thresh=0.3
+        use_angle_cls=True,
+        lang="fr",
+        rec_algorithm="SVTR_LCNet",
+        det_db_box_thresh=0.3
     )
 
     # Open the image
@@ -109,7 +113,6 @@ def process_image(image_path_string: str, redo: bool) -> None:
         # Process headlines
         console.print("\n[bold blue]Processing Headlines:[/]")
         for i in range(0, len(results), 2):
-            # TODO: extract the code that actually does the OCR into a ocr_box function
             bbox = results[i]
             label_info = results[i + 1]
 
@@ -120,34 +123,12 @@ def process_image(image_path_string: str, redo: bool) -> None:
                 width = int(bbox["value"]["width"] * img_width / 100)
                 height = int(bbox["value"]["height"] * img_height / 100)
 
-                # Crop the image to the headline area
-                headline_img = img.crop((x, y, x + width, y + height))
-
-                # Run OCR on the cropped area with word-level detection
-                ocr_result = ocr.ocr(
-                    np.array(headline_img), cls=True, det=True, rec=True
-                )
-
-                if ocr_result and ocr_result[0]:
-                    for line in ocr_result[0]:
-                        bbox_points = line[0]  # [[x1,y1], [x2,y1], [x3,y2], [x4,y2]]
-                        text, confidence = line[1]
-
-                        # Convert relative coordinates to absolute
-                        # Take min/max coordinates to get bounding box
-                        x1 = min(point[0] for point in bbox_points)
-                        y1 = min(point[1] for point in bbox_points)
-                        x2 = max(point[0] for point in bbox_points)
-                        y2 = max(point[1] for point in bbox_points)
-
-                        abs_bbox = [
-                            x + x1,  # x1
-                            y + y1,  # y1
-                            x + x2,  # x2
-                            y + y2,  # y2
-                        ]
-
-                        all_ocr_results.append((abs_bbox, (text, confidence)))
+                # Process the box
+                box_results = ocr_box(img, (x, y, width, height), ocr)
+                
+                if box_results:
+                    all_ocr_results.extend(box_results)
+                    for abs_bbox, (text, confidence) in box_results:
                         console.print(
                             f"[yellow]Position:[/] ({abs_bbox[0]:.1f}, {abs_bbox[1]:.1f})"
                         )
