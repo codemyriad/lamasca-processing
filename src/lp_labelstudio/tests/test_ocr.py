@@ -10,5 +10,10 @@ def setup():
     prepare()
 
 @pytest.mark.parametrize("page", PAGES)
-def test_ocr_box(page):
+def test_process_image(page):
     process_image.callback(TEST_FILES_ROOT / page, redo=True)
+
+
+@pytest.mark.parametrize("page", PAGES)
+def test_ocr_box(page):
+    # We need to factor out some functionality from `process_image` to use it here too
