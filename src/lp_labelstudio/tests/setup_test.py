@@ -23,7 +23,14 @@ def prepare():
             print(f"Downloading {fullpath}")
             url = BASEURL + filepath
             response = requests.get(url)
-            # Save the file in `fullpath`
+            # Create parent directory if it doesn't exist
+            fullpath.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Save the file
+            if response.status_code == 200:
+                fullpath.write_bytes(response.content)
+            else:
+                print(f"Failed to download {url}: {response.status_code}")
 
 if __name__ == '__main__':
     prepare()
