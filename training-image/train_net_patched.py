@@ -147,10 +147,7 @@ def main(args):
     )
 
     register_coco_instances(
-        f"{args.dataset_name}-val", 
-        {}, 
-        args.json_annotation_val, 
-        args.image_path_val
+        f"{args.dataset_name}-val", {}, args.json_annotation_val, args.image_path_val
     )
     cfg = setup(args)
 
@@ -194,9 +191,7 @@ if __name__ == "__main__":
     parser = default_argument_parser()
 
     # Extra Configurations for dataset names and paths
-    parser.add_argument(
-        "--dataset_name", 
-        help="The Dataset Name")
+    parser.add_argument("--dataset_name", help="The Dataset Name")
     parser.add_argument(
         "--json_annotation_train",
         help="The path to the training set JSON annotation",

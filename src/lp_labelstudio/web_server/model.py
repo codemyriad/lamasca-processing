@@ -28,7 +28,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-MODEL_PATH =  os.environ.get("MODEL_PATH")
+MODEL_PATH = os.environ.get("MODEL_PATH")
+
 
 class LayoutParserModel(LabelStudioMLBase):
     """Custom ML Backend model"""
@@ -39,7 +40,9 @@ class LayoutParserModel(LabelStudioMLBase):
         label_map = {cat["id"]: cat["name"] for cat in NEWSPAPER_CATEGORIES}
         if MODEL_PATH:
             self.model = lp.models.Detectron2LayoutModel(
-                MODEL_PATH + "/config.yml", MODEL_PATH + "/model_final.pth", label_map=label_map
+                MODEL_PATH + "/config.yml",
+                MODEL_PATH + "/model_final.pth",
+                label_map=label_map,
             )
         else:
             self.model = lp.models.Detectron2LayoutModel(

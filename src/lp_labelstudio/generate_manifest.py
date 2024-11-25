@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 from pathlib import Path
 from collections import defaultdict
 
+
 def get_image_url(image_path: str) -> str:
     """Convert local image path to cloud storage URL.
 
@@ -12,7 +13,11 @@ def get_image_url(image_path: str) -> str:
     >>> get_image_url("/tmp/newspapers/image.jpg")
     'https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers/image.jpg'
     """
-    return image_path.replace("/tmp/newspapers", "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers")
+    return image_path.replace(
+        "/tmp/newspapers",
+        "https://eu2.contabostorage.com/55b89d240dba4119bef0d60e8402458a:newspapers",
+    )
+
 
 def get_page_number(jpeg_file: str) -> int:
     """Extract page number from JPEG filename.
@@ -23,6 +28,7 @@ def get_page_number(jpeg_file: str) -> int:
     """
     return int(jpeg_file.split(".")[0].replace("page_", ""))
 
+
 def get_date(directory: str) -> str:
     """Extract date from directory name.
 
@@ -30,7 +36,8 @@ def get_date(directory: str) -> str:
     >>> get_date("/path/to/lamasca-2023-05-15")
     '2023-05-15'
     """
-    return directory.split('/')[-1].replace("lamasca-", "")
+    return directory.split("/")[-1].replace("lamasca-", "")
+
 
 @click.argument(
     "directories",
@@ -47,11 +54,13 @@ def generate_labelstudio_manifest(directories: List[str]) -> List[Dict[str, Any]
 
     for directory in directories:
         manifest: List[Dict[str, Any]] = []
-        if directory.endswith('/'):
+        if directory.endswith("/"):
             directory = directory[:-1]
 
         publication_name: str = os.path.basename(directory)
-        jpeg_files: List[str] = [f for f in os.listdir(directory) if f.lower().endswith('.jpeg')]
+        jpeg_files: List[str] = [
+            f for f in os.listdir(directory) if f.lower().endswith(".jpeg")
+        ]
 
         for jpeg_file in jpeg_files:
             image_path: str = os.path.join(directory, jpeg_file)
@@ -70,7 +79,9 @@ def generate_labelstudio_manifest(directories: List[str]) -> List[Dict[str, Any]
         num_annotations = 0
         annotations_path = Path(directory) / "annotations"
         if annotations_path.exists():
-            num_annotations = augment_manifest_with_annotations(manifest, directory, annotations_path)
+            num_annotations = augment_manifest_with_annotations(
+                manifest, directory, annotations_path
+            )
         total_issues += 1
         total_pages += len(manifest)
         total_annotations += num_annotations
@@ -80,16 +91,24 @@ def generate_labelstudio_manifest(directories: List[str]) -> List[Dict[str, Any]
         output = Path(directory) / "manifest.json"
         with output.open("w") as f:
             json.dump(manifest, f, indent=2)
-        click.echo(click.style(f"Manifest file generated with {num_annotations} annotations: {output}", fg="green"))
+        click.echo(
+            click.style(
+                f"Manifest file generated with {num_annotations} annotations: {output}",
+                fg="green",
+            )
+        )
 
     click.echo(click.style(f"Total issues included: {total_issues}", fg="green"))
     click.echo(click.style(f"Total pages included: {total_pages}", fg="green"))
-    click.echo(click.style(f"Total annotations included: {total_annotations}", fg="green"))
+    click.echo(
+        click.style(f"Total annotations included: {total_annotations}", fg="green")
+    )
 
     return all_manifests
 
+
 def read_xml_file(file_path: str) -> str:
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         return file.read()
 
 
@@ -114,6 +133,7 @@ def augment_manifest_with_annotations(manifest, directory, annotations_path):
             total_annotated += 1
     return total_annotated
 
+
 def get_task_id(directory_name: str, filename: str) -> str:
     """
     >>> directory_name = "/tmp/newspapers/lamasca-pages/1994/lamasca-1994-01-12"
@@ -121,5 +141,5 @@ def get_task_id(directory_name: str, filename: str) -> str:
     >>> get_task_id(directory_name, filename)
     '1994-01-12-page01'
     """
-    date = directory_name.split('/')[-1]
+    date = directory_name.split("/")[-1]
     return f"{date}-{filename.split('.')[0]}"

@@ -29,7 +29,6 @@ def cli():
     pass
 
 
-
 cli.command(generate_labelstudio_manifest)
 
 
@@ -64,11 +63,12 @@ def process_image(image_path_string: str, redo: bool) -> None:
     all_pages_annotations = json.load(manifest_file.open())
 
     # Extract page number from filename (assuming format like page_01.jpeg)
-    current_page = int(image_path.stem.split('_')[1])
+    current_page = int(image_path.stem.split("_")[1])
 
     # Find annotations for current page
     page_annotations = [
-        annotation["annotations"][0] for annotation in all_pages_annotations
+        annotation["annotations"][0]
+        for annotation in all_pages_annotations
         if annotation["data"]["pageNumber"] == current_page
     ][0]
     table = Table(title="Annotations")
@@ -88,19 +88,17 @@ def process_image(image_path_string: str, redo: bool) -> None:
         x = bbox["value"]["x"]
         y = bbox["value"]["y"]
         label = label_info["value"]["labels"][0]
-        table.add_row(
-            label,
-            f"{width:.1f}",
-            f"{height:.1f}",
-            f"({x:.1f}, {y:.1f})"
-        )
+        table.add_row(label, f"{width:.1f}", f"{height:.1f}", f"({x:.1f}, {y:.1f})")
 
     rprint(table)
 
     # Initialize PaddleOCR with word-level detection
     from paddleocr import PaddleOCR
     from lp_labelstudio.alto_generator import create_alto_xml
-    ocr = PaddleOCR(use_angle_cls=True, lang='fr', rec_algorithm='SVTR_LCNet', det_db_box_thresh=0.3)
+
+    ocr = PaddleOCR(
+        use_angle_cls=True, lang="fr", rec_algorithm="SVTR_LCNet", det_db_box_thresh=0.3
+    )
 
     # Open the image
     with Image.open(image_path) as img:
@@ -125,36 +123,42 @@ def process_image(image_path_string: str, redo: bool) -> None:
                 headline_img = img.crop((x, y, x + width, y + height))
 
                 # Run OCR on the cropped area with word-level detection
-                ocr_result = ocr.ocr(np.array(headline_img), cls=True, det=True, rec=True)
+                ocr_result = ocr.ocr(
+                    np.array(headline_img), cls=True, det=True, rec=True
+                )
 
                 if ocr_result and ocr_result[0]:
                     for line in ocr_result[0]:
                         bbox_points = line[0]  # [[x1,y1], [x2,y1], [x3,y2], [x4,y2]]
                         text, confidence = line[1]
-                        
+
                         # Convert relative coordinates to absolute
                         # Take min/max coordinates to get bounding box
                         x1 = min(point[0] for point in bbox_points)
                         y1 = min(point[1] for point in bbox_points)
                         x2 = max(point[0] for point in bbox_points)
                         y2 = max(point[1] for point in bbox_points)
-                        
+
                         abs_bbox = [
                             x + x1,  # x1
                             y + y1,  # y1
                             x + x2,  # x2
-                            y + y2   # y2
+                            y + y2,  # y2
                         ]
-                        
+
                         all_ocr_results.append((abs_bbox, (text, confidence)))
-                        console.print(f"[yellow]Position:[/] ({abs_bbox[0]:.1f}, {abs_bbox[1]:.1f})")
-                        console.print(f"[green]Word:[/] {text} [yellow]Confidence:[/] {confidence:.2f}\n")
+                        console.print(
+                            f"[yellow]Position:[/] ({abs_bbox[0]:.1f}, {abs_bbox[1]:.1f})"
+                        )
+                        console.print(
+                            f"[green]Word:[/] {text} [yellow]Confidence:[/] {confidence:.2f}\n"
+                        )
                 else:
                     console.print(f"[red]No text detected[/] at position ({x}, {y})\n")
-        
+
         # Generate ALTO XML
         alto_xml = create_alto_xml(img_width, img_height, all_ocr_results)
-        
+
         # Save ALTO XML
         alto_path = os.path.splitext(image_path)[0] + ".alto.xml"
         with open(alto_path, "w", encoding="utf-8") as f:
@@ -215,11 +219,15 @@ def process_newspaper(directory: str, redo: bool) -> None:
 cli.add_command(escriptorium_group)
 cli.add_command(labelstudio_api)
 
+
 @cli.command()
-@click.argument('json_files', nargs=-1, type=click.Path(exists=True, file_okay=True, dir_okay=False))
+@click.argument(
+    "json_files", nargs=-1, type=click.Path(exists=True, file_okay=True, dir_okay=False)
+)
 def collect_coco(json_files):
     """Collect COCO data from multiple JSON files into a single output file."""
     from lp_labelstudio.collect_coco import collect_coco as cc
+
     if not json_files:
         click.echo("No JSON files found. Please check your input.")
         return
@@ -228,8 +236,10 @@ def collect_coco(json_files):
 
 
 @cli.command(name="generate-thumbnails")
-@click.argument('source_folder', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.argument('destination_folder', type=click.Path(file_okay=False, dir_okay=True))
+@click.argument(
+    "source_folder", type=click.Path(exists=True, file_okay=False, dir_okay=True)
+)
+@click.argument("destination_folder", type=click.Path(file_okay=False, dir_okay=True))
 def generate_thumbnails_command(source_folder: str, destination_folder: str):
     """Generate thumbnails from images in the source folder and save them in the destination folder."""
     click.echo(f"Generating thumbnails from {source_folder} to {destination_folder}")

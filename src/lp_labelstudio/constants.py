@@ -21,7 +21,7 @@ NEWSPAPER_CATEGORIES = [
     {"id": 9, "name": "Author"},
     {"id": 10, "name": "PageTitle"},
     {"id": 11, "name": "Date"},
-    {"id": 12, "name": "PageNumber"}
+    {"id": 12, "name": "PageNumber"},
 ]
 
 # Create NEWSPAPER_LABEL_MAP from NEWSPAPER_CATEGORIES

@@ -93,7 +93,9 @@ def upload_images(directory, document_id):
                         "document": document_id,
                         "order": parts_added + 1,
                     }
-                    response = requests.post(parts_url, headers=headers, data=data, files=files)
+                    response = requests.post(
+                        parts_url, headers=headers, data=data, files=files
+                    )
                     response.raise_for_status()
                     parts_added += 1
                     console.print(f"Uploaded part: {file}", style="green")

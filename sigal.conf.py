@@ -28,7 +28,7 @@ theme = "colorbox"
 # galleria_theme = 'classic'
 
 # Author. Used in the footer of the pages and in the author meta tag.
-author = 'Code Myriad'
+author = "Code Myriad"
 
 # Use originals in gallery (default: False). If True, this will bypass all
 # processing steps (resize, auto-orient, recompress, and any plugin-specific
@@ -224,8 +224,10 @@ ignore_files = []
 index_in_url = True
 
 # A list of links (tuples (title, URL))
-links = [('See github repository', 'https://github.com/codemyriad/lamasca-processing'),
-         ('Open ONI browsing', 'https://oni.cmzx.it/lccn/sn00000001/issues/')]
+links = [
+    ("See github repository", "https://github.com/codemyriad/lamasca-processing"),
+    ("Open ONI browsing", "https://oni.cmzx.it/lccn/sn00000001/issues/"),
+]
 
 # Google Analytics tracking code (UA-xxxx-x)
 # google_analytics = ''

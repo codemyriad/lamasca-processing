@@ -3,6 +3,7 @@ import sys
 import os
 import re
 
+
 def find_paddleocr_path():
     try:
         spec = importlib.util.find_spec("paddleocr")
@@ -16,8 +17,9 @@ def find_paddleocr_path():
             parts = error_msg.split("'")
             if len(parts) >= 2:
                 return os.path.dirname(parts[1])
-    
+
     return None
+
 
 def fix_paddleocr_imports(paddleocr_dir):
     paddleocr_file = os.path.join(paddleocr_dir, "paddleocr.py")
@@ -25,18 +27,21 @@ def fix_paddleocr_imports(paddleocr_dir):
         print(f"Error: {paddleocr_file} not found.")
         return
 
-    with open(paddleocr_file, 'r') as file:
+    with open(paddleocr_file, "r") as file:
         content = file.read()
 
     # Replace the import statements
-    modified_content = re.sub(r'from tools\.infer import', 'from paddleocr.tools.infer import', content)
+    modified_content = re.sub(
+        r"from tools\.infer import", "from paddleocr.tools.infer import", content
+    )
 
     if modified_content != content:
-        with open(paddleocr_file, 'w') as file:
+        with open(paddleocr_file, "w") as file:
             file.write(modified_content)
         print(f"Successfully updated {paddleocr_file}")
     else:
         print(f"No changes were necessary in {paddleocr_file}")
+
 
 def main():
     paddleocr_path = find_paddleocr_path()
@@ -45,6 +50,7 @@ def main():
         fix_paddleocr_imports(paddleocr_path)
     else:
         print("Unable to find PaddleOCR path.")
+
 
 if __name__ == "__main__":
     main()
