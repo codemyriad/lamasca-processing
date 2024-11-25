@@ -143,7 +143,6 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
     samples_table = Table(show_header=True)
     samples_table.add_column("Distance")
-    samples_table.add_column("URL", style="blue")
     samples_table.add_column("OCR Text")
     samples_table.add_column("Ground Truth")
 
@@ -167,9 +166,9 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
 
     # Add rows
     for sample in all_samples:
+        console.print(f"[blue]{sample['url']}[/blue]")
         samples_table.add_row(
             str(sample["distance"]),
-            sample["url"],
             truncate_text(sample["text"]),
             truncate_text(sample["gt"]),
         )
