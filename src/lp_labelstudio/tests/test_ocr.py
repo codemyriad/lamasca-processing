@@ -258,7 +258,9 @@ def test_ocr_box(page, test_results):
                 ):
                     gt_entry = ground_truth_data[image_name][box_id]["ground_truth"]
 
-                if gt_entry and not gt_entry.startswith("#"):  # Verified ground truth exists
+                if gt_entry and not gt_entry.startswith(
+                    "#"
+                ):  # Verified ground truth exists
                     distance = Levenshtein.distance(recognized_text, gt_entry)
                     max_distance_threshold = 100  # Practically disabled for now
 

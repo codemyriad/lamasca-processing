@@ -85,11 +85,11 @@ ground_truth_data = {
             "ocr": "Chi va, chi viene e\nhi si mette insieme",
             "ground_truth": "Chi va, chi viene e\nchi si mette insieme",
         },
-        "186_2741_909_32": {"ocr": "ATYT", "ground_truth": "# ATYT"},
-        "596_2820_71_22": {"ocr": "A", "ground_truth": "# A"},
+        "186_2741_909_32": {"ocr": "ATYT", "ground_truth": "Notizie dallo Stato Civile di Cuneo"},
+        "596_2820_71_22": {"ocr": "A", "ground_truth": "Nati"},
         "401_3134_467_20": {"ocr": "", "ground_truth": "# "},
         "548_3570_174_23": {"ocr": "Vatrinmo", "ground_truth": "# Vatrinmo"},
-        "591_3883_92_23": {"ocr": "Vort", "ground_truth": "# Vort"},
+        "591_3883_92_23": {"ocr": "Vort", "ground_truth": "Morti"},
         "1213_3880_365_136": {
             "ocr": "Farmacie\ndi turno",
             "ground_truth": "Farmacie\ndi turno",
@@ -108,7 +108,7 @@ ground_truth_data = {
         },
         "175_359_411_129": {
             "ocr": "Beppe e\na gran nasata",
-            "ground_truth": "# Beppe e\na gran nasata",
+            "ground_truth": "Beppe e\nla gran nasata",
         },
     },
     "page_03.jpeg": {
