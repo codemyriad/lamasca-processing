@@ -66,7 +66,6 @@ def process_image(image_path_string: str, redo: bool) -> None:
     table.add_column("Position", style="yellow")
 
     # Process results in pairs (bbox and label)
-    results = page_annotations["result"]
     for i in range(0, len(results), 2):
         bbox = results[i]
         label_info = results[i + 1]
