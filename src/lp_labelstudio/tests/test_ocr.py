@@ -1,9 +1,30 @@
 import pytest
 from lp_labelstudio.cli import process_image
 from lp_labelstudio.tests.setup_test import prepare, PAGES, TEST_FILES_ROOT
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from lp_labelstudio.ocr import ocr_box
+
+
+def get_font(size=36):
+    """Get a font with fallback options."""
+    try:
+        # Try different font paths
+        font_paths = [
+            "DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "arial.ttf",
+            "/System/Library/Fonts/Helvetica.ttf"
+        ]
+        for font_path in font_paths:
+            try:
+                return ImageFont.truetype(font_path, size)
+            except OSError:
+                continue
+        # If no fonts found, use default
+        return ImageFont.load_default()
+    except Exception:
+        return ImageFont.load_default()
 
 
 @pytest.fixture(autouse=True)
@@ -69,17 +90,19 @@ def test_ocr_box(page):
                 
                 # Draw OCR results
                 for coords, (text, confidence) in box_results:
-                    # Draw OCR detected rectangle
+                    # Draw OCR detected rectangle with thicker border
                     draw.rectangle(
                         [coords[0], coords[1], coords[2], coords[3]], 
                         outline='red', 
-                        width=2
+                        width=4
                     )
-                    # Draw text with confidence
+                    # Draw text with confidence using larger font
+                    font = get_font(36)
                     draw.text(
-                        (coords[0], coords[1] - 20),
+                        (coords[0], coords[1] - 40),  # Moved up to accommodate larger font
                         f"{text} ({confidence:.2f})",
-                        fill='red'
+                        fill='red',
+                        font=font
                     )
         
         # Save the annotated image with all boxes
