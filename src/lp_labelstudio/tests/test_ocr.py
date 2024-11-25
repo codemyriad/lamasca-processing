@@ -63,7 +63,7 @@ from PIL import Image
 def test_results():
     results = defaultdict(list)
     yield results
-    
+
     # Print results at the end of the session
     console = Console()
     for page, page_results in results.items():
@@ -253,4 +253,3 @@ def test_ocr_box(page, test_results):
         output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
         output_path = test_results_dir / output_filename
         new_img.save(output_path)
-
