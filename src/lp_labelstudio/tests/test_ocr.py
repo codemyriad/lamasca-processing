@@ -161,8 +161,8 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
                 }
             )
 
-    # Sort by distance
-    all_samples.sort(key=lambda x: x["distance"])
+    # Sort by distance (put unverified at the end)
+    all_samples.sort(key=lambda x: (x["distance"] == -1, x["distance"]))
 
     # Add rows
     current_url = None
@@ -171,7 +171,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
             # Add URL as a spanning header row
             samples_table.add_row(
                 f"[blue]{sample['url']}[/blue]",
-                str(sample["distance"]),
+                "Unverified" if sample["distance"] == -1 else str(sample["distance"]),
                 truncate_text(sample["text"]),
                 style="bold",
                 end_section=True,
@@ -245,39 +245,51 @@ def test_ocr_box(page, test_results):
                     )
                     f.write(f"ground_truth_data = {repr(ground_truth_data)}\n")
 
-                # Check if this box has verified ground truth (uncommented)
+                # Prepare file paths
+                output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
+                output_path = test_results_dir / output_filename
+                file_url = f"file://{output_path.absolute()}"
+
+                # Check if this box has ground truth
+                gt_entry = None
                 if (
                     image_name in ground_truth_data
                     and box_id in ground_truth_data[image_name]
                 ):
                     gt_entry = ground_truth_data[image_name][box_id]["ground_truth"]
-                    if not gt_entry.startswith(
-                        "#"
-                    ):  # Only test if ground truth is uncommented
-                        distance = Levenshtein.distance(recognized_text, gt_entry)
-                        max_distance_threshold = 100  # Practically disabled for now
 
-                        output_filename = (
-                            f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
-                        )
-                        output_path = test_results_dir / output_filename
-                        file_url = f"file://{output_path.absolute()}"
+                if gt_entry and not gt_entry.startswith("#"):  # Verified ground truth exists
+                    distance = Levenshtein.distance(recognized_text, gt_entry)
+                    max_distance_threshold = 100  # Practically disabled for now
 
-                        # Store result for summary
-                        test_results[page].append(
-                            {
-                                "text": recognized_text,
-                                "gt": gt_entry,
-                                "distance": distance,
-                                "passed": distance <= max_distance_threshold,
-                                "url": file_url,
-                            }
-                        )
+                    # Store result for summary
+                    test_results[page].append(
+                        {
+                            "text": recognized_text,
+                            "gt": gt_entry,
+                            "distance": distance,
+                            "passed": distance <= max_distance_threshold,
+                            "url": file_url,
+                            "verified": True,
+                        }
+                    )
 
-                        assert distance <= max_distance_threshold, (
-                            f"OCR result differs from ground truth by {distance} characters, "
-                            f"which is more than the allowed threshold of {max_distance_threshold}."
-                        )
+                    assert distance <= max_distance_threshold, (
+                        f"OCR result differs from ground truth by {distance} characters, "
+                        f"which is more than the allowed threshold of {max_distance_threshold}."
+                    )
+                else:  # No verified ground truth
+                    # Store result for summary with special handling
+                    test_results[page].append(
+                        {
+                            "text": recognized_text,
+                            "gt": gt_entry if gt_entry else "# Not verified yet",
+                            "distance": -1,  # Special value for unverified
+                            "passed": None,
+                            "url": file_url,
+                            "verified": False,
+                        }
+                    )
 
         # Create visualization
         cropped_img = img.crop((x, y, x + width, y + height))
