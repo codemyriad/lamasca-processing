@@ -139,6 +139,47 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
 
     console.print(summary_table)
 
+    # Print detailed samples table
+    console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
+    samples_table = Table(show_header=True)
+    samples_table.add_column("URL")
+    samples_table.add_column("Distance")
+    samples_table.add_column("Text")
+
+    # Collect all samples
+    all_samples = []
+    for page, results in test_results.items():
+        for result in results:
+            all_samples.append(
+                {
+                    "image": Path(page).name,
+                    "distance": result["distance"],
+                    "passed": result["passed"],
+                    "text": result["text"],
+                    "gt": result["gt"],
+                    "url": result["url"],
+                }
+            )
+
+    # Sort by distance (put unverified at the end)
+    all_samples.sort(key=lambda x: (x["distance"] == -1, x["distance"]))
+
+    # Add rows
+    current_url = None
+    for sample in all_samples:
+        if sample["url"] != current_url:
+            # Add URL as a spanning header row
+            samples_table.add_row(
+                f"[blue]{sample['url']}[/blue]",
+                "Unverified" if sample["distance"] == -1 else str(sample["distance"]),
+                truncate_text(sample["text"]),
+                style="bold",
+                end_section=True,
+            )
+            current_url = sample["url"]
+
+    console.print(samples_table)
+
     # Calculate and display OCR Quality Score
     if total_tests > 0:
         verified_results = sum(
@@ -183,47 +224,6 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
             end_section=True,
         )
         console.print(score_table)
-
-    # Print detailed samples table
-    console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
-    samples_table = Table(show_header=True)
-    samples_table.add_column("URL")
-    samples_table.add_column("Distance")
-    samples_table.add_column("Text")
-
-    # Collect all samples
-    all_samples = []
-    for page, results in test_results.items():
-        for result in results:
-            all_samples.append(
-                {
-                    "image": Path(page).name,
-                    "distance": result["distance"],
-                    "passed": result["passed"],
-                    "text": result["text"],
-                    "gt": result["gt"],
-                    "url": result["url"],
-                }
-            )
-
-    # Sort by distance (put unverified at the end)
-    all_samples.sort(key=lambda x: (x["distance"] == -1, x["distance"]))
-
-    # Add rows
-    current_url = None
-    for sample in all_samples:
-        if sample["url"] != current_url:
-            # Add URL as a spanning header row
-            samples_table.add_row(
-                f"[blue]{sample['url']}[/blue]",
-                "Unverified" if sample["distance"] == -1 else str(sample["distance"]),
-                truncate_text(sample["text"]),
-                style="bold",
-                end_section=True,
-            )
-            current_url = sample["url"]
-
-    console.print(samples_table)
 
 
 @pytest.mark.parametrize("page", PAGES)
