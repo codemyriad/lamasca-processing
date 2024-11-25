@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 from paddleocr import PaddleOCR
 
+
 def ocr_box(
     img: Image.Image,
     box: Tuple[int, int, int, int],
@@ -38,18 +39,20 @@ def ocr_box(
 
     return results
 
+
 OCR_CACHE = {}
+
 
 def get_ocr():
     """
     Cache the ocr object so that we instantiate at most one per invocation
     """
-    ocr = OCR_CACHE.get('ocr')
+    ocr = OCR_CACHE.get("ocr")
     if not ocr:
         ocr = OCR_CACHE["ocr"] = PaddleOCR(
             use_angle_cls=True,
             lang="fr",
             rec_algorithm="SVTR_LCNet",
-            det_db_box_thresh=0.3
+            det_db_box_thresh=0.3,
         )
     return ocr

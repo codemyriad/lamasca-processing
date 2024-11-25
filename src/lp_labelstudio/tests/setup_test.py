@@ -3,18 +3,17 @@ from pathlib import Path
 import requests
 
 
-TEST_FILES_ROOT = Path('/tmp/lamasca-tests')
-BASEURL = 'https://newspapers.codemyriad.io/lamasca-pages/'
+TEST_FILES_ROOT = Path("/tmp/lamasca-tests")
+BASEURL = "https://newspapers.codemyriad.io/lamasca-pages/"
 
 PAGES = [
-    '1994/lamasca-1994-02-16/page_01.jpeg',
-    '1994/lamasca-1994-02-16/page_02.jpeg',
-    '1994/lamasca-1994-02-16/page_03.jpeg',
+    "1994/lamasca-1994-02-16/page_01.jpeg",
+    "1994/lamasca-1994-02-16/page_02.jpeg",
+    "1994/lamasca-1994-02-16/page_03.jpeg",
 ]
 
-MANIFESTS = [
-    '1994/lamasca-1994-02-16/manifest.json'
-]
+MANIFESTS = ["1994/lamasca-1994-02-16/manifest.json"]
+
 
 def prepare():
     # Download the pages needed for the test
@@ -34,5 +33,6 @@ def prepare():
             else:
                 print(f"Failed to download {url}: {response.status_code}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     prepare()

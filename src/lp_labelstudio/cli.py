@@ -81,7 +81,9 @@ def process_image(image_path_string: str, redo: bool) -> None:
 
     # Initialize OCR and process image
     from lp_labelstudio.alto_generator import create_alto_xml
-    from lp_labelstudio.ocr import ocr_box  # Heavy import: we like it to be inside this function
+    from lp_labelstudio.ocr import (
+        ocr_box,
+    )  # Heavy import: we like it to be inside this function
 
     # Open the image
     with Image.open(image_path) as img:
@@ -211,10 +213,10 @@ def generate_thumbnails_command(source_folder: str, destination_folder: str):
 def get_page_annotations(image_path: Path) -> Tuple[List[Dict], int, int]:
     """
     Get annotations for a page and its dimensions.
-    
+
     Args:
         image_path: Path to the image file
-        
+
     Returns:
         Tuple containing:
         - List of annotation results
@@ -223,19 +225,19 @@ def get_page_annotations(image_path: Path) -> Tuple[List[Dict], int, int]:
     """
     manifest_file = image_path.parent / "manifest.json"
     assert manifest_file.exists()
-    
+
     with Image.open(image_path) as img:
         img_width, img_height = img.size
-    
+
     all_pages_annotations = json.load(manifest_file.open())
     current_page = int(image_path.stem.split("_")[1])
-    
+
     page_annotations = [
         annotation["annotations"][0]
         for annotation in all_pages_annotations
         if annotation["data"]["pageNumber"] == current_page
     ][0]
-    
+
     return page_annotations["result"], img_width, img_height
 
 
