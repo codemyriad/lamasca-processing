@@ -61,11 +61,12 @@ from PIL import Image
 # Store test results for summary
 test_results = defaultdict(list)
 
+
 def print_final_summary():
     """Print final summary table with statistics for all images."""
     if not test_results:
         return
-        
+
     console.print("\n[bold]Final Summary Across All Images:[/bold]")
     summary_table = Table(show_header=True)
     summary_table.add_column("Image", style="bold")
@@ -85,20 +86,20 @@ def print_final_summary():
         n_failed = n_tests - n_passed
         pass_rate = f"{(n_passed/n_tests)*100:.1f}%" if n_tests else "N/A"
         avg_dist = f"{mean(r['distance'] for r in results):.1f}" if results else "N/A"
-        
+
         total_tests += n_tests
         total_passed += n_passed
         all_distances.extend(r["distance"] for r in results)
-        
+
         summary_table.add_row(
             Path(page).name,
             str(n_tests),
             str(n_passed),
             str(n_failed),
             pass_rate,
-            avg_dist
+            avg_dist,
         )
-    
+
     # Add totals row
     total_pass_rate = f"{(total_passed/total_tests)*100:.1f}%" if total_tests else "N/A"
     total_avg_dist = f"{mean(all_distances):.1f}" if all_distances else "N/A"
@@ -109,9 +110,9 @@ def print_final_summary():
         str(total_tests - total_passed),
         total_pass_rate,
         total_avg_dist,
-        style="bold"
+        style="bold",
     )
-    
+
     console.print(summary_table)
 
 
@@ -204,14 +205,13 @@ def test_ocr_box(page):
                             box=None,
                             border_style="gray50",
                         )
-                        table.add_column("Type", style="bold")
-                        table.add_column("Text")
-                        table.add_column("Distance")
-                        table.add_column("URL")
+                        table.add_column("OCR", style="cyan")
+                        table.add_column("GT", style="green")
+                        table.add_column("Dist", justify="right")
+                        table.add_column("Image")
 
-                        table.add_row("OCR", recognized_text, "", "", style="cyan")
                         table.add_row(
-                            "GT", gt_entry, str(distance), file_url, style="green"
+                            recognized_text, gt_entry, str(distance), file_url
                         )
                         console.print(table)
 
@@ -264,6 +264,7 @@ def test_ocr_box(page):
         output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
         output_path = test_results_dir / output_filename
         new_img.save(output_path)
+
 
 # Print final summary after all tests complete
 print_final_summary()
