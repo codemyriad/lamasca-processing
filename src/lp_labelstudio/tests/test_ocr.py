@@ -204,17 +204,17 @@ def test_ocr_box(page):
         )
         console.print(summary_table)
 
-                # Create visualization
-                cropped_img = img.crop((x, y, x + width, y + height))
-                new_height = height * 2
-                new_img = Image.new("RGB", (width, new_height), color="white")
-                new_img.paste(cropped_img, (0, 0))
-                draw = ImageDraw.Draw(new_img)
-                font = get_font(size=24)
-                text_start_y = height + 10
+        # Create visualization
+        cropped_img = img.crop((x, y, x + width, y + height))
+        new_height = height * 2
+        new_img = Image.new("RGB", (width, new_height), color="white")
+        new_img.paste(cropped_img, (0, 0))
+        draw = ImageDraw.Draw(new_img)
+        font = get_font(size=24)
+        text_start_y = height + 10
 
-                draw.text((10, text_start_y), recognized_text, fill="black", font=font)
+        draw.text((10, text_start_y), recognized_text, fill="black", font=font)
 
-                output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
-                output_path = test_results_dir / output_filename
-                new_img.save(output_path)
+        output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
+        output_path = test_results_dir / output_filename
+        new_img.save(output_path)
