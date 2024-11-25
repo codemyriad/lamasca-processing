@@ -109,6 +109,7 @@ def process_image(image_path_string: str, redo: bool) -> None:
         # Process headlines
         console.print("\n[bold blue]Processing Headlines:[/]")
         for i in range(0, len(results), 2):
+            # TODO: extract the code that actually does the OCR into a ocr_box function
             bbox = results[i]
             label_info = results[i + 1]
 
