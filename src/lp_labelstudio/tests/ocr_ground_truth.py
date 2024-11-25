@@ -65,7 +65,7 @@ ground_truth_data = {
             "ocr": "di Franco Bagnis",
             "ground_truth": "di Franco Bagnis",
         },
-        "2959_2229_266_78": {"ocr": "", "ground_truth": "# "},
+        "2959_2229_266_78": {"ocr": "", "ground_truth": "È tempo di\nabbonamenti"},
         "1422_3165_304_159": {"ocr": "Pollidi", "ground_truth": "Polli di\nsinistra"},
     },
     "page_02.jpeg": {
@@ -85,10 +85,13 @@ ground_truth_data = {
             "ocr": "Chi va, chi viene e\nhi si mette insieme",
             "ground_truth": "Chi va, chi viene e\nchi si mette insieme",
         },
-        "186_2741_909_32": {"ocr": "ATYT", "ground_truth": "Notizie dallo Stato Civile di Cuneo"},
+        "186_2741_909_32": {
+            "ocr": "ATYT",
+            "ground_truth": "Notizie dallo Stato Civile di Cuneo",
+        },
         "596_2820_71_22": {"ocr": "A", "ground_truth": "Nati"},
-        "401_3134_467_20": {"ocr": "", "ground_truth": "# "},
-        "548_3570_174_23": {"ocr": "Vatrinmo", "ground_truth": "# Vatrinmo"},
+        "401_3134_467_20": {"ocr": "", "ground_truth": "Pubblicazioni di matrimonio"},
+        "548_3570_174_23": {"ocr": "Vatrinmo", "ground_truth": "Matrimoni"},
         "591_3883_92_23": {"ocr": "Vort", "ground_truth": "Morti"},
         "1213_3880_365_136": {
             "ocr": "Farmacie\ndi turno",
@@ -104,7 +107,7 @@ ground_truth_data = {
         },
         "686_361_397_195": {
             "ocr": "Mite\nlaico e gli\nintegralism",
-            "ground_truth": "# Mite\nlaico e gli\nintegralism",
+            "ground_truth": "Mite\nlaico e gli\nintegralismi",
         },
         "175_359_411_129": {
             "ocr": "Beppe e\na gran nasata",
@@ -122,7 +125,7 @@ ground_truth_data = {
         },
         "379_540_1440_55": {
             "ocr": "Continuano le polemiche tra sindaco e comandante dei vigil",
-            "ground_truth": "# Continuano le polemiche tra sindaco e comandante dei vigil",
+            "ground_truth": "Continuano le polemiche tra sindaco e comandante dei vigili",
         },
         "611_635_979_191": {
             "ocr": "Corpo con due teste\no corpo senza testa?",
@@ -138,7 +141,7 @@ ground_truth_data = {
         },
         "385_1825_1434_112": {
             "ocr": "Le norme del tempo che fu sono tuttora in vigore\nael Regolamento di Polizia Municipale.rinnovato nel'92",
-            "ground_truth": "# Le norme del tempo che fu sono tuttora in vigore\nael Regolamento di Polizia Municipale.rinnovato nel'92",
+            "ground_truth": "Le norme del tempo che fu sono tuttora in vigore\nael Regolamento di Polizia Municipale, rinnovato nel '92",
         },
         "418_1978_1376_180": {
             "ocr": "Cosi deve comportarsi\n'utente degli orinatoi pubblic",
