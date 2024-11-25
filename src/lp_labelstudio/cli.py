@@ -93,16 +93,8 @@ def process_image(image_path_string: str, redo: bool) -> None:
     rprint(table)
 
     # Initialize OCR and process image
-    from paddleocr import PaddleOCR
     from lp_labelstudio.alto_generator import create_alto_xml
-    from lp_labelstudio.ocr import ocr_box
-
-    ocr = PaddleOCR(
-        use_angle_cls=True,
-        lang="fr",
-        rec_algorithm="SVTR_LCNet",
-        det_db_box_thresh=0.3
-    )
+    from lp_labelstudio.ocr import ocr_box  # Heavy import: we like it to be inside this function
 
     # Open the image
     with Image.open(image_path) as img:
@@ -124,8 +116,8 @@ def process_image(image_path_string: str, redo: bool) -> None:
                 height = int(bbox["value"]["height"] * img_height / 100)
 
                 # Process the box
-                box_results = ocr_box(img, (x, y, width, height), ocr)
-                
+                box_results = ocr_box(img, (x, y, width, height))
+
                 if box_results:
                     all_ocr_results.extend(box_results)
                     for abs_bbox, (text, confidence) in box_results:
