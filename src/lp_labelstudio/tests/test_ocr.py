@@ -144,18 +144,31 @@ def test_ocr_box(page):
                         file_url = f"file://{output_path.absolute()}"
 
                         table = Table(
-                            show_header=False, show_lines=False, padding=(0, 1)
+                            show_header=True, 
+                            show_lines=False,
+                            padding=(0, 1),
+                            box=None,
+                            border_style="gray50"
                         )
-                        table.add_row("OCR:", recognized_text, style="cyan")
-                        table.add_row("GT:", gt_entry, style="green")
+                        table.add_column("Type", style="bold")
+                        table.add_column("Text")
+                        table.add_column("Distance")
+                        table.add_column("URL")
+                        
                         table.add_row(
-                            "Dist:",
-                            str(distance),
-                            style=(
-                                "green" if distance <= max_distance_threshold else "red"
-                            ),
+                            "OCR", 
+                            recognized_text, 
+                            "", 
+                            "",
+                            style="cyan"
                         )
-                        table.add_row("Image:", file_url, style="blue underline")
+                        table.add_row(
+                            "GT", 
+                            gt_entry, 
+                            str(distance), 
+                            file_url,
+                            style="green"
+                        )
                         console.print(table)
 
                         # Store result for summary
