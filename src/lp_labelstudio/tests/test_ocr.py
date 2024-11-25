@@ -144,30 +144,20 @@ def test_ocr_box(page):
                         file_url = f"file://{output_path.absolute()}"
 
                         table = Table(
-                            show_header=True, 
+                            show_header=True,
                             show_lines=False,
                             padding=(0, 1),
                             box=None,
-                            border_style="gray50"
+                            border_style="gray50",
                         )
                         table.add_column("Type", style="bold")
                         table.add_column("Text")
                         table.add_column("Distance")
                         table.add_column("URL")
-                        
+
+                        table.add_row("OCR", recognized_text, "", "", style="cyan")
                         table.add_row(
-                            "OCR", 
-                            recognized_text, 
-                            "", 
-                            "",
-                            style="cyan"
-                        )
-                        table.add_row(
-                            "GT", 
-                            gt_entry, 
-                            str(distance), 
-                            file_url,
-                            style="green"
+                            "GT", gt_entry, str(distance), file_url, style="green"
                         )
                         console.print(table)
 
