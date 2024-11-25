@@ -139,6 +139,51 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
 
     console.print(summary_table)
 
+    # Calculate and display OCR Quality Score
+    if total_tests > 0:
+        verified_results = sum(
+            1 for results in test_results.values() for r in results if r["verified"]
+        )
+        total_boxes = sum(len(results) for results in test_results.values())
+        verification_rate = verified_results / total_boxes
+        perfect_rate = total_perfect / total_tests
+        avg_distance_normalized = 1 - (mean(all_distances) / 100)  # Normalize to 0-1
+
+        # Weighted components of the score
+        score_components = {
+            "Verification Rate": (verification_rate, 0.3),
+            "Perfect Match Rate": (perfect_rate, 0.4),
+            "Average Accuracy": (avg_distance_normalized, 0.3),
+        }
+
+        final_score = (
+            sum(value * weight for value, weight in score_components.values()) * 100
+        )
+
+        console.print("\n[bold]OCR Quality Score:[/bold]")
+        score_table = Table(show_header=True)
+        score_table.add_column("Component")
+        score_table.add_column("Value")
+        score_table.add_column("Weight")
+        score_table.add_column("Contribution")
+
+        for component, (value, weight) in score_components.items():
+            score_table.add_row(
+                component,
+                f"{value*100:.1f}%",
+                f"{weight*100:.0f}%",
+                f"{value * weight * 100:.1f}",
+            )
+
+        score_table.add_row(
+            "[bold]Final Score[/bold]",
+            f"[bold]{final_score:.1f}/100[/bold]",
+            "",
+            "",
+            end_section=True,
+        )
+        console.print(score_table)
+
     # Print detailed samples table
     console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
     samples_table = Table(show_header=True)
