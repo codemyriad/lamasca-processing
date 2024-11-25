@@ -174,8 +174,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
                 "",
                 "",
                 style="bold",
-                end_section=True,
-                span=3,  # Span across all 3 columns
+                end_section=True
             )
             current_url = sample["url"]
 
