@@ -131,10 +131,12 @@ def test_ocr_box(page):
                         distance = Levenshtein.distance(recognized_text, gt_entry)
                         max_distance_threshold = 10
 
-                        output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
+                        output_filename = (
+                            f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
+                        )
                         output_path = test_results_dir / output_filename
                         file_url = f"file://{output_path.absolute()}"
-                        
+
                         table = Table(
                             show_header=False, show_lines=False, padding=(0, 1)
                         )
