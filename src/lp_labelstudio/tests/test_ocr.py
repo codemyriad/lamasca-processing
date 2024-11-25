@@ -49,7 +49,7 @@ def test_ocr_box(page):
 
     image_path = TEST_FILES_ROOT / page
     results, img_width, img_height = get_page_annotations(image_path)
-    
+
     # Prepare output directory
     test_results_dir = TEST_FILES_ROOT / 'test-results'
     test_results_dir.mkdir(exist_ok=True)
