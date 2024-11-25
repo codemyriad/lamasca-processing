@@ -174,7 +174,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
                 str(sample["distance"]),
                 truncate_text(sample["text"]),
                 style="bold",
-                end_section=True
+                end_section=True,
             )
             current_url = sample["url"]
 
