@@ -142,6 +142,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     # Print detailed samples table
     console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
     samples_table = Table(show_header=True)
+    samples_table.add_column("URL")
     samples_table.add_column("Distance")
     samples_table.add_column("Text")
 
@@ -169,12 +170,13 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         if sample["url"] != current_url:
             # Add URL as a spanning header row
             samples_table.add_row(
-                f"[blue]{sample['url']}[/blue]", "", style="bold", end_section=True
+                f"[blue]{sample['url']}[/blue]", "", "", style="bold", end_section=True
             )
             current_url = sample["url"]
 
         # Add the data row
         samples_table.add_row(
+            "",  # URL column empty for data rows
             str(sample["distance"]),
             truncate_text(sample["text"]),
         )
