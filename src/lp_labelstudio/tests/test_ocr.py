@@ -75,47 +75,57 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     summary_table = Table(show_header=True)
     summary_table.add_column("Image", style="bold")
     summary_table.add_column("Total Tests")
-    summary_table.add_column("Passed")
-    summary_table.add_column("Failed")
-    summary_table.add_column("Pass Rate")
+    summary_table.add_column("Perfect", style="green")
+    summary_table.add_column("Passed", style="yellow")
+    summary_table.add_column("Failed", style="red")
+    summary_table.add_column("Perfect Rate")
     summary_table.add_column("Avg Distance")
 
     total_tests = 0
+    total_perfect = 0
     total_passed = 0
     all_distances = []
 
     for page, results in sorted(test_results.items()):
         n_tests = len(results)
-        n_passed = sum(1 for r in results if r["passed"])
-        n_failed = n_tests - n_passed
-        pass_rate = f"{(n_passed/n_tests)*100:.1f}%" if n_tests else "N/A"
+        if n_tests == 0:
+            continue
+            
+        n_perfect = sum(1 for r in results if r["distance"] == 0)
+        n_passed = sum(1 for r in results if r["passed"] and r["distance"] > 0)
+        n_failed = n_tests - n_perfect - n_passed
+        perfect_rate = f"{(n_perfect/n_tests)*100:.1f}%" if n_tests else "N/A"
         avg_dist = f"{mean(r['distance'] for r in results):.1f}" if results else "N/A"
 
         total_tests += n_tests
+        total_perfect += n_perfect
         total_passed += n_passed
         all_distances.extend(r["distance"] for r in results)
 
         summary_table.add_row(
             Path(page).name,
             str(n_tests),
+            str(n_perfect),
             str(n_passed),
             str(n_failed),
-            pass_rate,
+            perfect_rate,
             avg_dist,
         )
 
     # Add totals row
-    total_pass_rate = f"{(total_passed/total_tests)*100:.1f}%" if total_tests else "N/A"
-    total_avg_dist = f"{mean(all_distances):.1f}" if all_distances else "N/A"
-    summary_table.add_row(
-        "[bold]TOTAL[/bold]",
-        str(total_tests),
-        str(total_passed),
-        str(total_tests - total_passed),
-        total_pass_rate,
-        total_avg_dist,
-        style="bold",
-    )
+    if total_tests > 0:
+        total_perfect_rate = f"{(total_perfect/total_tests)*100:.1f}%"
+        total_avg_dist = f"{mean(all_distances):.1f}"
+        summary_table.add_row(
+            "[bold]TOTAL[/bold]",
+            str(total_tests),
+            str(total_perfect),
+            str(total_passed),
+            str(total_tests - total_perfect - total_passed),
+            total_perfect_rate,
+            total_avg_dist,
+            style="bold",
+        )
 
     console.print(summary_table)
 
