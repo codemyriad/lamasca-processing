@@ -1,6 +1,7 @@
 import pytest
 from rich.console import Console
 from rich.table import Table
+from collections import defaultdict
 import pytest
 from lp_labelstudio.cli import process_image
 from lp_labelstudio.tests.setup_test import prepare, PAGES, TEST_FILES_ROOT
@@ -56,8 +57,12 @@ from pathlib import Path
 from PIL import Image
 
 
+# Store test results for summary
+test_results = defaultdict(list)
+
 @pytest.mark.parametrize("page", PAGES)
 def test_ocr_box(page):
+    page_results = []
     from lp_labelstudio.cli import get_page_annotations
 
     image_path = TEST_FILES_ROOT / page
@@ -152,10 +157,52 @@ def test_ocr_box(page):
                         table.add_row("Image:", file_url, style="blue underline")
                         console.print(table)
 
+                        # Store result for summary
+                        test_results[page].append({
+                            'text': recognized_text,
+                            'gt': gt_entry,
+                            'distance': distance,
+                            'passed': distance <= max_distance_threshold,
+                            'url': file_url
+                        })
+
                         assert distance <= max_distance_threshold, (
                             f"OCR result differs from ground truth by {distance} characters, "
                             f"which is more than the allowed threshold of {max_distance_threshold}."
                         )
+
+    # Print summary table after all tests for this page
+    if test_results[page]:
+        console.print(f"\n[bold]Summary for {page}:[/bold]")
+        summary_table = Table(show_header=True)
+        summary_table.add_column("Status", style="bold")
+        summary_table.add_column("Count")
+        summary_table.add_column("Avg Distance")
+        
+        results = test_results[page]
+        passed = sum(1 for r in results if r['passed'])
+        failed = len(results) - passed
+        avg_dist = sum(r['distance'] for r in results) / len(results)
+        
+        summary_table.add_row(
+            "✓ Passed", 
+            str(passed), 
+            "", 
+            style="green"
+        )
+        if failed:
+            summary_table.add_row(
+                "✗ Failed", 
+                str(failed), 
+                "", 
+                style="red"
+            )
+        summary_table.add_row(
+            "Average Distance",
+            "",
+            f"{avg_dist:.1f}"
+        )
+        console.print(summary_table)
 
                 # Create visualization
                 cropped_img = img.crop((x, y, x + width, y + height))
