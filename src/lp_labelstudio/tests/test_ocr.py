@@ -83,7 +83,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
 
     console.print("\n[bold]Final Summary Across All Images:[/bold]")
     summary_table = Table(show_header=True)
-    summary_table.add_column("Image", style="bold")
+    summary_table.add_column("URL", style="blue")
     summary_table.add_column("Total Tests")
     summary_table.add_column("Perfect", style="green")
     summary_table.add_column("Passed", style="yellow")
@@ -113,7 +113,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         all_distances.extend(r["distance"] for r in results)
 
         summary_table.add_row(
-            Path(page).name,
+            f"file://{(TEST_FILES_ROOT / 'test-results' / Path(page).name).absolute()}",
             str(n_tests),
             str(n_perfect),
             str(n_passed),
@@ -127,7 +127,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         total_perfect_rate = f"{(total_perfect/total_tests)*100:.1f}%"
         total_avg_dist = f"{mean(all_distances):.1f}"
         summary_table.add_row(
-            "[bold]TOTAL[/bold]",
+            "[bold]file:///TOTAL[/bold]",
             str(total_tests),
             str(total_perfect),
             str(total_passed),
