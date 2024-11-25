@@ -2,46 +2,44 @@ name: Tests
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   setup:
-    uses: ./.github/workflows/setup-python.yml
-
-  install:
-    needs: setup
-    uses: ./.github/workflows/install-deps.yml
+    uses: ./.github/workflows/setup.yml
 
   smoketest:
-    needs: install
-    name: Smoke Tests
+    needs: setup
+    name: Smoke test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      - name: Run install script
+        run: ./install.sh
 
-      - name: "Run smoke test"
+      - name: "Smoke test: try to annotate some images"
         run: lp-labelstudio process-newspaper --redo src/lp_labelstudio/web_server/test_images/
 
-      - name: "Verify results"
-        run: |
-          cat src/lp_labelstudio/web_server/test_images/page_01_annotations.json|jq -C
-          cat src/lp_labelstudio/web_server/test_images/page_02_annotations.json|jq -C
+      - name: Show results for page 1
+        run: cat src/lp_labelstudio/web_server/test_images/page_01_annotations.json|jq -C
 
-  unit-tests:
-    needs: install
-    name: Unit Tests
+      - name: Show results for page 2
+        run: cat src/lp_labelstudio/web_server/test_images/page_02_annotations.json|jq -C
+
+  pytest:
+    needs: setup
+    name: Run pytest tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+      - name: Run install script
+        run: ./install.sh
 
       - name: Install pytest
         run: pip install pytest
 
-      - name: Run tests
+      - name: Run pytest
         run: pytest
