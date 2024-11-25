@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from lp_labelstudio.ocr import ocr_box
 import Levenshtein
+from lp_labelstudio.tests.ocr_ground_truth import ground_truth_data
 
 
 def get_font(size=36):
@@ -68,37 +69,55 @@ def test_ocr_box(page):
                 box_results = ocr_box(img, (x, y, width, height))
                 assert box_results is not None, f"OCR should return results for headline at ({x}, {y})"
 
+                recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
+                
+                # Create identifier for this box
+                image_name = Path(page).name
+                box_id = f"{x}_{y}_{width}_{height}"
+
+                # Initialize or update ground truth data structure
+                if image_name not in ground_truth_data:
+                    ground_truth_data[image_name] = {}
+                
+                if box_id not in ground_truth_data[image_name]:
+                    ground_truth_data[image_name][box_id] = {
+                        "ocr": recognized_text,
+                        "ground_truth": f"# {recognized_text}"  # Commented out by default
+                    }
+                
+                # Save the updated ground truth data
+                with open(Path(__file__).parent / "ocr_ground_truth.py", "w", encoding="utf-8") as f:
+                    f.write('"""\nGround truth data for OCR testing.\n\n')
+                    f.write('Format:\n')
+                    f.write('{\n    "image_name": {\n        "x_y_width_height": {\n')
+                    f.write('            "ocr": "text from OCR",\n')
+                    f.write('            "ground_truth": "# correct text after manual verification"\n')
+                    f.write('        }\n    }\n}\n\n')
+                    f.write('Uncomment the ground_truth lines as you verify them.\n"""\n\n')
+                    f.write(f"ground_truth_data = {repr(ground_truth_data)}\n")
+
+                # Check if this box has verified ground truth (uncommented)
+                if image_name in ground_truth_data and box_id in ground_truth_data[image_name]:
+                    gt_entry = ground_truth_data[image_name][box_id]["ground_truth"]
+                    if not gt_entry.startswith("#"):  # Only test if ground truth is uncommented
+                        distance = Levenshtein.distance(recognized_text, gt_entry)
+                        max_distance_threshold = 10
+
+                        print(f"\nTesting OCR for {image_name} box {box_id}:")
+                        print(f"OCR text: {recognized_text}")
+                        print(f"Ground truth: {gt_entry}")
+                        print(f"Levenshtein distance: {distance}")
+
+                        assert distance <= max_distance_threshold, (
+                            f"OCR result differs from ground truth by {distance} characters, "
+                            f"which is more than the allowed threshold of {max_distance_threshold}."
+                        )
+
+                # Create visualization
                 cropped_img = img.crop((x, y, x + width, y + height))
                 new_height = height * 2
                 new_img = Image.new('RGB', (width, new_height), color='white')
                 new_img.paste(cropped_img, (0, 0))
-                recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
-
-                # Define the ground truth text file path
-                output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.txt"
-                output_text_path = test_results_dir / output_filename
-
-                if not output_text_path.exists():
-                    # Save the recognized text for manual correction
-                    with open(output_text_path, 'w', encoding='utf-8') as f:
-                        f.write(recognized_text)
-                    print(f"Saved OCR result to {output_text_path} for manual correction.")
-                else:
-                    # Load the ground truth text
-                    with open(output_text_path, 'r', encoding='utf-8') as f:
-                        ground_truth_text = f.read()
-
-                    # Compute the Levenshtein distance
-                    distance = Levenshtein.distance(recognized_text, ground_truth_text)
-                    max_distance_threshold = 10  # Set an appropriate threshold
-
-                    # Assert that the distance is below the threshold
-                    assert distance <= max_distance_threshold, (
-                        f"OCR result differs from ground truth by {distance} characters, "
-                        f"which is more than the allowed threshold of {max_distance_threshold}."
-                    )
-
-                recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
                 draw = ImageDraw.Draw(new_img)
                 font = get_font(size=24)
                 text_start_y = height + 10
