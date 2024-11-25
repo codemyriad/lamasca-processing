@@ -166,18 +166,9 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
 
     # Add rows
     for sample in all_samples:
-        status = Text()
-        if sample["distance"] == 0:
-            status.append("PERFECT", style="green")
-        elif sample["passed"]:
-            status.append("PASSED", style="yellow")
-        else:
-            status.append("FAILED", style="red")
-
         samples_table.add_row(
-            sample["image"],
             str(sample["distance"]),
-            status,
+            sample["url"],
             truncate_text(sample["text"]),
             truncate_text(sample["gt"]),
         )
