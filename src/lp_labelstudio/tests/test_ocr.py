@@ -63,27 +63,6 @@ from PIL import Image
 def test_results():
     results = defaultdict(list)
     yield results
-
-    # Print results at the end of the session
-    console = Console()
-    for page, page_results in results.items():
-        if page_results:
-            console.print(f"\n[bold]Summary for {page}:[/bold]")
-            summary_table = Table(show_header=True)
-            summary_table.add_column("Status", style="bold")
-            summary_table.add_column("Count")
-            summary_table.add_column("Avg Distance")
-
-            passed = sum(1 for r in page_results if r["passed"])
-            failed = len(page_results) - passed
-            avg_dist = sum(r["distance"] for r in page_results) / len(page_results)
-
-            summary_table.add_row("✓ Passed", str(passed), "", style="green")
-            if failed:
-                summary_table.add_row("✗ Failed", str(failed), "", style="red")
-            summary_table.add_row("Average Distance", "", f"{avg_dist:.1f}")
-            console.print(summary_table)
-
     print_final_summary(results)
 
 
