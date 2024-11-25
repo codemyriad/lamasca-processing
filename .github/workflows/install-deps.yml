@@ -1,0 +1,11 @@
+name: Install Dependencies
+on:
+  workflow_call:
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run install script
+        shell: bash
+        run: ./install.sh
