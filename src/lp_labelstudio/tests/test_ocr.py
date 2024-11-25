@@ -166,7 +166,14 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
 
     # Add rows
     for sample in all_samples:
-        console.print(f"[blue]{sample['url']}[/blue]")
+        # Add URL row with full colspan
+        samples_table.add_row(
+            f"[blue]{sample['url']}[/blue]",
+            "",
+            "",
+            end_section=True
+        )
+        # Add data row
         samples_table.add_row(
             str(sample["distance"]),
             truncate_text(sample["text"]),
