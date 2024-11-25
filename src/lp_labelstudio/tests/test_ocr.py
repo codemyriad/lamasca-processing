@@ -96,14 +96,40 @@ def test_ocr_box(page):
                         outline='red', 
                         width=4
                     )
-                    # Draw text with confidence using larger font
-                    font = get_font(36)
-                    draw.text(
-                        (coords[0], coords[1] - 40),  # Moved up to accommodate larger font
-                        f"{text} ({confidence:.2f})",
-                        fill='red',
-                        font=font
-                    )
+                    # Use consistent font size
+                    font = get_font(24)
+                    
+                    # Split text into lines of max 50 chars
+                    text_with_conf = f"{text} ({confidence:.2f})"
+                    lines = [text_with_conf[i:i+50] for i in range(0, len(text_with_conf), 50)]
+                    
+                    # Calculate text background
+                    padding = 4
+                    line_height = font.getsize('A')[1] + padding
+                    max_width = max(font.getsize(line)[0] for line in lines)
+                    bg_bbox = [
+                        coords[0], 
+                        coords[1] - (line_height * len(lines)) - padding,
+                        coords[0] + max_width + padding*2,
+                        coords[1] - padding
+                    ]
+                    
+                    # Draw semi-transparent background
+                    overlay = Image.new('RGBA', img_draw.size, (0,0,0,0))
+                    overlay_draw = ImageDraw.Draw(overlay)
+                    overlay_draw.rectangle(bg_bbox, fill=(255,255,255,180))
+                    img_draw = Image.alpha_composite(img_draw.convert('RGBA'), overlay)
+                    draw = ImageDraw.Draw(img_draw)
+                    
+                    # Draw each line of text
+                    for i, line in enumerate(lines):
+                        y_pos = coords[1] - (line_height * (len(lines) - i))
+                        draw.text(
+                            (coords[0] + padding, y_pos),
+                            line,
+                            fill='red',
+                            font=font
+                        )
         
         # Save the annotated image with all boxes
         output_path = test_results_dir / f"ocr_overlay_{Path(page).stem}.png"
