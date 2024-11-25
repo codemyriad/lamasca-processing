@@ -142,9 +142,9 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     # Print detailed samples table
     console.print("\n[bold]Detailed Samples (sorted by distance):[/bold]")
     samples_table = Table(show_header=True)
-    samples_table.add_column("URL")
-    samples_table.add_column("Distance")
-    samples_table.add_column("Text")
+    samples_table.add_column("URL", no_wrap=True)
+    samples_table.add_column("Distance", no_wrap=True)
+    samples_table.add_column("Text Comparison")
 
     # Collect all samples
     all_samples = []
@@ -169,10 +169,14 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     for sample in all_samples:
         if sample["url"] != current_url:
             # Add URL as a spanning header row
+            text_comparison = (
+                f"GT: {truncate_text(sample['gt'])}\n"
+                f"OCR: {truncate_text(sample['text'])}"
+            )
             samples_table.add_row(
                 f"[blue]{sample['url']}[/blue]",
                 "Unverified" if sample["distance"] == -1 else str(sample["distance"]),
-                truncate_text(sample["text"]),
+                text_comparison,
                 style="bold",
                 end_section=True,
             )
