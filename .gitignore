@@ -12,3 +12,7 @@ dist/
 
 src/lp_labelstudio/web_server/test_images/*.json
 .env
+
+# Ignore test result text files
+test-results/*.txt
+src/lp_labelstudio/tests/test-results/*.txt

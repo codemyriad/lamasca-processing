@@ -4,6 +4,7 @@ from lp_labelstudio.tests.setup_test import prepare, PAGES, TEST_FILES_ROOT
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from lp_labelstudio.ocr import ocr_box
+import Levenshtein
 
 
 def get_font(size=36):
@@ -67,10 +68,32 @@ def test_ocr_box(page):
                 box_results = ocr_box(img, (x, y, width, height))
                 assert box_results is not None, f"OCR should return results for headline at ({x}, {y})"
 
-                cropped_img = img.crop((x, y, x + width, y + height))
-                new_height = height * 2
-                new_img = Image.new('RGB', (width, new_height), color='white')
-                new_img.paste(cropped_img, (0, 0))
+                # Concatenate all recognized text
+                recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
+
+                # Define the ground truth text file path
+                output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.txt"
+                output_text_path = test_results_dir / output_filename
+
+                if not output_text_path.exists():
+                    # Save the recognized text for manual correction
+                    with open(output_text_path, 'w', encoding='utf-8') as f:
+                        f.write(recognized_text)
+                    print(f"Saved OCR result to {output_text_path} for manual correction.")
+                else:
+                    # Load the ground truth text
+                    with open(output_text_path, 'r', encoding='utf-8') as f:
+                        ground_truth_text = f.read()
+
+                    # Compute the Levenshtein distance
+                    distance = Levenshtein.distance(recognized_text, ground_truth_text)
+                    max_distance_threshold = 10  # Set an appropriate threshold
+
+                    # Assert that the distance is below the threshold
+                    assert distance <= max_distance_threshold, (
+                        f"OCR result differs from ground truth by {distance} characters, "
+                        f"which is more than the allowed threshold of {max_distance_threshold}."
+                    )
 
                 recognized_text = "\n".join([text for coords, (text, confidence) in box_results])
                 draw = ImageDraw.Draw(new_img)
