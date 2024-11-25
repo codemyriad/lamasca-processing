@@ -53,6 +53,6 @@ def get_ocr():
             use_angle_cls=False,
             lang="it",
             rec_algorithm="SVTR_LCNet",
-            det_db_box_thresh=0.3,
+            det_db_box_thresh=0.1,
         )
     return ocr
