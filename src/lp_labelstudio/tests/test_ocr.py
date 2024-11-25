@@ -170,11 +170,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         if sample["url"] != current_url:
             # Add URL as a spanning header row
             samples_table.add_row(
-                f"[blue]{sample['url']}[/blue]",
-                "",
-                "",
-                style="bold",
-                end_section=True
+                f"[blue]{sample['url']}[/blue]", "", "", style="bold", end_section=True
             )
             current_url = sample["url"]
 
