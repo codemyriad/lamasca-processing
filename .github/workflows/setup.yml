@@ -1,0 +1,30 @@
+name: Setup Python Environment
+
+on:
+  workflow_call:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.torch/iopath_cache
+            ~/.paddleocr/whl
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py', 'install.py', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Run install script
+        run: ./install.sh
