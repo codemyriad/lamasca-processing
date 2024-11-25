@@ -144,7 +144,6 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
     samples_table = Table(show_header=True)
     samples_table.add_column("Distance")
     samples_table.add_column("Text")
-    samples_table.add_column("Ground Truth")
 
     # Collect all samples
     all_samples = []
@@ -170,7 +169,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         if sample["url"] != current_url:
             # Add URL as a spanning header row
             samples_table.add_row(
-                f"[blue]{sample['url']}[/blue]", "", "", style="bold", end_section=True
+                f"[blue]{sample['url']}[/blue]", "", style="bold", end_section=True
             )
             current_url = sample["url"]
 
@@ -178,7 +177,6 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
         samples_table.add_row(
             str(sample["distance"]),
             truncate_text(sample["text"]),
-            truncate_text(sample["gt"]),
         )
 
     console.print(samples_table)
