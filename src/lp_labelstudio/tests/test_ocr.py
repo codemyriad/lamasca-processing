@@ -158,6 +158,7 @@ def print_final_summary(test_results: Dict[str, List[dict]]):
                     "passed": result["passed"],
                     "text": result["text"],
                     "gt": result["gt"],
+                    "url": result["url"]
                 }
             )
 
