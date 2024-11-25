@@ -2,6 +2,7 @@ import pytest
 from rich.console import Console
 from rich.table import Table
 from collections import defaultdict
+from statistics import mean
 import pytest
 from lp_labelstudio.cli import process_image
 from lp_labelstudio.tests.setup_test import prepare, PAGES, TEST_FILES_ROOT
@@ -59,6 +60,59 @@ from PIL import Image
 
 # Store test results for summary
 test_results = defaultdict(list)
+
+def print_final_summary():
+    """Print final summary table with statistics for all images."""
+    if not test_results:
+        return
+        
+    console.print("\n[bold]Final Summary Across All Images:[/bold]")
+    summary_table = Table(show_header=True)
+    summary_table.add_column("Image", style="bold")
+    summary_table.add_column("Total Tests")
+    summary_table.add_column("Passed")
+    summary_table.add_column("Failed")
+    summary_table.add_column("Pass Rate")
+    summary_table.add_column("Avg Distance")
+
+    total_tests = 0
+    total_passed = 0
+    all_distances = []
+
+    for page, results in sorted(test_results.items()):
+        n_tests = len(results)
+        n_passed = sum(1 for r in results if r["passed"])
+        n_failed = n_tests - n_passed
+        pass_rate = f"{(n_passed/n_tests)*100:.1f}%" if n_tests else "N/A"
+        avg_dist = f"{mean(r['distance'] for r in results):.1f}" if results else "N/A"
+        
+        total_tests += n_tests
+        total_passed += n_passed
+        all_distances.extend(r["distance"] for r in results)
+        
+        summary_table.add_row(
+            Path(page).name,
+            str(n_tests),
+            str(n_passed),
+            str(n_failed),
+            pass_rate,
+            avg_dist
+        )
+    
+    # Add totals row
+    total_pass_rate = f"{(total_passed/total_tests)*100:.1f}%" if total_tests else "N/A"
+    total_avg_dist = f"{mean(all_distances):.1f}" if all_distances else "N/A"
+    summary_table.add_row(
+        "[bold]TOTAL[/bold]",
+        str(total_tests),
+        str(total_passed),
+        str(total_tests - total_passed),
+        total_pass_rate,
+        total_avg_dist,
+        style="bold"
+    )
+    
+    console.print(summary_table)
 
 
 @pytest.mark.parametrize("page", PAGES)
@@ -210,3 +264,6 @@ def test_ocr_box(page):
         output_filename = f"{Path(page).stem}_x{x}_y{y}_w{width}_h{height}.png"
         output_path = test_results_dir / output_filename
         new_img.save(output_path)
+
+# Print final summary after all tests complete
+print_final_summary()
