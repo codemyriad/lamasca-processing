@@ -131,11 +131,18 @@ def test_ocr_box(page):
                         distance = Levenshtein.distance(recognized_text, gt_entry)
                         max_distance_threshold = 10
 
-                        table = Table(show_header=False, show_lines=False, padding=(0,1))
+                        table = Table(
+                            show_header=False, show_lines=False, padding=(0, 1)
+                        )
                         table.add_row("OCR:", recognized_text, style="cyan")
                         table.add_row("GT:", gt_entry, style="green")
-                        table.add_row("Dist:", str(distance), 
-                                    style="green" if distance <= max_distance_threshold else "red")
+                        table.add_row(
+                            "Dist:",
+                            str(distance),
+                            style=(
+                                "green" if distance <= max_distance_threshold else "red"
+                            ),
+                        )
                         console.print(table)
 
                         assert distance <= max_distance_threshold, (
