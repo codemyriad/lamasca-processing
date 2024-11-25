@@ -4,19 +4,15 @@ on:
   push:
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yml
-
   smoketest:
-    needs: setup
     name: Smoke test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Run install script
-        run: ./install.sh
+      - name: Setup environment
+        uses: ./.github/actions/setup
 
       - name: "Smoke test: try to annotate some images"
         run: lp-labelstudio process-newspaper --redo src/lp_labelstudio/web_server/test_images/
@@ -28,15 +24,14 @@ jobs:
         run: cat src/lp_labelstudio/web_server/test_images/page_02_annotations.json|jq -C
 
   pytest:
-    needs: setup
     name: Run pytest tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Run install script
-        run: ./install.sh
+      - name: Setup environment
+        uses: ./.github/actions/setup
 
       - name: Install pytest
         run: pip install pytest
