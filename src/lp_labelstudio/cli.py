@@ -3,7 +3,7 @@ import os
 import logging
 import json
 import numpy as np
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Union, Tuple, Optional
 from rich import print as rprint
 from rich.table import Table
 from rich.console import Console
@@ -58,19 +58,7 @@ def cli_generate_index_txt(
 def process_image(image_path_string: str, redo: bool) -> None:
     """Process a single JPEG image. Perform OCR for the areas found in annotations and generate ALTO XML"""
     image_path = Path(image_path_string)
-    manifest_file = image_path.parent / "manifest.json"
-    assert manifest_file.exists()
-    all_pages_annotations = json.load(manifest_file.open())
-
-    # Extract page number from filename (assuming format like page_01.jpeg)
-    current_page = int(image_path.stem.split("_")[1])
-
-    # Find annotations for current page
-    page_annotations = [
-        annotation["annotations"][0]
-        for annotation in all_pages_annotations
-        if annotation["data"]["pageNumber"] == current_page
-    ][0]
+    results, img_width, img_height = get_page_annotations(image_path)
     table = Table(title="Annotations")
     table.add_column("Label", style="cyan")
     table.add_column("Width", justify="right", style="green")
@@ -219,6 +207,37 @@ def generate_thumbnails_command(source_folder: str, destination_folder: str):
     click.echo(f"Generating thumbnails from {source_folder} to {destination_folder}")
     generate_thumbnails(source_folder, destination_folder)
     click.echo("Thumbnail generation complete!")
+
+
+def get_page_annotations(image_path: Path) -> Tuple[List[Dict], int, int]:
+    """
+    Get annotations for a page and its dimensions.
+    
+    Args:
+        image_path: Path to the image file
+        
+    Returns:
+        Tuple containing:
+        - List of annotation results
+        - Image width
+        - Image height
+    """
+    manifest_file = image_path.parent / "manifest.json"
+    assert manifest_file.exists()
+    
+    with Image.open(image_path) as img:
+        img_width, img_height = img.size
+    
+    all_pages_annotations = json.load(manifest_file.open())
+    current_page = int(image_path.stem.split("_")[1])
+    
+    page_annotations = [
+        annotation["annotations"][0]
+        for annotation in all_pages_annotations
+        if annotation["data"]["pageNumber"] == current_page
+    ][0]
+    
+    return page_annotations["result"], img_width, img_height
 
 
 def generate_summary(
