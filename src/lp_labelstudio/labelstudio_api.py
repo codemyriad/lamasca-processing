@@ -150,13 +150,23 @@ def list_projects(ctx, local_root):
                 )
             )
             if annotator_tasks:
-                console.print("\nAnnotator Breakdown:")
-                for annotator in annotator_tasks:
+                annotator_table = Table(title="Annotator Breakdown", show_header=True)
+                annotator_table.add_column("Annotator", style="cyan")
+                annotator_table.add_column("Tasks", justify="right", style="green")
+                annotator_table.add_column("Projects", justify="right", style="yellow")
+                annotator_table.add_column("Avg Tasks/Project", justify="right", style="magenta")
+                
+                for annotator in sorted(annotator_tasks.keys()):
                     total_tasks = annotator_tasks[annotator]
                     total_projects = annotator_projects[annotator]
-                    console.print(
-                        f"{annotator}: {total_tasks} tasks over {total_projects} projects"
+                    avg_tasks = total_tasks / total_projects
+                    annotator_table.add_row(
+                        annotator,
+                        str(total_tasks),
+                        str(total_projects),
+                        f"{avg_tasks:.1f}"
                     )
+                console.print("\n", annotator_table)
         else:
             console.print("[bold yellow]No projects found.[/bold yellow]")
     except requests.exceptions.RequestException as e:
