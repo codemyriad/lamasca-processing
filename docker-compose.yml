@@ -31,7 +31,7 @@ services:
     image: ghcr.io/codemyriad/lamasca-open-oni-web:latest
     volumes:
       - ./open-oni:/opt/openoni:z
-      - ./create_awardee_title.py:/opt/create_awardee_title.py
+      - ./test_batches/create_awardee_title.py:/opt/create_awardee_title.py
       - ./test_batches:/opt/openoni/data/batches:z
     depends_on:
       - rdbms

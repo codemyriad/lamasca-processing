@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:mix="http://www.loc.gov/mix/" TYPE="urn:library-of-congress:ndnp:mets:newspaper:issue" PROFILE="urn:library-of-congress:mets:profiles:ndnp:issue:v1.5" LABEL="lamasca 1994-01-12">
+	<dmdSec ID="issueModsBib">
+		<mdWrap LABEL="Issue metadata" MDTYPE="MODS">
+			<xmlData>
+				<mods:mods>
+					<mods:relatedItem type="host">
+						<mods:identifier type="lccn">sn00000001</mods:identifier>
+						<mods:part>
+							<mods:detail type="edition">
+								<mods:number>01</mods:number>
+							</mods:detail>
+						</mods:part>
+					</mods:relatedItem>
+					<mods:originInfo>
+						<mods:dateIssued encoding="iso8601">1994-01-12</mods:dateIssued>
+					</mods:originInfo>
+					<mods:note type="noteAboutReproduction">Present</mods:note>
+				</mods:mods>
+			</xmlData>
+		</mdWrap>
+	</dmdSec>
+	<fileSec>
+		<fileGrp>
+			<file ADMID="premisotherDerivativeFile" ID="otherDerivativeFile1" USE="derivative">
+				<FLocat LOCTYPE="OTHER" OTHERLOCTYPE="file" xlink="http://www.w3.org/1999/xlink" xlink:href="./0001.pdf"/>
+			</file>
+		</fileGrp>
+		<fileGrp>
+			<file ADMID="mixserviceFile" ID="serviceFile1" USE="service">
+				<FLocat LOCTYPE="OTHER" OTHERLOCTYPE="file" xlink="http://www.w3.org/1999/xlink" xlink:href="./0001.jp2"/>
+			</file>
+		</fileGrp>
+		<fileGrp>
+			<file ADMID="mixmasterFile" ID="masterFile1" USE="master">
+				<FLocat LOCTYPE="OTHER" OTHERLOCTYPE="file" xlink="http://www.w3.org/1999/xlink" xlink:href="./0001.tif"/>
+			</file>
+		</fileGrp>
+		<fileGrp>
+			<file ADMID="premisocrFile" ID="ocrFile1" USE="ocr">
+				<FLocat LOCTYPE="OTHER" OTHERLOCTYPE="file" xlink="http://www.w3.org/1999/xlink" xlink:href="./0001.xml"/>
+			</file>
+		</fileGrp>
+	</fileSec>
+	<structMap xmlns:np="urn:library-of-congress:ndnp:mets:newspaper">
+		<div TYPE="np:issue" DMDID="issueModsBib">
+			<div TYPE="np:page" DMDID="pageModsBib1">
+				<fptr FILEID="otherDerivativeFile1"/>
+				<fptr FILEID="serviceFile1"/>
+				<fptr FILEID="masterFile1"/>
+				<fptr FILEID="ocrFile1"/>
+			</div>
+		</div>
+	</structMap>
+	<amdSec>
+		<techMD ID="premisotherDerivativeFile">
+			<mdWrap LABEL="PDF Image metadata" MDTYPE="PDFIMG">
+				<xmlData>
+					<mix:mix>
+						<mix:ImagingPerformanceAssessment>
+							<mix:SpatialMetrics>
+								<mix:ImageWidth>842</mix:ImageWidth>
+								<mix:ImageLength>1191</mix:ImageLength>
+							</mix:SpatialMetrics>
+						</mix:ImagingPerformanceAssessment>
+					</mix:mix>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="mixserviceFile">
+			<mdWrap LABEL="PDF Image metadata" MDTYPE="PDFIMG">
+				<xmlData>
+					<mix:mix>
+						<mix:ImagingPerformanceAssessment>
+							<mix:SpatialMetrics>
+								<mix:ImageWidth>842</mix:ImageWidth>
+								<mix:ImageLength>1191</mix:ImageLength>
+							</mix:SpatialMetrics>
+						</mix:ImagingPerformanceAssessment>
+					</mix:mix>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="mixmasterFile">
+			<mdWrap LABEL="PDF Image metadata" MDTYPE="PDFIMG">
+				<xmlData>
+					<mix:mix>
+						<mix:ImagingPerformanceAssessment>
+							<mix:SpatialMetrics>
+								<mix:ImageWidth>842</mix:ImageWidth>
+								<mix:ImageLength>1191</mix:ImageLength>
+							</mix:SpatialMetrics>
+						</mix:ImagingPerformanceAssessment>
+					</mix:mix>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+		<techMD ID="premisocrFile">
+			<mdWrap LABEL="PDF Image metadata" MDTYPE="PDFIMG">
+				<xmlData>
+					<mix:mix>
+						<mix:ImagingPerformanceAssessment>
+							<mix:SpatialMetrics>
+								<mix:ImageWidth>842</mix:ImageWidth>
+								<mix:ImageLength>1191</mix:ImageLength>
+							</mix:SpatialMetrics>
+						</mix:ImagingPerformanceAssessment>
+					</mix:mix>
+				</xmlData>
+			</mdWrap>
+		</techMD>
+	</amdSec>
+	<dmdSec ID="pageModsBib1">
+		<mdWrap LABEL="Page metadata" MDTYPE="MODS">
+			<xmlData>
+				<mods:mods>
+					<mods:part>
+						<mods:extent unit="pages">
+							<mods:start>1</mods:start>
+						</mods:extent>
+					</mods:part>
+					<mods:relatedItem type="original">
+						<mods:physicalDescription>
+							<mods:form type="microfilm"/>
+						</mods:physicalDescription>
+						<mods:identifier type="reel number">001</mods:identifier>
+						<mods:location>
+							<mods:physicalLocation authority="marcorg" displayLabel="La Masca; Cuneo, Italy">lamasca</mods:physicalLocation>
+						</mods:location>
+					</mods:relatedItem>
+					<mods:note displayLabel="La Masca; Cuneo, Italy" type="agencyResponsibleForReproduction">lamasca</mods:note>
+					<mods:note type="noteAboutReproduction">Present</mods:note>
+				</mods:mods>
+			</xmlData>
+		</mdWrap>
+	</dmdSec>
+</mets>
