@@ -1,0 +1,64 @@
+services:
+  rdbms:
+    image: mariadb:10.6
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=openoni
+      - MYSQL_USER=openoni
+      - MYSQL_PASSWORD=openoni
+    volumes:
+      - ./conf/mysql/:/etc/mysql/conf.d:Z
+      - data-mariadb:/var/lib/mysql
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+  solr:
+    image: solr:8-slim
+    volumes:
+      - data-solr:/var/solr
+    command:
+      - solr-precreate
+      - openoni
+  rais:
+    image: uolibraries/rais:4
+    environment:
+      - RAIS_IIIFWEBPATH=/images/iiif
+      - RAIS_IIIFBASEURL=${ONI_BASE_URL:-http://localhost}
+      - RAIS_TILECACHELEN=250
+      - RAIS_TILEPATH=/opt/openoni/data/batches
+    volumes:
+      # Image files must be available at RAIS_TILEPATH
+      - ./test_batches:/opt/openoni/data/batches:z
+  web:
+    image: ghcr.io/codemyriad/lamasca-open-oni-web:latest
+    volumes:
+      - ./open-oni:/opt/openoni:z
+      - ./create_awardee_title.py:/opt/create_awardee_title.py
+      - ./test_batches:/opt/openoni/data/batches:z
+    depends_on:
+      - rdbms
+    links:
+      - rdbms
+      - solr
+      - rais
+    environment:
+      - APACHE_LOG_LEVEL=${APACHE_LOG_LEVEL:-warn}
+      - ONI_BASE_URL
+      - ONI_CHRONAM_API_THROTTLE
+      - ONI_DB_HOST
+      - ONI_DB_PORT
+      - ONI_DB_NAME
+      - ONI_DB_USER
+      - ONI_DB_PASSWORD
+      - ONI_DEBUG
+      - ONI_HSTS_SECONDS
+      - ONI_IIIF_URL
+      - ONI_LOG_LEVEL
+      - ONI_LOG_SQL
+      - ONI_LOG_TO_FILE
+      - ONI_SECRET_KEY
+      - ONI_SOLR_URL
+    ports:
+      - ${HTTPPORT:-80}:80
+
+volumes:
+  data-mariadb: {}
+  data-solr: {}
