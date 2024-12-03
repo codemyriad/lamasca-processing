@@ -31,6 +31,10 @@ cp "$ALTO_XML_FILE" "${ALTO_OUTPUT_DIR}/0001.xml"
 if [ -f "$JPEG_FILE" ]; then
     echo "Found JPEG file: $JPEG_FILE"
 
+    # Define output file paths
+    TIFF_FILE="${ALTO_OUTPUT_DIR}/${ALTO_XML_FILENAME}.tif"
+    JP2_FILE="${ALTO_OUTPUT_DIR}/${ALTO_XML_FILENAME}.jp2"
+
     # Check if TIFF file exists
     if [ -f "$TIFF_FILE" ]; then
         echo "TIFF file already exists: $TIFF_FILE"
