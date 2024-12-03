@@ -16,3 +16,5 @@ The script will lookup for a .jp2 and .tif image in the same directory and with 
         |-- 0001.xml
         |-- 0001.jp2
         |-- 0001.tif
+
+One can reset all data by removing the docker peristent volumes `data-mariadb` and `data-solr`.
