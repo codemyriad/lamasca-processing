@@ -8,13 +8,16 @@ Than you should be able to test an XML Alto file with:
 
     `bash test-alto-batch.sh <path_to_alto_XML_file>`
 
-The script will lookup for a .jp2 and .tif image in the same directory and with the same name as the Alto XML file.
+    e.g.
+
+    `bash test-alto-batch.sh test-alto/0001.xml`
+
+The script will lookup for a .jpeg image in the same directory and with the same name as the Alto XML file.
 
     e.g.
 
     test_alto
         |-- 0001.xml
-        |-- 0001.jp2
-        |-- 0001.tif
+        |-- 0001.jpeg
 
 One can reset all data by removing the docker peristent volumes `data-mariadb` and `data-solr`.
