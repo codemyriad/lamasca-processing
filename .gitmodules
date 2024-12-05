@@ -1,4 +1,4 @@
 [submodule "open-oni"]
-	path = open-oni
+	path = test-alto/open-oni
 	url = git@github.com:codemyriad/open-oni.git
         branch = masca

@@ -21,3 +21,12 @@ The script will lookup for a .jpeg image in the same directory and with the same
         |-- 0001.jpeg
 
 One can reset all data by removing the docker peristent volumes `data-mariadb` and `data-solr`.
+
+
+Data reset
+----------
+
+To reset local state run
+
+    docker compose down
+    docker volume rm test-alto_data-solr test-alto_data-mariadb

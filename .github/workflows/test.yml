@@ -48,5 +48,8 @@ jobs:
         with:
           submodules: true
 
-      - name: Run Alto XML test
-        run: bash test-alto-batch.sh test-alto/0001.xml
+      - name: Pull docker images to run ALTO XML test
+        run: cd test-alto && docker compose pull
+
+      - name: Run ALTO XML test
+        run: cd test-alto && bash test-alto-batch.sh example-file/0001.xml

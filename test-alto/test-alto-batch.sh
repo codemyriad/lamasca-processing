@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+cd "$(dirname "$0")"
 
 # Check if input file is provided
 if [ $# -eq 0 ]; then
@@ -84,7 +85,15 @@ docker compose -f "$DOCKER_COMPOSE_PATH" down
 docker compose -f "$DOCKER_COMPOSE_PATH" up -d
 
 # Wait for the container to fully start
-sleep 15
+timeout=90
+until docker compose logs web | grep -q "ONI setup successful"; do
+ if [ $timeout -le 0 ]; then
+   echo "Timeout waiting for ONI setup"
+   exit 1
+ fi
+ sleep 3
+ timeout=$((timeout-5))
+done
 
 # Create Awardee and Title objects if they don't exists
 docker compose -f "$DOCKER_COMPOSE_PATH" exec -T web bash -c "source ENV/bin/activate && python manage.py shell < /opt/create_awardee_title.py"
