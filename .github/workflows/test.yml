@@ -38,3 +38,15 @@ jobs:
 
       - name: Run pytest
         run: pytest
+
+  test-alto:
+    name: Test Alto XML
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Run Alto XML test
+        run: bash test-alto-batch.sh test-alto/0001.xml
