@@ -2,7 +2,7 @@
 
 Setup Open ONI as submodule. This is needed since the open-oni folder will be mounted in the `web` container.
 
-    `git submodule --init --checkout`
+    `git submodule update --init --checkout`
 
 Than you should be able to test an XML Alto file with:
 
