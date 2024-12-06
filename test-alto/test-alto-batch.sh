@@ -78,9 +78,6 @@ if [ ! -f "$DOCKER_COMPOSE_PATH" ]; then
     exit 1
 fi
 
-# Stop any existing Open ONI containers
-docker compose -f "$DOCKER_COMPOSE_PATH" down
-
 # Start Docker Compose with batch mounted
 docker compose -f "$DOCKER_COMPOSE_PATH" up -d
 
@@ -99,7 +96,7 @@ done
 docker compose -f "$DOCKER_COMPOSE_PATH" exec -T web bash -c "source ENV/bin/activate && python manage.py shell < /opt/create_awardee_title.py"
 
 # Purge the batch if it exists in Open ONI
-docker compose -f "$DOCKER_COMPOSE_PATH" exec -T web bash -c "source ENV/bin/activate && python manage.py purge_batch $BATCH_NAME"
+docker compose -f "$DOCKER_COMPOSE_PATH" exec -T web bash -c "source ENV/bin/activate && (python manage.py batches | grep -q '^$BATCH_NAME$' && python manage.py purge_batch $BATCH_NAME; true)"
 
 # Load the batch into Open ONI
 docker compose -f "$DOCKER_COMPOSE_PATH" exec -T web bash -c "source ENV/bin/activate && python manage.py load_batch /opt/openoni/data/batches/$BATCH_NAME"
