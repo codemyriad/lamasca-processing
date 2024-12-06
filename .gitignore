@@ -12,7 +12,3 @@ dist/
 
 src/lp_labelstudio/web_server/test_images/*.json
 .env
-
-test_batches/*
-!test_batches/default_mets.xml
-!test_batches/create_awardee_title.py

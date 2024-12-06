@@ -38,3 +38,18 @@ jobs:
 
       - name: Run pytest
         run: pytest
+
+  test-alto:
+    name: Test Alto XML
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Pull docker images to run ALTO XML test
+        run: cd test-alto && docker compose pull
+
+      - name: Run ALTO XML test
+        run: cd test-alto && bash test-alto-batch.sh example-file/0001.xml
