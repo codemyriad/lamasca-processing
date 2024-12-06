@@ -1,3 +1,5 @@
+conf
+
 test_batches/*
 !test_batches/default_mets.xml
 !test_batches/create_awardee_title.py
